@@ -13,6 +13,8 @@ import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
@@ -24,7 +26,7 @@ import android.widget.GridView;
 import android.widget.ImageView;
 
 public class ImageGridFragment extends Fragment implements AdapterView.OnItemClickListener{
-    private static final String LOG_TAG = "ImageGridFragment";
+    private static final String TAG = "ImageGridFragment";
     
     private int mImageThumbSize;
     private int mImageThumbSpacing;
@@ -41,13 +43,17 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setHasOptionsMenu(true);
+		mImageThumbSize = getResources().getDimensionPixelSize(R.dimen.image_thumbnail_size);
+        mImageThumbSpacing = getResources().getDimensionPixelSize(R.dimen.image_thumbnail_spacing);
 		mAdapter = new ImageAdapter(getActivity());
+        imageLoader = new ImageLoader();
+        getActivity().getSupportFragmentManager(); //?
+		
 	}
     
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup containter, Bundle sacedInstanceState){
-    	final View v = inflater.inflate(R.layout.fragment_image_grid, containter);
-    	
+    	final View v = inflater.inflate(R.layout.fragment_image_grid, containter,false);
 		final GridView mGridView = (GridView) v.findViewById(R.id.gridView);
 	        mGridView.setAdapter(mAdapter);
 	        mGridView.setOnItemClickListener(this);
@@ -83,7 +89,7 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
 	                                        (mGridView.getWidth() / numColumns) - mImageThumbSpacing;
 	                                mAdapter.setNumColumns(numColumns);
 	                                mAdapter.setItemHeight(columnWidth);
-	                                    Log.d(LOG_TAG, "onCreateView - numColumns set to " + numColumns);
+	                                    Log.d(TAG, "onCreateView - numColumns set to " + numColumns);
 	                            }
 	                        }
 	                    }
@@ -93,12 +99,36 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
 
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        mAdapter.notifyDataSetChanged();
+    }
 
+    @Override
+    public void onPause() {
+        super.onPause();
+        
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        
+    }
+    
 	@Override
 	public void onItemClick(AdapterView<?> arg0, View arg1, int arg2, long arg3) {
 		// TODO Auto-generated method stub
 		
 	}
+	
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        inflater.inflate(R.menu.main, menu);
+    }
+    
+    
     /**
      * The main adapter that backs the GridView. This is fairly standard except the number of
      * columns in the GridView is used to create a fake top row of empty views as we use a
@@ -124,21 +154,21 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
                 mActionBarHeight = TypedValue.complexToDimensionPixelSize(
                         tv.data, context.getResources().getDisplayMetrics());
             }
-            imageLoader = new ImageLoader();
             
-            Images.populateImagePaths(1); // main category in tree     
+            Images.populateImagePaths(Long.valueOf(1)); // main category in tree     
+            Images.generateThumbs();
         }
 
         @Override
         public int getCount() {
             // Size + number of columns for top empty row
-            return Images.imagesPaths.size()+ mNumColumns;
+            return Images.images.size()+ mNumColumns;
         }
 
         @Override
         public Object getItem(int position) {
             return position < mNumColumns ?
-                    null : Images.imagesPaths.get(position - mNumColumns);
+                    null : Images.getImageThubms(position - mNumColumns);
         }
 
         @Override
@@ -199,7 +229,7 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
             
             
             // TODO 1
-            imageLoader.loadBitmap(Images.imagesPaths.get(position), (ImageView) convertView);
+            imageLoader.loadBitmap(Images.getImageThubms(position), (ImageView) imageView);
             //ImageLoader.loadImage(Images.imagesPaths.get(position - mNumColumns), imageView);
             return imageView;
         }

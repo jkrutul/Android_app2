@@ -1,8 +1,8 @@
 package com.example.app_2.models;
 
-public class ImageObject {
-	private Long id;
-	private String imagePath;
+public class ImageObject { //ID imageName, AUDIOPATH, DESCRIPTION, CATEGORY_FK
+	private Long id;  		
+	private String imageName;
 	private String audioPath;
 	private String description;
 	private Long category_fk;
@@ -20,18 +20,18 @@ public class ImageObject {
 		
 	}
 	
-	public ImageObject(String imagePath){
-		this.imagePath= imagePath;
+	public ImageObject(String imageName){
+		this.imageName= imageName;
 		this.category_fk= Long.valueOf(0);
 	}
 	
 
-	public String getImagePath() {
-		return imagePath;
+	public String getImageName() {
+		return imageName;
 	}
 
-	public void setImagePath(String imagePath) {
-		this.imagePath = imagePath;
+	public void setImageName(String imageName) {
+		this.imageName = imageName;
 	}
 
 	public String getDescription() {
@@ -50,11 +50,7 @@ public class ImageObject {
 		this.category_fk = category_fk;
 	}
 	
-	@Override
-	public String toString(){
-		return id+" "+imagePath+" "+description;
-		
-	}
+
 
 
 	public String getAudioPath() {
@@ -65,5 +61,10 @@ public class ImageObject {
 	public void setAudioPath(String audioPath) {
 		this.audioPath = audioPath;
 	}
-
+	
+	@Override
+	public String toString(){				//ID imageName, AUDIOPATH, DESCRIPTION, CATEGORY_FK
+		return "ID:"+id+" P:"+imageName+" D:"+description+" C_FK:"+category_fk;
+		
+	}
 }

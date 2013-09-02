@@ -86,7 +86,8 @@ public class Storage {
 		File[] ftab = dir.listFiles();
 		List<File> fileList = new LinkedList<File>();
 		for(File f: ftab){
-			fileList.add(f);
+			if(f.isFile())
+				fileList.add(f);
 		}
 		return fileList;
 	}

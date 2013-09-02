@@ -34,13 +34,26 @@ public class MainActivity extends Activity {
 	}	
 	
 	public void onClick(View view){
+		Intent intent;
 		switch(view.getId()){
-		case R.id.grid_activity:
-			Intent intent = new Intent(this, ImageGridActivity.class);
-			startActivity(intent);
-			break;
-		default:
-			break;
+			case R.id.grid_activity:
+				intent = new Intent(this, ImageGridActivity.class);
+				startActivity(intent);
+				break;
+		
+			case R.id.db_test_activity:
+				intent = new Intent(this, DatabaseTestActivity.class);
+				startActivity(intent);
+				break;
+				
+			case R.id.client_activity:
+				intent = new Intent(this, SimpleClientActivity.class);
+				startActivity(intent);
+				break;
+				
+			default:
+				intent = null;
+				break;
 		}
 
 	}

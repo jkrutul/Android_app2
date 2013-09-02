@@ -12,16 +12,19 @@ import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Bitmap.CompressFormat;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.support.v4.util.LruCache;
+import android.util.Log;
 import android.widget.ImageView;
 
 
 public class ImageLoader {
+	private static String LOG_TAG = "ImageLoader";
 	private Context context;
 	private Bitmap mPlaceHolderBitmap;
 	
@@ -30,7 +33,7 @@ public class ImageLoader {
 	private boolean mDiskCacheStarting = true;
 	private static final int DISK_CACHE_SIZE = 1024 * 1024 * 10; // 10MB
 	private static final String DISK_CACHE_SUBDIR = "thumbnails";
-	private static int  mWidth=100, mHeight=100;
+	public static int  mWidth=100, mHeight=100;
 	
 	
 	
@@ -59,24 +62,30 @@ public class ImageLoader {
 			}
 		};
 		
-		
 		/* INITIALIZE DISK CACHE */
-	    File cacheDir = Storage.getDiskCacheDir(DISK_CACHE_SUBDIR);
-	    new InitDiskCacheTask().execute(cacheDir);
-
-		
-	
-
+	  //  File cacheDir = Storage.getDiskCacheDir(DISK_CACHE_SUBDIR);
+	  //  new InitDiskCacheTask().execute(cacheDir);
 	}
 
 	public void addBitmapToMemoryCache(String key, Bitmap bitmap) {
-		if (getBitmapFromMemCache(key) == null) {
-			mMemoryCache.put(key, bitmap);
-		}
+		if(key!=null && bitmap != null){
+			if (getBitmapFromMemCache(key) == null) {
+				mMemoryCache.put(key, bitmap);
+			}
+		}else
+			Log.w(LOG_TAG, "key or bitmap is null");
+
 	}
 
 	public Bitmap getBitmapFromMemCache(String key) {
-		return mMemoryCache.get(key);
+		if(key!=null){
+			return mMemoryCache.get(key);
+		}
+		else{
+			Log.w(LOG_TAG, "key is null");
+			return null;
+		}
+
 	}
 	
 /*
@@ -141,27 +150,33 @@ public class ImageLoader {
 	    protected Bitmap doInBackground(String... params) {
 	        path = params[0];	        
 	        final String imageKey = String.valueOf(path);
-	        
+	        Bitmap bitmap = mMemoryCache.get(imageKey);
+	        if(bitmap ==null)
 	        // Check disk cache in background thread
-	        Bitmap bitmap = getBitmapFromDiskCache(imageKey);
-	        if (bitmap == null) { // Not found in disk cache
-	        	bitmap = BitmapCalc.decodeSampleBitmapFromFile(path, mWidth, mHeight);
-	        }
+	        //Bitmap bitmap = getBitmapFromDiskCache(imageKey);
+	        //if (bitmap == null) { // Not found in disk cache
+	        	//bitmap = BitmapCalc.decodeSampleBitmapFromFile(path, mWidth, mHeight);
+	        	bitmap = BitmapFactory.decodeFile(path);
+	        //}
 	        // add final bitmap to caches
 	        addBitmapToCache(imageKey,bitmap);
 	        return bitmap;
 	    }
 	    public void addBitmapToCache(String key, Bitmap bitmap) {
-	        // Add to memory cache as before
-	        if (getBitmapFromMemCache(key) == null) {
-	            mMemoryCache.put(key, bitmap);
-	        }
-
-	        // Also add to disk cache
-	        synchronized (mDiskCacheLock) {
-	            if (mDiskLruCache != null && mDiskLruCache.getBitmap(key) == null) {
-	                mDiskLruCache.put(key, bitmap);
-	            }
+	    	if(key !=null && bitmap != null){
+		        // Add to memory cache as before
+		        if (getBitmapFromMemCache(key) == null) {
+		            mMemoryCache.put(key, bitmap);
+		        }
+	
+		        // Also add to disk cache
+		        /*
+		        synchronized (mDiskCacheLock) {
+		            if (mDiskLruCache != null && mDiskLruCache.getBitmap(key) == null) {
+		                mDiskLruCache.put(key, bitmap);
+		            }
+		        }
+		        */
 	        }
 	    }
 

@@ -147,7 +147,7 @@ public class Database {
 	 */
 	public ImageObject insertImage(ImageObject mio){
 		ContentValues cv = new ContentValues();
-		cv.put(COL_PATH, mio.getImagePath() );
+		cv.put(COL_PATH, mio.getImageName() );
 		cv.put(COL_CAT, mio.getCategory_fk());
 		cv.put(COL_DESC, mio.getDescription());
 		if(db == null)
@@ -174,7 +174,7 @@ public class Database {
 		String where = KEY_ID + "=" + _rowIndex;
 		ContentValues cv = new ContentValues();
 		cv.put(KEY_ID,mio.getId());
-		cv.put(COL_PATH, mio.getImagePath() );
+		cv.put(COL_PATH, mio.getImageName() );
 		cv.put(COL_CAT, mio.getCategory_fk());
 		cv.put(COL_DESC, mio.getDescription());
 		return db.update(TABLE_IMAGE, cv, where, null);
@@ -183,7 +183,16 @@ public class Database {
 	/* image - get */
 	public ImageObject getImage(long _rowIndex){
 		Cursor c = db.query(TABLE_IMAGE,  null, KEY_ID+" = "+_rowIndex, null,null, null,null);
+		c.moveToFirst();
 		return cursorToImage(c);
+	}
+	
+	public ImageObject isImageAlreadyExist(String imageName){
+		Cursor c = db.query(TABLE_IMAGE,  null, COL_PATH+" = "+"\""+imageName+"\"", null,null, null,null);
+		c.moveToFirst();
+		if(c.getCount()>0)
+			return cursorToImage(c);
+		return null;
 	}
 	
 	public List<ImageObject> getAllImagesByCategory(long category_id){
@@ -210,7 +219,7 @@ public class Database {
 		List<String> img_paths = new LinkedList<String>();
 		List<ImageObject> img_o = getAllImagesByCategory(category_id);
 		for(ImageObject i : img_o){
-			img_paths.add(Storage.getImagesDir() + File.pathSeparator + i.getImagePath());
+			img_paths.add(i.getImageName());
 		}
 		return img_paths;
 	}
@@ -234,7 +243,7 @@ public class Database {
 	private ImageObject cursorToImage(Cursor cursor){
 		ImageObject mio = new ImageObject();
 		mio.setId(cursor.getLong(			cursor.getColumnIndex(KEY_ID)));
-		mio.setImagePath(cursor.getString(	cursor.getColumnIndex(COL_PATH)));
+		mio.setImageName(cursor.getString(	cursor.getColumnIndex(COL_PATH)));
 		mio.setAudioPath(cursor.getString(	cursor.getColumnIndex(COL_AUDIO_PATH)));
 		mio.setDescription(cursor.getString(cursor.getColumnIndex(COL_DESC)));
 		mio.setCategory_fk(cursor.getLong(	cursor.getColumnIndex(COL_CAT)));
@@ -306,9 +315,7 @@ public class Database {
 		public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
 			String drop_table = "DROP TABLE IF EXISTS ";
 			// Log the version upgrade/
-			Log.w("TaskDBAdapter", "Upgrading from version "+
-					oldVersion + " to "+
-					newVersion + ", witch will destroy all old data");
+			Log.w("TaskDBAdapter", "Upgrading from version "+	oldVersion + " to "+ newVersion + ", witch will destroy all old data");
 			db.execSQL(drop_table+TABLE_IMAGE);
 			//db.execSQL(drop_table+TABLE_DESC);
 			db.execSQL(drop_table+TABLE_CAT);
