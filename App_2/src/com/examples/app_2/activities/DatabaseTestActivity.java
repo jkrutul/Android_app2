@@ -22,7 +22,7 @@ public class DatabaseTestActivity extends ListActivity {
 	    super.onCreate(savedInstanceState);
 	    setContentView(R.layout.activity_test_db);
 
-	    mda = Database.getInstance();
+	    mda = Database.getInstance(this.getApplicationContext());
 	    mda.open();
 
 	    List<ImageObject> values = mda.getAllImages();

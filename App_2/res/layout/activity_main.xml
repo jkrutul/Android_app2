@@ -30,6 +30,14 @@
             android:layout_below="@id/db_test_activity"
             android:onClick="onClick"
             android:text="send message to computer" />
+
+        <Button
+            android:id="@+id/image_overview_activity"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/client_activity"
+            android:onClick="onClick"
+            android:text="image Overview" />
     </RelativeLayout>
 
 </ScrollView>

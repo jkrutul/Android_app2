@@ -50,6 +50,11 @@ public class MainActivity extends Activity {
 				intent = new Intent(this, SimpleClientActivity.class);
 				startActivity(intent);
 				break;
+			
+			case R.id.image_overview_activity:
+				intent = new Intent(this, ImagesOverviewActivity.class);
+				startActivity(intent);
+				break;
 				
 			default:
 				intent = null;

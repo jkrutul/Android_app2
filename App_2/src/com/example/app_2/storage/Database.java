@@ -1,6 +1,5 @@
 package com.example.app_2.storage;
 
-import java.io.File;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -8,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 import android.content.ContentValues;
+import android.content.Context;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
@@ -15,15 +15,14 @@ import android.database.sqlite.SQLiteDatabase.CursorFactory;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
-import com.example.app_2.App_2;
 import com.example.app_2.models.ImageObject;
 
 
 
 public class Database {
 	private static SQLiteDatabase db;		// Variable to hold the database instance
-	private static myDbHelper dbHelper; 	// Database open/upgrade helper
-	
+	public static myDbHelper dbHelper; 	// Database open/upgrade helper
+	private static Context context = null;
 	
 	private static final String DATABASE_NAME="myDatabase.db";
 	private static Database instance = null;
@@ -32,13 +31,13 @@ public class Database {
 	
 	// The name and the column index of each column in your database
 	// The index (key) column name for use in where clauses.
-	private static final String KEY_ID="_id";
+	public static final String KEY_ID="_id";
 	
-	private static final String TABLE_IMAGE = "image"; 					// KEY_ID, COL_PATH, COL_AUDIO_PATH, COL_DESC, COL_CAT
-	private static final String COL_PATH = "path";
-	private static final String COL_AUDIO_PATH = "audio";
-	private static final String COL_DESC = "description";
-	private static final String COL_CAT = "category";
+	public static final String TABLE_IMAGE = "image"; 					// KEY_ID, COL_PATH, COL_AUDIO_PATH, COL_DESC, COL_CAT
+	public static final String COL_PATH = "path";
+	public static final String COL_AUDIO_PATH = "audio";
+	public static final String COL_DESC = "description";
+	public static final String COL_CAT = "category";
 	private static final Map<String, Integer> imgMap;
 	static{
 		Map<String, Integer> mImg = new HashMap<String, Integer>();
@@ -108,13 +107,14 @@ public class Database {
 		dbHelper.onCreate(db);
 	}
 	
-	private Database(){
-		dbHelper = myDbHelper.getInstance( DATABASE_NAME, null, DATABASE_VERSION);
+	private Database(Context context ){
+		this.context = context;
+		dbHelper = myDbHelper.getInstance(context, DATABASE_NAME, null, DATABASE_VERSION);
 	}
 	
-	public static Database getInstance(){
+	public static Database getInstance(Context context){
 		if (instance == null){
-			instance = new Database();
+			instance = new Database(context);
 			return instance;
 		}else
 			return instance;
@@ -122,11 +122,12 @@ public class Database {
 	
 	public static Database open() throws SQLException{
 		if(dbHelper==null)
-			getInstance();
+			getInstance(context);
 		
 				try{
 					db = dbHelper.getWritableDatabase();
 				}catch(SQLException ex){
+					Log.w(LOG_TAG, "Database not open");
 					db = dbHelper.getReadableDatabase();
 				}
 			return instance;
@@ -135,7 +136,6 @@ public class Database {
 	public void close(){
 		dbHelper.close();
 	}
-	
 	
 	
 	/* I M A G E */
@@ -285,20 +285,21 @@ public class Database {
 	*/
 	
 	//----
-	private static class myDbHelper extends SQLiteOpenHelper{
+	public static class myDbHelper extends SQLiteOpenHelper{
 		
 		private static myDbHelper instance = null;
 		
-		private myDbHelper(String name, CursorFactory factory, int version){
-			super(App_2.getAppContext(),name,factory,version);
+		private myDbHelper(Context context, String name, CursorFactory factory, int version){
+			super(context,name,factory,version);
 		}
 		
-		public static myDbHelper getInstance(String name, CursorFactory factory, int version){
+		public static myDbHelper getInstance(Context context, String name, CursorFactory factory, int version){
 			if(instance==null){
-				instance = new myDbHelper(name, factory,version);
+				instance = new myDbHelper(context, name, factory,version);
 				return instance;
 			}
-			else return instance;
+			else
+				return instance;
 		}
 
 		@Override
