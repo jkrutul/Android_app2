@@ -2,8 +2,10 @@ package com.examples.app_2.activities;
 
 import com.example.app_2.R;
 import android.annotation.SuppressLint;
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -20,7 +22,8 @@ public class MainActivity extends Activity {
 		setContentView(R.layout.activity_main);		
 	}
 
-	@SuppressLint("NewApi")
+
+	@TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		// Inflate the menu; this adds items to the action bar if it is present.

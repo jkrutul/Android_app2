@@ -239,6 +239,20 @@ public class Database {
 		return images;
 	}
 	
+	public List<String> getAllCategories(){
+		List<String> categories = new LinkedList<String>();
+		String[] columns = new String[1];
+		columns[0]=COL_CAT;
+		Cursor c = db.query(true, TABLE_IMAGE, columns,null, null,null, null,null, null);
+		c.moveToFirst();
+		while(!c.isAfterLast()){
+			categories.add(String.valueOf(c.getLong(c.getColumnIndex(COL_CAT))));
+			c.moveToNext();
+		}
+		c.close();
+		return categories;
+	}
+	
 	/* image - cursor */
 	private ImageObject cursorToImage(Cursor cursor){
 		ImageObject mio = new ImageObject();

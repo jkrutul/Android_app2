@@ -8,6 +8,7 @@ import com.example.app_2.R;
 import com.example.app_2.storage.DiskLruImageCache;
 import com.example.app_2.storage.Storage;
 
+import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.res.Resources;
@@ -44,7 +45,7 @@ public class ImageLoader {
 
 
 	// Use 1/8th of the available memory for this memory cache.
-	final int cacheSize = maxMemory / 8;
+	final int cacheSize = maxMemory / 2;
 
 	private LruCache<String, Bitmap> mMemoryCache;
 	
@@ -99,12 +100,14 @@ public class ImageLoader {
 	}
 */
 	
+	@SuppressLint("NewApi")
 	public void loadBitmap(String path, ImageView imageView){
 		if(cancelPotentialWork(path, imageView)){
 			final BitmapWorkerTask task = new BitmapWorkerTask(imageView);
 			final AsyncDrawable asyncDrawable = new AsyncDrawable(context.getResources(), mPlaceHolderBitmap, task);
 			imageView.setImageDrawable(asyncDrawable);
-			task.execute(path);
+            task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, path);
+			//task.execute(path);
 		}
 	}
 	

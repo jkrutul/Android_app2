@@ -1,6 +1,8 @@
 package com.example.app_2.fragments;
 
+import com.example.app_2.App_2;
 import com.example.app_2.R;
+import com.example.app_2.models.ImageObject;
 import com.example.app_2.provider.Images;
 import com.example.app_2.utils.ImageFetcher;
 import com.example.app_2.utils.ImageLoader;
@@ -24,6 +26,7 @@ import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.GridView;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 public class ImageGridFragment extends Fragment implements AdapterView.OnItemClickListener{
     private static final String TAG = "ImageGridFragment";
@@ -47,7 +50,7 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
         mImageThumbSpacing = getResources().getDimensionPixelSize(R.dimen.image_thumbnail_spacing);
 		mAdapter = new ImageAdapter(getActivity());
         imageLoader = new ImageLoader();
-        getActivity().getSupportFragmentManager(); //?
+        //getActivity().getSupportFragmentManager(); //?
 		
 	}
     
@@ -118,9 +121,9 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
     }
     
 	@Override
-	public void onItemClick(AdapterView<?> arg0, View arg1, int arg2, long arg3) {
-		// TODO Auto-generated method stub
-		
+	public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+		ImageObject imgO = mAdapter.getItemAtPosition(position);							// TODO debug info
+		Toast.makeText(App_2.getAppContext(), "pos:"+position+"\n"+imgO, Toast.LENGTH_SHORT).show();
 	}
 	
     @Override
@@ -155,25 +158,31 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
                         tv.data, context.getResources().getDisplayMetrics());
             }
             
-            Images.populateImagePaths(Long.valueOf(1)); // main category in tree     
-            Images.generateThumbs();
+            Images.readImagesFromDB();
+            //Images.populateImagePaths(Long.valueOf(1)); // main category in tree     
+            //Images.generateThumbs();
         }
 
         @Override
         public int getCount() {
             // Size + number of columns for top empty row
-            return Images.images.size()+ mNumColumns;
+            return Images.images.size();
+            // return Images.images.size()+ mNumColumns;
         }
 
         @Override
         public Object getItem(int position) {
             return position < mNumColumns ?
-                    null : Images.getImageThubms(position - mNumColumns);
+                    null : Images.getImageThubms(position);
+        }
+        
+        public ImageObject getItemAtPosition(int position){
+        	return Images.images.get(position);
         }
 
         @Override
         public long getItemId(int position) {
-            return position < mNumColumns ? 0 : position - mNumColumns;
+            return position < mNumColumns ? 0 : position;
         }
 
         @Override

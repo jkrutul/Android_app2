@@ -1,6 +1,6 @@
 package com.examples.app_2.activities;
 
-import android.annotation.SuppressLint;
+import android.annotation.TargetApi;
 import android.app.ListActivity;
 import android.app.LoaderManager.LoaderCallbacks;
 import android.content.CursorLoader;
@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.content.Loader;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
@@ -23,7 +24,7 @@ import com.example.app_2.R;
 import com.example.app_2.contentprovider.ImagesContentProvider;
 import com.example.app_2.storage.Database;
 
-@SuppressLint("NewApi")
+@TargetApi(Build.VERSION_CODES.HONEYCOMB)
 public class ImagesOverviewActivity extends ListActivity implements
 		LoaderCallbacks<Cursor> {
 
@@ -94,9 +95,7 @@ public class ImagesOverviewActivity extends ListActivity implements
 		startActivity(i);
 	}
 
-	@SuppressLint("NewApi")
 	private void fillData() {
-
 		// Fields from the database (projection)
 		// Must include the _id column for the adapter to work
 		String[] from = new String[] { Database.COL_PATH };
@@ -104,8 +103,7 @@ public class ImagesOverviewActivity extends ListActivity implements
 		int[] to = new int[] { R.id.label };
 
 		getLoaderManager().initLoader(0, null, this);
-		adapter = new SimpleCursorAdapter(this, R.layout.image_row, null, from,
-				to, 0);
+		adapter = new SimpleCursorAdapter(this, R.layout.image_row, null, from,	to, 0);
 
 		setListAdapter(adapter);
 	}
@@ -126,13 +124,11 @@ public class ImagesOverviewActivity extends ListActivity implements
 		return cursorLoader;
 	}
 
-	@SuppressLint("NewApi")
 	@Override
 	public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
 		adapter.swapCursor(data);
 	}
 
-	@SuppressLint("NewApi")
 	@Override
 	public void onLoaderReset(Loader<Cursor> loader) {
 		// data is not available anymore, delete reference

@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Random;
 
 import android.graphics.Bitmap;
 import android.graphics.Point;
@@ -29,8 +30,22 @@ public class Images {
 	
 	private static final String LOG_TAG = "Images";
 	
+	public static void readImagesFromDB(){ 				//TODO zmieniæ - u¿yteczne tylko do debugowania
+		Log.i(LOG_TAG, "images size: " +images.size());
+		if(images.size()<=0){
+			Database db = Database.open();	
+			images = db.getAllImages();
+			if(images.size()<=0){
+				Log.i(LOG_TAG, "images size2: " +images.size());
+				populateImagePaths();
+				//images = db.getAllImages();
+				generateThumbs();
+				}
+			}
+		}
 	
-	public static void populateImagePaths(Long category){
+	public static void populateImagePaths(){
+		Random rnd = new Random();
 		images.clear();
 		Database db = Database.open();	
 		List<String> fileNames = new LinkedList<String>();
@@ -41,7 +56,7 @@ public class Images {
 			img_obj= db.isImageAlreadyExist(filename);		// je¿eli tak to zwaracam do img_obj
 			if(img_obj == null){							// brak obiektu w bazie danych
 				img_obj = new ImageObject(filename);		// TODO zamieniæ na klucz generowany z MD5
-				img_obj.setCategory_fk(Long.valueOf(1));  	//  wstawienie do g³ównej kategorii
+				img_obj.setCategory_fk(Long.valueOf(rnd.nextInt(8)));  	//  wstawienie do g³ównej kategorii
 				images.add(db.insertImage(img_obj));
 			}else{
 				images.add(img_obj);
