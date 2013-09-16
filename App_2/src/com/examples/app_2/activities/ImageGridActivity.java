@@ -18,10 +18,13 @@ package com.examples.app_2.activities;
 
 import java.util.List;
 
+import android.animation.Animator;
 import android.annotation.TargetApi;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.widget.DrawerLayout;
 import android.view.Menu;
@@ -32,6 +35,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
+import com.example.app_2.App_2;
 import com.example.app_2.R;
 import com.example.app_2.fragments.ImageGridFragment;
 import com.example.app_2.storage.Database;
@@ -44,12 +48,17 @@ public class ImageGridActivity extends FragmentActivity {
     private List<String> mCategoryTitles;
     private DrawerLayout mDrawerLayout;
     private ListView mDrawerList;
-
+    private Animator mCurrentAnimator;
+    private int mShortAnimationDuration;
+    public static FragmentActivity mInstance;
+    
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
 	@Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_grid);
+        mInstance = this;
+        App_2.actvity= mInstance;
 
         
         Database db = Database.getInstance(getApplicationContext());
@@ -102,9 +111,24 @@ public class ImageGridActivity extends FragmentActivity {
 
 		@Override
 		public void onItemClick(AdapterView parent, View view, int position, long id) {
-			//selectItem(position);			
+			//parent.getChildAt(position).get
+			selectItem(position);			
 		}
 		
+		private void selectItem(int position){
+			Fragment fragment = new ImageGridFragment();
+			Bundle args = new Bundle();
+			
+			args.putInt("CATEGORY_POS", position);
+			fragment.setArguments(args);
+			
+			//Insert the fragment by replacing an existing fragment
+			if(getSupportFragmentManager().findFragmentByTag(TAG)!=null){
+				final FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+	            ft.replace(R.id.content_frame, fragment, TAG);
+	            ft.commit();				
+			}
+		}
 		
     	
     }

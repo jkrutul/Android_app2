@@ -3,25 +3,25 @@ package com.example.app_2.utils;
 import java.io.File;
 import java.lang.ref.WeakReference;
 
-import com.example.app_2.App_2;
-import com.example.app_2.R;
-import com.example.app_2.storage.DiskLruImageCache;
-import com.example.app_2.storage.Storage;
-
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Bitmap.CompressFormat;
+import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.support.v4.util.LruCache;
 import android.util.Log;
+import android.widget.ImageButton;
 import android.widget.ImageView;
+
+import com.example.app_2.App_2;
+import com.example.app_2.R;
+import com.example.app_2.storage.DiskLruImageCache;
 
 
 public class ImageLoader {
@@ -45,7 +45,7 @@ public class ImageLoader {
 
 
 	// Use 1/8th of the available memory for this memory cache.
-	final int cacheSize = maxMemory / 2;
+	final int cacheSize = maxMemory / 8;
 
 	private LruCache<String, Bitmap> mMemoryCache;
 	
@@ -107,9 +107,9 @@ public class ImageLoader {
 			final AsyncDrawable asyncDrawable = new AsyncDrawable(context.getResources(), mPlaceHolderBitmap, task);
 			imageView.setImageDrawable(asyncDrawable);
             task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, path);
-			//task.execute(path);
 		}
 	}
+	
 	
 	public static boolean cancelPotentialWork(String path, ImageView imageView) {
 	    final BitmapWorkerTask bitmapWorkerTask = getBitmapWorkerTask(imageView);
@@ -160,6 +160,7 @@ public class ImageLoader {
 	        //if (bitmap == null) { // Not found in disk cache
 	        	//bitmap = BitmapCalc.decodeSampleBitmapFromFile(path, mWidth, mHeight);
 	        	bitmap = BitmapFactory.decodeFile(path);
+	        	Log.i(LOG_TAG,"decoded image h:"+bitmap.getHeight()+" w:"+bitmap.getWidth());
 	        //}
 	        // add final bitmap to caches
 	        addBitmapToCache(imageKey,bitmap);

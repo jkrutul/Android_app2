@@ -4,7 +4,9 @@ import java.io.File;
 import java.util.LinkedList;
 import java.util.List;
 
+import android.app.Activity;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Environment;
 import android.util.Log;
 
@@ -114,4 +116,38 @@ public class Storage {
 				.getPath() : App_2.getAppContext().getCacheDir().getPath();
 		return new File(cachePath + File.separator + subDir);
 	}
+	
+	/* SHARED PREFERENCES ------------------------------------------------------------------------------------------*/
+	public static void saveToSharedPreferences(String prefName, String value,
+			String key, Context context, int mode) {
+		SharedPreferences sharedPref = context.getSharedPreferences(prefName,
+				mode);
+		SharedPreferences.Editor editor = sharedPref.edit();
+		editor.putString(key, value);
+		editor.commit();
+	}
+
+	public static void saveToPreferences(String value, String key,
+			Activity activity, int mode) {
+		SharedPreferences sharedPref = activity.getPreferences(mode);
+		SharedPreferences.Editor editor = sharedPref.edit();
+		editor.putString(key, value);
+		editor.commit();
+	}
+
+	public static String readFromSharedPreferences(String defValue,
+			String prefName, String key, Context context, int mode) {
+		SharedPreferences sharedPref = context.getSharedPreferences(prefName,
+				mode);
+		String value = sharedPref.getString((key), defValue);
+		return value;
+	}
+
+	public static String readFromPreferences(String defValue, String key,
+			Activity activity, int mode) {
+		SharedPreferences sharedPref = activity.getPreferences(mode);
+		String value = sharedPref.getString((key), defValue);
+		return value;
+	}
+
 }

@@ -4,11 +4,14 @@ import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
+import android.util.Log;
 
 public class BitmapCalc {
+	private final static String LOG_TAG = "BitmapCalc";
 	
 	public static int calculateInSampleSize(BitmapFactory.Options options, int reqWidth, int reqHeight){
 	// Raw height and width of image
+		
 		final int height = options.outHeight;
 		final int width = options.outWidth;
 		int inSampleSize = 1;
@@ -23,7 +26,11 @@ public class BitmapCalc {
 			// a final image with both dimensions larger than or equal to the
 			// requested height and width
 			inSampleSize = heightRatio < widthRatio ? heightRatio : widthRatio;
+			if((inSampleSize==1)&&(height > 1000 || width>1000)){
+				inSampleSize=2;			
+			}
 		}
+		Log.w(LOG_TAG, "outHeight: "+options.outHeight + " outWidth:"+options.outWidth +" rH"+ reqHeight +" rW"+ reqWidth +" inSample:" +inSampleSize);
 		return inSampleSize;
 	}
 	
