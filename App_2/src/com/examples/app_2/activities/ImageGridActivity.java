@@ -16,7 +16,9 @@
 
 package com.examples.app_2.activities;
 
+import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.LinkedBlockingDeque;
 
 import android.animation.Animator;
 import android.annotation.TargetApi;
@@ -38,6 +40,7 @@ import android.widget.ListView;
 import com.example.app_2.App_2;
 import com.example.app_2.R;
 import com.example.app_2.fragments.ImageGridFragment;
+import com.example.app_2.models.CategoryObject;
 import com.example.app_2.storage.Database;
 
 /**
@@ -45,12 +48,14 @@ import com.example.app_2.storage.Database;
  */
 public class ImageGridActivity extends FragmentActivity {
     private static final String TAG = "ImageGridActivity";
-    private List<String> mCategoryTitles;
+    private List<String> mCategoryTitles = new LinkedList<String>();
     private DrawerLayout mDrawerLayout;
     private ListView mDrawerList;
     private Animator mCurrentAnimator;
     private int mShortAnimationDuration;
     public static FragmentActivity mInstance;
+    private List<CategoryObject> categories;
+    
     
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
 	@Override
@@ -63,11 +68,15 @@ public class ImageGridActivity extends FragmentActivity {
         
         Database db = Database.getInstance(getApplicationContext());
         db.open();
-        mCategoryTitles = db.getAllCategories();
+					
         
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
         mDrawerList  = (ListView) findViewById(R.id.left_drawer);
         
+        categories = db.getAllCategories();
+        for(CategoryObject i : categories){
+        	mCategoryTitles.add(i.getCategoryName());			//TODO ³adowanie kategorii do drawera, co je¿eli pierwszy raz ³aduje 
+        }	
         // Set the adapter for the list view
         mDrawerList.setAdapter(new ArrayAdapter<String>(this, R.layout.drawer_list_item, mCategoryTitles));
         // Set the list's click listener
@@ -81,6 +90,7 @@ public class ImageGridActivity extends FragmentActivity {
             ft.add(R.id.content_frame, new ImageGridFragment(), TAG);
             ft.commit();
         }
+
     }
     
     @Override
@@ -112,14 +122,15 @@ public class ImageGridActivity extends FragmentActivity {
 		@Override
 		public void onItemClick(AdapterView parent, View view, int position, long id) {
 			//parent.getChildAt(position).get
-			selectItem(position);			
+			selectItem(position);		
+			
 		}
 		
 		private void selectItem(int position){
 			Fragment fragment = new ImageGridFragment();
 			Bundle args = new Bundle();
-			
-			args.putInt("CATEGORY_POS", position);
+			Long cat_id = categories.get(position).getId();
+			args.putLong("CATEGORY_ID", cat_id);
 			fragment.setArguments(args);
 			
 			//Insert the fragment by replacing an existing fragment

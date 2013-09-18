@@ -9,6 +9,7 @@ import android.text.TextUtils;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.Toast;
 
@@ -20,6 +21,7 @@ public class ImageDetailActivity extends Activity{
 	 private Spinner mCategory;
 	  private EditText mTitleText;
 	  private EditText mBodyText;
+	  private ImageView mImage;
 
 	  private Uri todoUri;
 
@@ -27,7 +29,7 @@ public class ImageDetailActivity extends Activity{
 	  protected void onCreate(Bundle bundle) {
 	    super.onCreate(bundle);
 	    setContentView(R.layout.image_edit);
-
+	    mImage = (ImageView) findViewById(R.id.img);
 	    mCategory = (Spinner) findViewById(R.id.category);
 	    mTitleText = (EditText) findViewById(R.id.todo_edit_summary);
 	    mBodyText = (EditText) findViewById(R.id.todo_edit_description);
@@ -41,8 +43,7 @@ public class ImageDetailActivity extends Activity{
 
 	    // Or passed from the other activity
 	    if (extras != null) {
-	      todoUri = extras
-	          .getParcelable(ImagesContentProvider.CONTENT_ITEM_TYPE);
+	      todoUri = extras.getParcelable(ImagesContentProvider.CONTENT_ITEM_TYPE);
 
 	      fillData(todoUri);
 	    }
@@ -61,17 +62,13 @@ public class ImageDetailActivity extends Activity{
 	  }
 
 	  private void fillData(Uri uri) {
-	    String[] projection = { Database.COL_PATH,
-	        Database.COL_DESC, Database.COL_CAT};
-	    Cursor cursor = getContentResolver().query(uri, projection, null, null,
-	        null);
+	    String[] projection = { Database.COL_PATH, Database.COL_DESC, Database.COL_CAT};
+	    Cursor cursor = getContentResolver().query(uri, projection, null, null,null);
 	    if (cursor != null) {
 	      cursor.moveToFirst();
-	      String category = cursor.getString(cursor
-	          .getColumnIndexOrThrow(Database.COL_CAT));
+	      String category = cursor.getString(cursor.getColumnIndexOrThrow(Database.COL_CAT));
 
 	      for (int i = 0; i < mCategory.getCount(); i++) {
-
 	        String s = (String) mCategory.getItemAtPosition(i);
 	        if (s.equalsIgnoreCase(category)) {
 	          mCategory.setSelection(i);

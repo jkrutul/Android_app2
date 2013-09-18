@@ -1,6 +1,8 @@
 package com.example.app_2.storage;
 
+import java.text.SimpleDateFormat;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -15,6 +17,7 @@ import android.database.sqlite.SQLiteDatabase.CursorFactory;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
+import com.example.app_2.models.CategoryObject;
 import com.example.app_2.models.ImageObject;
 
 
@@ -23,6 +26,9 @@ public class Database {
 	private static SQLiteDatabase db;		// Variable to hold the database instance
 	public static myDbHelper dbHelper; 	// Database open/upgrade helper
 	private static Context context = null;
+	
+	SimpleDateFormat dateFormat;
+	Date date;
 	
 	private static final String DATABASE_NAME="myDatabase.db";
 	private static Database instance = null;
@@ -37,7 +43,12 @@ public class Database {
 	public static final String COL_PATH = "path";
 	public static final String COL_AUDIO_PATH = "audio";
 	public static final String COL_DESC = "description";
+	public static final String COL_TIME_USED = "used";
+	public static final String COL_MODIFIED  = "last_modified";
+	public static final String COL_LAST_USED = "last_used";
+	public static final String COL_IS_CAT = "is_category";
 	public static final String COL_CAT = "category";
+	public static final String COL_PARENT = "parent_fk";
 	private static final Map<String, Integer> imgMap;
 	static{
 		Map<String, Integer> mImg = new HashMap<String, Integer>();
@@ -67,10 +78,7 @@ public class Database {
 	private static final String TABLE_CAT_CREATE = "CREATE TABLE "+
 	TABLE_CAT+" ("+
 			KEY_ID+" INTEGER PRIMARY KEY AUTOINCREMENT, "+
-			COL_PATH+ " TEXT, "+
-			COL_NAME+ " TEXT NOT NULL, "+
-			COL_AUDIO_PATH + " TEXT NO NULL, "+
-			COL_DESC+ " TEXT NO NULL"+
+			COL_NAME+ " TEXT NOT NULL "+
 	");";	
 	
 	private static final String TABLE_IMAGES_CREATE = "CREATE TABLE "+
@@ -79,8 +87,14 @@ public class Database {
 			COL_PATH+ " TEXT, "+
 			COL_AUDIO_PATH + " TEXT, "+
 			COL_DESC+ " TEXT, "+
-			COL_CAT+ " INTEGER"+
-			///" FOREIGN KEY("+COL_CAT+") REFERENECES "+TABLE_CAT+"("+KEY_ID+")"+
+			COL_MODIFIED+ " DATETIME, "+
+			COL_TIME_USED+ " INTEGER DEFAULT 0 ,"+
+			COL_LAST_USED+ " DATETIME, "+
+			COL_IS_CAT+ " INTEGER DEFAULT 0, "+
+			COL_CAT+ " INTEGER DEFAULT 0, "+
+			COL_PARENT+ " INTEGER DEFAULT 0, "+
+		    "FOREIGN KEY("+COL_PARENT+") REFERENCES "+TABLE_IMAGE+"("+KEY_ID+") "+
+		    "FOREIGN KEY("+COL_CAT+") REFERENCES "+TABLE_CAT+"("+KEY_ID+") "+
 	");";
 	
     private static final String DICTIONARY_TABLE_CREATE = "CREATE TABLE "+
@@ -96,7 +110,9 @@ public class Database {
             COL_URL + " TEXT" +
     ");";
 	
-
+    private static final String INSERT_MAIN_CATEGORY = "INSERT INTO " +
+    TABLE_CAT+"("+KEY_ID+","+COL_NAME+") VALUES(0,\'GLOWNA\');";    //INSERT INTO category(name) VALUES ('jejkujejku');
+    
 	public void recreateDB(){
 		open();
 		String drop_table = "DROP TABLE IF EXISTS ";
@@ -108,6 +124,10 @@ public class Database {
 	}
 	
 	private Database(Context context ){
+		// set the format to sql date time
+		dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"); 
+		date = new Date();
+		
 		this.context = context;
 		dbHelper = myDbHelper.getInstance(context, DATABASE_NAME, null, DATABASE_VERSION);
 	}
@@ -150,6 +170,10 @@ public class Database {
 		cv.put(COL_PATH, mio.getImageName() );
 		cv.put(COL_CAT, mio.getCategory_fk());
 		cv.put(COL_DESC, mio.getDescription());
+		cv.put(COL_PARENT, mio.getParent_fk());
+		cv.put(COL_MODIFIED, dateFormat.format(date));
+		cv.put(COL_IS_CAT, mio.getIs_category());
+
 		if(db == null)
 			open();
 		long l = db.insert(TABLE_IMAGE, null, cv);
@@ -227,6 +251,7 @@ public class Database {
 	public List<ImageObject> getAllImages(){
 		ImageObject mio;
 		List<ImageObject> images = new LinkedList<ImageObject>();
+		try{
 		Cursor c = db.query(TABLE_IMAGE, null,null, null,null, null,null);
 		c.moveToFirst();
 		while(!c.isAfterLast()){
@@ -235,18 +260,25 @@ public class Database {
 			c.moveToNext();
 		}
 		c.close();
+		}
+		catch(SQLException ex){
+			Log.w(LOG_TAG,ex);
+		}
 		
 		return images;
 	}
 	
-	public List<String> getAllCategories(){
-		List<String> categories = new LinkedList<String>();
-		String[] columns = new String[1];
-		columns[0]=COL_CAT;
-		Cursor c = db.query(true, TABLE_IMAGE, columns,null, null,null, null,null, null);
+	public List<CategoryObject> getAllCategories(){
+		CategoryObject co;
+		List<CategoryObject> categories = new LinkedList<CategoryObject>();
+		String[] columns = new String[2];
+		columns[0]=KEY_ID;
+		columns[1]=COL_NAME;
+		Cursor c = db.query(true, TABLE_CAT, columns,null, null,null, null,COL_NAME, null);
 		c.moveToFirst();
 		while(!c.isAfterLast()){
-			categories.add(String.valueOf(c.getLong(c.getColumnIndex(COL_CAT))));
+			co=cursorToCategory(c);
+			categories.add(co);
 			c.moveToNext();
 		}
 		c.close();
@@ -256,19 +288,70 @@ public class Database {
 	/* image - cursor */
 	private ImageObject cursorToImage(Cursor cursor){
 		ImageObject mio = new ImageObject();
-		mio.setId(cursor.getLong(			cursor.getColumnIndex(KEY_ID)));
-		mio.setImageName(cursor.getString(	cursor.getColumnIndex(COL_PATH)));
-		mio.setAudioPath(cursor.getString(	cursor.getColumnIndex(COL_AUDIO_PATH)));
-		mio.setDescription(cursor.getString(cursor.getColumnIndex(COL_DESC)));
-		mio.setCategory_fk(cursor.getLong(	cursor.getColumnIndex(COL_CAT)));
+		mio.setId(			cursor.getLong(		cursor.getColumnIndex(KEY_ID)));
+		mio.setImageName(	cursor.getString(	cursor.getColumnIndex(COL_PATH)));
+		mio.setAudioPath(	cursor.getString(	cursor.getColumnIndex(COL_AUDIO_PATH)));
+		mio.setDescription(	cursor.getString(	cursor.getColumnIndex(COL_DESC)));
+		mio.setModified(	cursor.getString(	cursor.getColumnIndex(COL_MODIFIED)));
+		mio.setTimes_used(	cursor.getLong(		cursor.getColumnIndex(COL_TIME_USED)));
+		mio.setLast_used(	cursor.getString(	cursor.getColumnIndex(COL_LAST_USED)));
+		mio.setIs_category(	cursor.getLong(		cursor.getColumnIndex(COL_IS_CAT)));
+		mio.setCategory_fk(	cursor.getLong(		cursor.getColumnIndex(COL_CAT)));
+		mio.setParent_fk(	cursor.getLong(		cursor.getColumnIndex(COL_PARENT)));
 		return mio;
 	}
 	
 	/* C A T E G O R Y */
-	/* -insert */
-	/* -remove */
-	/* -update */
-	/*
+	/* category -insert */
+	public CategoryObject insertCategory(CategoryObject co){
+		ContentValues cv = new ContentValues();
+		cv.put(COL_NAME, co.getCategoryName());
+		if(db == null)
+			open();
+		long l = db.insert(TABLE_CAT, null, cv);
+	    if(l==-1){
+	    	return null;
+	    }
+		Cursor c = db.query(TABLE_CAT,  null, KEY_ID+" = "+l, null,null, null,null);
+		c.moveToFirst();
+		co = cursorToCategory(c);
+		c.close();
+		return co;
+	}
+		
+	/* category - remove */
+	public boolean deleteCategory(CategoryObject co){
+		long row_id = co.getId();
+		return db.delete(TABLE_CAT, KEY_ID+" = "+row_id, null)>0;
+	}
+	
+	/* category - update */
+	public int updateCategory(long _rowIndex, CategoryObject co){
+		String where = KEY_ID + "=" + _rowIndex;
+		ContentValues cv = new ContentValues();
+		cv.put(KEY_ID,co.getId());
+		cv.put(COL_NAME, co.getCategoryName() );
+		return db.update(TABLE_CAT, cv, where, null);
+	}
+	
+	/* category - get */
+	public ImageObject getCategory(long _rowIndex){
+		Cursor c = db.query(TABLE_CAT,  null, KEY_ID+" = "+_rowIndex, null,null, null,null);
+		c.moveToFirst();
+		return cursorToImage(c);
+	}
+
+	/* category - cursor*/
+	private CategoryObject cursorToCategory(Cursor c){
+		CategoryObject co = new CategoryObject();
+		co.setId(c.getLong(	c.getColumnIndex(KEY_ID)));
+		co.setCategoryName(c.getColumnName(c.getColumnIndex(COL_NAME)));
+		return co;		
+	}
+	
+	
+	
+	
 	public void insertHttpTable(String[] http_img){
 		ContentValues cv = new ContentValues();
 		for(int i=0; i<http_img.length; i++){
@@ -280,15 +363,8 @@ public class Database {
 
 	}
 	
-	public long insertCategory(MyCategoryObject mco){
-		ContentValues cv = new ContentValues();	
-		cv.put(COL_CAT, mco.getName());
-		cv.put(COL_AUDIO_PATH, mco.getAudiopath());
-		cv.put(COL_NAME, mco.getName());
-		return db.insert(TABLE_CAT, null, cv);
-	}
 	
-
+/*
 	public long insertWord(MyWordObject mwo){
 		ContentValues cv = new ContentValues();
 		cv.put(COL_WORD,mwo.getKey_word());
@@ -318,8 +394,11 @@ public class Database {
 
 		@Override
 		public void onCreate(SQLiteDatabase _db) {
-			_db.execSQL(TABLE_IMAGES_CREATE);
+
 			_db.execSQL(TABLE_CAT_CREATE);
+			_db.execSQL(INSERT_MAIN_CATEGORY);
+			
+			_db.execSQL(TABLE_IMAGES_CREATE);
 			//_db.execSQL(TABLE1_CREATE);
 			//_db.execSQL(DICTIONARY_TABLE_CREATE);
 			_db.execSQL(HTTP_IMG_TABLE_CREATE);

@@ -33,6 +33,7 @@ import android.widget.Toast;
 
 import com.example.app_2.App_2;
 import com.example.app_2.R;
+import com.example.app_2.adapters.ImageAdapter;
 import com.example.app_2.models.ImageObject;
 import com.example.app_2.provider.Images;
 import com.example.app_2.utils.ImageLoader;
@@ -59,7 +60,7 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
     @Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		
+		imageLoader = new ImageLoader();
 		if(App_2.actvity!=null){
 			expandedImageView = (ImageView) App_2.actvity.findViewById(R.id.expanded_image);
 		}
@@ -67,18 +68,18 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
 		int category_pos = -1;
 		Bundle bundle = this.getArguments();
 		if(bundle !=null)
-			category_pos = bundle.getInt("CATEGORY_POS", -1);
+			category_pos = bundle.getInt("CATEGORY_ID", -1);
 		
 		setHasOptionsMenu(true);
 		mImageThumbSize = getResources().getDimensionPixelSize(R.dimen.image_thumbnail_size);
         mImageThumbSpacing = getResources().getDimensionPixelSize(R.dimen.image_thumbnail_spacing);
 		if(category_pos != -1){
-			mAdapter = new ImageAdapter(getActivity(), category_pos);
+			mAdapter = new ImageAdapter(getActivity(), category_pos,imageLoader);
 		}else
 		{
-			mAdapter = new ImageAdapter(getActivity());
+			mAdapter = new ImageAdapter(getActivity(),imageLoader);
 		}
-        imageLoader = new ImageLoader();
+
         //getActivity().getSupportFragmentManager(); //?
 		
 	}
@@ -300,174 +301,4 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         inflater.inflate(R.menu.main, menu);
     }
-    
-  
-    
-    /**
-     * The main adapter that backs the GridView. This is fairly standard except the number of
-     * columns in the GridView is used to create a fake top row of empty views as we use a
-     * transparent ActionBar and don't want the real top row of images to start off covered by it.
-     */
-    private class ImageAdapter extends BaseAdapter {
-    	private int imgButtonID=0;
-        private final Context mContext;
-        private int mItemHeight = 0;
-        private int mNumColumns = 0;
-        private int mActionBarHeight = 0;
-        private GridView.LayoutParams mImageViewLayoutParams;
-        
-
-        public ImageAdapter(Context context) {
-            super();
-            mContext = context;
-            mImageViewLayoutParams = new GridView.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
-            // Calculate ActionBar height
-            TypedValue tv = new TypedValue();
-            if (context.getTheme().resolveAttribute(
-                    android.R.attr.actionBarSize, tv, true)) {
-                mActionBarHeight = TypedValue.complexToDimensionPixelSize(
-                        tv.data, context.getResources().getDisplayMetrics());
-            }
-            
-            Images.readImagesFromDB();
-            //Images.populateImagePaths(Long.valueOf(1)); // main category in tree     
-            //Images.generateThumbs();
-        }
-        
-        public ImageAdapter(Context context, int category){
-            super();
-            mContext = context;
-            mImageViewLayoutParams = new GridView.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
-            // Calculate ActionBar height
-            TypedValue tv = new TypedValue();
-            if (context.getTheme().resolveAttribute(
-                    android.R.attr.actionBarSize, tv, true)) {
-                mActionBarHeight = TypedValue.complexToDimensionPixelSize(
-                        tv.data, context.getResources().getDisplayMetrics());
-            }
-        	Images.populateImagePaths(category);
-        }
-
-        @Override
-        public int getCount() {
-            return Images.images.size();
-        }
-
-        @Override
-        public Object getItem(int position) {
-            return position < mNumColumns ?
-                    null : Images.getImageThubms(position);
-        }
-        
-        public ImageObject getItemAtPosition(int position){
-        	return Images.images.get(position);
-        }
-
-        @Override
-        public long getItemId(int position) {
-            return position < mNumColumns ? 0 : position;
-        }
-
-        @Override
-        public int getViewTypeCount() {
-            // Two types of views, the normal ImageView and the top row of empty views
-            return 2;
-        }
-
-        @Override
-        public int getItemViewType(int position) {
-            return (position < mNumColumns) ? 1 : 0;
-        }
-
-        @Override
-        public boolean hasStableIds() {
-            return true;
-        }
-
-        @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
-
-        	/*
-            // First check if this is the top row
-            if (position < mNumColumns) {
-                if (convertView == null) {
-                    convertView = new View(mContext);
-                }
-                // Set empty view with height of ActionBar
-                convertView.setLayoutParams(new AbsListView.LayoutParams(
-                        ViewGroup.LayoutParams.MATCH_PARENT, mActionBarHeight));
-                return convertView;
-            }
-            
-          
-
-            // Now handle the main ImageView thumbnails
-        	ImageButton imageButton;
-        	if (convertView == null) { // if it's not recycled, instantiate and initialize
-        		imageButton = new ImageButton(mContext);
-        		imageButton.setId(imgButtonID++);
-        		imageButton.setScaleType(ImageView.ScaleType.CENTER_CROP);
-        		imageButton.setLayoutParams(mImageViewLayoutParams);
-            } else { // Otherwise re-use the converted view
-            	imageButton = (ImageButton) convertView;
-            }
-
-            // Check the height matches our calculated column width
-            if (imageButton.getLayoutParams().height != mItemHeight) {
-            	imageButton.setLayoutParams(mImageViewLayoutParams);
-            }
-        	  */
-        	
-
-            ImageView imageView;
-            if (convertView == null) { // if it's not recycled, instantiate and initialize
-                imageView = new RecyclingImageView(mContext);
-                imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
-                imageView.setLayoutParams(mImageViewLayoutParams);
-            } else { // Otherwise re-use the converted view
-                imageView = (ImageView) convertView;
-            }
-
-            // Check the height matches our calculated column width
-            if (imageView.getLayoutParams().height != mItemHeight) {
-                imageView.setLayoutParams(mImageViewLayoutParams);
-            }
-
-
-            // Finally load the image asynchronously into the ImageView, this also takes care of
-            // setting a placeholder image while the background thread runs
-            
-            
-            // TODO 1
-            imageLoader.loadBitmap(Images.getImageThubms(position), imageView);
-            //ImageLoader.loadImage(Images.imagesPaths.get(position - mNumColumns), imageView);
-            return imageView;
-        }
-
-        /**
-         * Sets the item height. Useful for when we know the column width so the height can be set
-         * to match.
-         *
-         * @param height
-         */
-        public void setItemHeight(int height) {
-            if (height == mItemHeight) {
-                return;
-            }
-            mItemHeight = height;
-            mImageViewLayoutParams =
-                    new GridView.LayoutParams(LayoutParams.MATCH_PARENT, mItemHeight);
-            ImageLoader.setImageSize(height);
-            notifyDataSetChanged();
-        }
-        
-        public void setNumColumns(int numColumns) {
-            mNumColumns = numColumns;
-        }
-
-        public int getNumColumns() {
-            return mNumColumns;
-        }
-    }
-
 }
