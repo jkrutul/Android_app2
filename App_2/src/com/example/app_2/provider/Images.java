@@ -8,6 +8,7 @@ import java.util.Random;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.util.Log;
 import android.view.Display;
 import android.view.WindowManager;
@@ -18,7 +19,6 @@ import com.example.app_2.models.ImageObject;
 import com.example.app_2.storage.Database;
 import com.example.app_2.storage.Storage;
 import com.example.app_2.utils.BitmapCalc;
-import com.example.app_2.utils.ImageLoader;
 
 public class Images {
 	public static List<ImageObject> images = new LinkedList<ImageObject>();  // list of ImageObject selected by category id
@@ -53,16 +53,22 @@ public class Images {
 		List<String> fileNames = new LinkedList<String>();
 		fileNames = Storage.getFilesNamesFromDir(Storage.getImagesDir());		// TODO info jak folder images jest pusty
 		
+		for(String filename: fileNames){   										// sprawdŸ czy pliki s¹ obrazkami
+			if(!(isImgFile(Storage.getImagesDir() + File.separator + filename))){
+				fileNames.remove(filename);
+			}
+		}
+		
 		ImageObject img_obj= null;
 		for(String filename: fileNames){
 			img_obj= db.isImageAlreadyExist(filename);		// je¿eli tak to zwaracam do img_obj
 			if(img_obj == null){							// brak obiektu w bazie danych
 				img_obj = new ImageObject(filename);		// TODO zamieniæ na klucz generowany z MD5
 				img_obj.setCategory_fk(Long.valueOf(rnd.nextInt(4)));  	//  wstawienie do g³ównej kategorii
+				img_obj.setParent_fk(Long.valueOf(rnd.nextInt(4)));
 				images.add(db.insertImage(img_obj));
 			}else{
 				images.add(img_obj);
-				//Log.i(LOG_TAG, "image:"+img_obj+"already exist in db");
 			}
 		}
 
@@ -100,15 +106,6 @@ public class Images {
 			path_toTHUMB = Storage.getThumbsDir() + File.separator + img_o.getImageName();
 			path_toFullScreenTHUMB = Storage.getThumbsMaxDir() + File.separator + img_o.getImageName();
 			
-        	bitmap = BitmapCalc.decodeSampleBitmapFromFile(path_toIMG, thumbWidth,thumbHeight);
-        	try {
-        	       FileOutputStream out = new FileOutputStream(path_toTHUMB);
-        	       bitmap.compress(Bitmap.CompressFormat.JPEG, 100, out);
-        	} catch (Exception e) {
-        	       e.printStackTrace();
-        	}
-        	
-        	
         	bitmap = BitmapCalc.decodeSampleBitmapFromFile(path_toIMG, maxWidth,maxHeight);
         	Log.w(LOG_TAG, bitmap.getHeight() + " " +bitmap.getWidth());
         	try {
@@ -117,6 +114,17 @@ public class Images {
         	} catch (Exception e) {
         	       e.printStackTrace();
         	}
+        	
+        	bitmap = BitmapCalc.decodeSampleBitmapFromFile(path_toFullScreenTHUMB, thumbWidth,thumbHeight);
+        	try {
+        	       FileOutputStream out = new FileOutputStream(path_toTHUMB);
+        	       bitmap.compress(Bitmap.CompressFormat.JPEG, 100, out);
+        	} catch (Exception e) {
+        	       e.printStackTrace();
+        	}
+        	
+        	
+
 		}
 		
 
@@ -151,6 +159,17 @@ public class Images {
 		return null;
 	}
 	
+	private static boolean isImgFile(String path){
+		BitmapFactory.Options options = new BitmapFactory.Options();
+		options.inJustDecodeBounds = true;
+		Bitmap bitmap = BitmapFactory.decodeFile(path, options);
+		if (options.outWidth != -1 && options.outHeight != -1) {
+		    return true;
+		}
+		else {
+		    return false;
+		}
+	}
 	
 	
 	

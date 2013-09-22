@@ -9,15 +9,18 @@
     <FrameLayout
         android:id="@+id/content_frame"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" >
+        android:layout_height="match_parent"
+        android:background="#ffc28ece" >
 
         <ImageView
             android:id="@+id/expanded_image"
-            android:clickable="true"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            android:background="#a0c28ece"
+            android:clickable="true"
             android:contentDescription="description_zoom_touch_close"
             android:visibility="invisible" />
+
     </FrameLayout>
     <!-- The navigation drawer -->
 

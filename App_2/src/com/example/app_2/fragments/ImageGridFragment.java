@@ -7,10 +7,12 @@ import android.animation.ObjectAnimator;
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.content.Context;
+import android.graphics.Color;
 import android.graphics.Point;
 import android.graphics.Rect;
 import android.os.Build;
 import android.os.Bundle;
+import android.speech.tts.TextToSpeech;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.util.TypedValue;
@@ -27,6 +29,8 @@ import android.view.animation.DecelerateInterpolator;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.Toast;
@@ -37,6 +41,8 @@ import com.example.app_2.adapters.ImageAdapter;
 import com.example.app_2.models.ImageObject;
 import com.example.app_2.provider.Images;
 import com.example.app_2.utils.ImageLoader;
+import com.example.app_2.utils.TTS;
+import com.example.app_2.utils.Utils;
 import com.example.app_2.views.RecyclingImageView;
 
 @TargetApi(Build.VERSION_CODES.HONEYCOMB)
@@ -50,9 +56,7 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
     private ImageLoader imageLoader;
     private Animator mCurrentAnimator;
     private int mShortAnimationDuration;
-
-
-	
+    	
     public ImageGridFragment(){
     	
     }
@@ -65,22 +69,20 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
 			expandedImageView = (ImageView) App_2.actvity.findViewById(R.id.expanded_image);
 		}
 		
-		int category_pos = -1;
+		int category_id = -1;
 		Bundle bundle = this.getArguments();
 		if(bundle !=null)
-			category_pos = bundle.getInt("CATEGORY_ID", -1);
+			category_id = (int) bundle.getLong("CATEGORY_ID", -1);
 		
 		setHasOptionsMenu(true);
 		mImageThumbSize = getResources().getDimensionPixelSize(R.dimen.image_thumbnail_size);
         mImageThumbSpacing = getResources().getDimensionPixelSize(R.dimen.image_thumbnail_spacing);
-		if(category_pos != -1){
-			mAdapter = new ImageAdapter(getActivity(), category_pos,imageLoader);
+		if(category_id != -1){
+			mAdapter = new ImageAdapter(getActivity(), category_id,imageLoader);
 		}else
 		{
 			mAdapter = new ImageAdapter(getActivity(),imageLoader);
 		}
-
-        //getActivity().getSupportFragmentManager(); //?
 		
 	}
     
@@ -165,12 +167,15 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
 	    }
 		
 		expandedImageView.bringToFront();
-		
+		//App_2.actvity.getActionBar().hide();
 	    // Load the high-resolution "zoomed-in" image.
 		if(expandedImageView!=null){
 			 String path = Images.getImageFullScreenThumbs(position);
+			 App_2.actvity.speakOut(Utils.cutExtention(Images.images.get(position).getImageName()));
 			 imageLoader.loadBitmap(path, expandedImageView);
 		}
+		
+		App_2.actvity.refreshDrawer(Images.images.get(position).getId());
 				
 
 		
@@ -290,6 +295,7 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
 	            });
 	            set.start();
 	            mCurrentAnimator = set;
+	            //App_2.actvity.getActionBar().show();
 	        }
 	    });
 

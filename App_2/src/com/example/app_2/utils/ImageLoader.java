@@ -33,7 +33,6 @@ public class ImageLoader {
 	private final Object mDiskCacheLock = new Object();
 	private boolean mDiskCacheStarting = true;
 	private static final int DISK_CACHE_SIZE = 1024 * 1024 * 10; // 10MB
-	private static final String DISK_CACHE_SUBDIR = "thumbnails";
 	public static int  mWidth=100, mHeight=100;
 	
 	
@@ -164,7 +163,7 @@ public class ImageLoader {
 	        //}
 	        // add final bitmap to caches
 	        addBitmapToCache(imageKey,bitmap);
-	        return bitmap;
+	        return BitmapCalc.getRoundedCornerBitmap(bitmap);
 	    }
 	    public void addBitmapToCache(String key, Bitmap bitmap) {
 	    	if(key !=null && bitmap != null){

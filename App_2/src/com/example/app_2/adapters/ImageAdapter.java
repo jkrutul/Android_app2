@@ -1,6 +1,7 @@
 package com.example.app_2.adapters;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.util.TypedValue;
 import android.view.View;
 import android.view.ViewGroup;
@@ -48,7 +49,7 @@ public class ImageAdapter extends BaseAdapter {
         //Images.generateThumbs();
     }
     
-    public ImageAdapter(Context context, int category,ImageLoader il){
+    public ImageAdapter(Context context, int category_id,ImageLoader il){
         super();
         mContext = context;
         imageLoader = il;
@@ -60,7 +61,7 @@ public class ImageAdapter extends BaseAdapter {
             mActionBarHeight = TypedValue.complexToDimensionPixelSize(
                     tv.data, context.getResources().getDisplayMetrics());
         }
-    	Images.populateImagePaths(category);
+    	Images.populateImagePaths(category_id);
     }
 
     @Override
@@ -155,7 +156,10 @@ public class ImageAdapter extends BaseAdapter {
         
         // TODO 1
         imageLoader.loadBitmap(Images.getImageThubms(position), imageView);
-        //ImageLoader.loadImage(Images.imagesPaths.get(position - mNumColumns), imageView);
+        //ImageLoader.loadImage(Images.imagesPaths.get(position - mNumColumns), imageView);  
+        if(Images.images.get(position).getIs_category()==0){
+        	imageView.setBackgroundColor(Color.RED);
+        }
         return imageView;
     }
 

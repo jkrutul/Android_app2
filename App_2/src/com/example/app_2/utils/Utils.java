@@ -71,4 +71,8 @@ public class Utils {
     public static boolean hasJellyBean() {
         return Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN;
     }
+    public static String cutExtention(String filename){
+    	String[] fn = filename.split("\\.");
+    	return fn[0];
+    }
 }

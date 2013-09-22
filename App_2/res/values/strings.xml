@@ -5,5 +5,7 @@
     <string name="action_settings">Settings</string>
     <string name="hello_world">Hello world!</string>
     <string name="title_activity_fgil">FGILActivity</string>
+    <string name="drawer_open">open</string>
+    <string name="drawer_close">close</string>
 
 </resources>

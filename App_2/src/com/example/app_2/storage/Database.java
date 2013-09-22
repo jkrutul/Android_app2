@@ -49,17 +49,6 @@ public class Database {
 	public static final String COL_IS_CAT = "is_category";
 	public static final String COL_CAT = "category";
 	public static final String COL_PARENT = "parent_fk";
-	private static final Map<String, Integer> imgMap;
-	static{
-		Map<String, Integer> mImg = new HashMap<String, Integer>();
-		mImg.put(KEY_ID, 0);
-		mImg.put(COL_PATH,1);
-		mImg.put(COL_AUDIO_PATH,2);
-		mImg.put(COL_DESC, 3);
-		mImg.put(COL_CAT, 4);
-		imgMap = Collections.unmodifiableMap(mImg);
-	}
-	
 	
 	private static final String TABLE_CAT = "category";
 	private static final String COL_NAME = "name";
@@ -111,7 +100,7 @@ public class Database {
     ");";
 	
     private static final String INSERT_MAIN_CATEGORY = "INSERT INTO " +
-    TABLE_CAT+"("+KEY_ID+","+COL_NAME+") VALUES(0,\'GLOWNA\');";    //INSERT INTO category(name) VALUES ('jejkujejku');
+    TABLE_CAT+"("+KEY_ID+","+COL_NAME+") VALUES(0,\'GLÓWNA\');";    
     
 	public void recreateDB(){
 		open();
@@ -120,7 +109,12 @@ public class Database {
 		//db.execSQL(drop_table+TABLE_DESC);
 		db.execSQL(drop_table+TABLE_CAT);
 		db.execSQL(drop_table+TABLE_HTTP);
+
 		dbHelper.onCreate(db);
+		insertCategory((new CategoryObject("cat1")));
+		insertCategory((new CategoryObject("cat2")));
+		insertCategory((new CategoryObject("cat3")));
+		insertCategory((new CategoryObject("cat4")));
 	}
 	
 	private Database(Context context ){
@@ -271,19 +265,115 @@ public class Database {
 	public List<CategoryObject> getAllCategories(){
 		CategoryObject co;
 		List<CategoryObject> categories = new LinkedList<CategoryObject>();
-		String[] columns = new String[2];
-		columns[0]=KEY_ID;
-		columns[1]=COL_NAME;
-		Cursor c = db.query(true, TABLE_CAT, columns,null, null,null, null,COL_NAME, null);
-		c.moveToFirst();
-		while(!c.isAfterLast()){
-			co=cursorToCategory(c);
-			categories.add(co);
-			c.moveToNext();
+		try{
+			Cursor c = db.query(true,TABLE_CAT, null,null, null,null, null,null, null);
+			c.moveToFirst();
+			while(!c.isAfterLast()){
+				co=cursorToCategory(c);
+				categories.add(co);
+				c.moveToNext();
 		}
 		c.close();
+			
+		}catch(SQLException ex){
+			Log.w(LOG_TAG,ex);
+		}
+
 		return categories;
 	}
+	
+	public List<CategoryObject> getSubcategories(Long img_id){
+		CategoryObject co;
+		List<CategoryObject> categories = new LinkedList<CategoryObject>();
+		
+		/*
+		String sql = "SELECT "+KEY_ID+", "+COL_NAME+"" +
+					" FROM "+TABLE_CAT+"" +
+					" WHERE "+KEY_ID+" = (SELECT "+COL_CAT+
+										" FROM "+TABLE_IMAGE+
+										" WHERE "+ COL_PARENT+"="+
+											"(SELECT "+COL_PARENT+
+											" FROM "+TABLE_IMAGE+
+											" WHERE "+KEY_ID	+	"="+img_id.toString()+"));";
+		*/
+		String sql = "SELECT "+KEY_ID+" , "+COL_NAME+
+					 " FROM "+TABLE_CAT+
+					 " WHERE "+KEY_ID + " = "+
+						 "(SELECT " +COL_CAT+ 
+						" FROM "+TABLE_IMAGE+
+						" WHERE "+COL_PARENT+ " = " + img_id.toString()+");";
+		try{
+			Cursor c = db.rawQuery(sql, null);
+			c.moveToFirst();
+			while(!c.isAfterLast()){
+				co=cursorToCategory(c);
+				categories.add(co);
+				c.moveToNext();
+		}
+		c.close();
+			
+		}catch(SQLException ex){
+			Log.w(LOG_TAG,ex);
+		}
+
+		return categories;
+	}
+	
+	public List<CategoryObject> getParentCategory(Long img_id){
+		CategoryObject co;
+		List<CategoryObject> categories = new LinkedList<CategoryObject>();
+		//String[] selectionArgs = {img_id.toString()};
+		String sql = "SELECT "+KEY_ID+", "+COL_NAME+
+					" FROM "+TABLE_CAT+
+					" WHERE "+KEY_ID+" = (SELECT "+COL_PARENT+
+										" FROM "+TABLE_IMAGE+
+										" WHERE "+ KEY_ID+"="+img_id.toString()+");";
+		try{
+			Cursor c = db.rawQuery(sql, null);
+			c.moveToFirst();
+			while(!c.isAfterLast()){
+				co=cursorToCategory(c);
+				categories.add(co);
+				c.moveToNext();
+		}
+		c.close();
+			
+		}catch(SQLException ex){
+			Log.w(LOG_TAG,ex);
+		}
+
+		return categories;
+	}
+	public List<CategoryObject> getParentSubcategories(Long img_id){
+		CategoryObject co;
+		List<CategoryObject> categories = new LinkedList<CategoryObject>();
+		//String[] selectionArgs = {img_id.toString()};
+		String sql = "SELECT "+KEY_ID+", "+COL_NAME+
+					" FROM "+TABLE_CAT+
+					" WHERE "+KEY_ID+" = (SELECT "+COL_CAT+
+										" FROM "+TABLE_IMAGE+
+										" WHERE "+ COL_PARENT+"="+
+											"(SELECT "+COL_CAT+
+											" FROM "+TABLE_IMAGE+
+											" WHERE "+COL_PARENT+ "="+img_id.toString()+"));";
+		try{
+			Cursor c = db.rawQuery(sql, null);
+			c.moveToFirst();
+			while(!c.isAfterLast()){
+				co=cursorToCategory(c);
+				categories.add(co);
+				c.moveToNext();
+		}
+		c.close();
+			
+		}catch(SQLException ex){
+			Log.w(LOG_TAG,ex);
+		}
+
+		return categories;
+	}
+	
+	
 	
 	/* image - cursor */
 	private ImageObject cursorToImage(Cursor cursor){
@@ -345,7 +435,7 @@ public class Database {
 	private CategoryObject cursorToCategory(Cursor c){
 		CategoryObject co = new CategoryObject();
 		co.setId(c.getLong(	c.getColumnIndex(KEY_ID)));
-		co.setCategoryName(c.getColumnName(c.getColumnIndex(COL_NAME)));
+		co.setCategoryName(c.getString(c.getColumnIndex(COL_NAME)));
 		return co;		
 	}
 	
@@ -394,14 +484,19 @@ public class Database {
 
 		@Override
 		public void onCreate(SQLiteDatabase _db) {
-
-			_db.execSQL(TABLE_CAT_CREATE);
-			_db.execSQL(INSERT_MAIN_CATEGORY);
+			try{
+				_db.execSQL(TABLE_CAT_CREATE);
+				
+				_db.execSQL(INSERT_MAIN_CATEGORY);
+				
+				_db.execSQL(TABLE_IMAGES_CREATE);
+				//_db.execSQL(TABLE1_CREATE);
+				//_db.execSQL(DICTIONARY_TABLE_CREATE);
+				_db.execSQL(HTTP_IMG_TABLE_CREATE);				
+			}catch(SQLException ex){
+				Log.w(LOG_TAG, ex);
+			}
 			
-			_db.execSQL(TABLE_IMAGES_CREATE);
-			//_db.execSQL(TABLE1_CREATE);
-			//_db.execSQL(DICTIONARY_TABLE_CREATE);
-			_db.execSQL(HTTP_IMG_TABLE_CREATE);
 			
 		}
 

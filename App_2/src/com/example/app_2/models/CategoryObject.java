@@ -4,6 +4,13 @@ public class CategoryObject {
 	private Long id;  		
 	private String categoryName;
 	
+	public CategoryObject(){
+		
+	}
+	public CategoryObject(String categoryName){
+		this.categoryName = categoryName;
+	}
+	
 	
 	public Long getId() {
 		return id;

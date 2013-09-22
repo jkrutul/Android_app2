@@ -87,7 +87,8 @@ public class ImageObject { //ID imageName, AUDIOPATH, DESCRIPTION, CATEGORY_FK
 	
 	@Override
 	public String toString(){				//ID imageName, AUDIOPATH, DESCRIPTION, CATEGORY_FK
-		return "ID:"+id+" P:"+imageName+" D:"+description+" M:"+modified+" TU:"+times_used+" C_FK:"+category_fk+"P_FK:"+parent_fk;
+		//return "ID:"+id+" P:"+imageName+" D:"+description+" M:"+modified+" TU:"+times_used+" C_FK:"+category_fk+" P_FK:"+parent_fk+" isCategory:"+is_category;
+		return "ID:"+id+" P:"+imageName+" C_FK:"+category_fk+" P_FK:"+parent_fk+" isCategory:"+is_category;
 		
 	}
 

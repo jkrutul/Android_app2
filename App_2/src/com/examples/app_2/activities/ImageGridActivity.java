@@ -16,26 +16,34 @@
 
 package com.examples.app_2.activities;
 
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.LinkedBlockingDeque;
+import java.util.Locale;
 
 import android.animation.Animator;
+import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
+import android.content.Intent;
+import android.content.res.Configuration;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.v4.app.ActionBarDrawerToggle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
-import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.widget.DrawerLayout;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ListView;
+import android.speech.tts.TextToSpeech;
 
 import com.example.app_2.App_2;
 import com.example.app_2.R;
@@ -46,24 +54,38 @@ import com.example.app_2.storage.Database;
 /**
  * Simple FragmentActivity to hold the main {@link ImageGridFragment} and not much else.
  */
-public class ImageGridActivity extends FragmentActivity {
+public class ImageGridActivity extends FragmentActivity implements TextToSpeech.OnInitListener{
     private static final String TAG = "ImageGridActivity";
     private List<String> mCategoryTitles = new LinkedList<String>();
     private DrawerLayout mDrawerLayout;
-    private ListView mDrawerList;
+    private ActionBarDrawerToggle mDrawerToggle;
+    private static ListView mDrawerList;
     private Animator mCurrentAnimator;
     private int mShortAnimationDuration;
-    public static FragmentActivity mInstance;
+    public static ImageGridActivity mInstance;
     private List<CategoryObject> categories;
+    CharSequence mTitle;
+    CharSequence mDrawerTitle;
+    
+	private static TextToSpeech tts;
+	public static final int MY_DATA_CHECK_CODE = 1;
     
     
-    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
+    
+    @SuppressLint("NewApi")
+	@TargetApi(Build.VERSION_CODES.HONEYCOMB)
 	@Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_grid);
+        
+		Intent checkIntent = new Intent();
+		checkIntent.setAction(TextToSpeech.Engine.ACTION_CHECK_TTS_DATA);
+		startActivityForResult(checkIntent, MY_DATA_CHECK_CODE);
+        
         mInstance = this;
         App_2.actvity= mInstance;
+        mDrawerTitle = "Wybierz kategoriê";
 
         
         Database db = Database.getInstance(getApplicationContext());
@@ -71,9 +93,36 @@ public class ImageGridActivity extends FragmentActivity {
 					
         
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
+        mDrawerToggle = new ActionBarDrawerToggle(
+                this,                  /* host Activity */
+                mDrawerLayout,         /* DrawerLayout object */
+                R.drawable.ic_drawer,  /* nav drawer icon to replace 'Up' caret */
+                R.string.drawer_open,  /* "open drawer" description */
+                R.string.drawer_close  /* "close drawer" description */
+                ) {
+
+            /** Called when a drawer has settled in a completely closed state. */
+            public void onDrawerClosed(View view) {
+                getActionBar().setTitle(mTitle);
+            }
+
+            /** Called when a drawer has settled in a completely open state. */
+            public void onDrawerOpened(View drawerView) {
+				getActionBar().setTitle(mDrawerTitle);
+            }
+        };
+
+        // Set the drawer toggle as the DrawerListener
+        mDrawerLayout.setDrawerListener(mDrawerToggle);
+
+        getActionBar().setDisplayHomeAsUpEnabled(true);
+        getActionBar().setHomeButtonEnabled(true);
+    
+        
         mDrawerList  = (ListView) findViewById(R.id.left_drawer);
         
         categories = db.getAllCategories();
+        //parentSubcategories = db.getParentSubcategories(img_id);
         for(CategoryObject i : categories){
         	mCategoryTitles.add(i.getCategoryName());			//TODO ³adowanie kategorii do drawera, co je¿eli pierwszy raz ³aduje 
         }	
@@ -93,16 +142,28 @@ public class ImageGridActivity extends FragmentActivity {
 
     }
     
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu items for use in the action bar
-        MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.grid_activity_actions, menu);
-        return super.onCreateOptionsMenu(menu);
-    }
     
     @Override
+    protected void onPostCreate(Bundle savedInstanceState) {
+        super.onPostCreate(savedInstanceState);
+        // Sync the toggle state after onRestoreInstanceState has occurred.
+        mDrawerToggle.syncState();
+    }
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        mDrawerToggle.onConfigurationChanged(newConfig);
+    }
+
+    @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+        // Pass the event to ActionBarDrawerToggle, if it returns
+        // true, then it has handled the app icon touch event
+        if (mDrawerToggle.onOptionsItemSelected(item)) {
+          return true;
+        }
+
         // Handle presses on the action bar items
         switch (item.getItemId()) {
             case R.id.action_search:
@@ -116,7 +177,15 @@ public class ImageGridActivity extends FragmentActivity {
         }
     }
     
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu items for use in the action bar
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.grid_activity_actions, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
     
+
     private class DrawerItemClickListener implements ListView.OnItemClickListener{
 
 		@Override
@@ -139,8 +208,92 @@ public class ImageGridActivity extends FragmentActivity {
 	            ft.replace(R.id.content_frame, fragment, TAG);
 	            ft.commit();				
 			}
+			
+			 // Highlight the selected item, update the title, and close the drawer
+		    mDrawerList.setItemChecked(position, true);
+		    setTitle(categories.get(position).getCategoryName());
+		    mTitle = getTitle();
+		    mDrawerLayout.closeDrawer(mDrawerList);
 		}
-		
-    	
     }
+
+
+	@Override
+	public void onDestroy() {
+		if (tts != null) {
+			tts.stop();
+			tts.shutdown();
+		}
+		super.onDestroy();
+	}
+
+	@Override
+	public void onInit(int status) {
+		int result;
+		if (status == TextToSpeech.SUCCESS) {
+	        Locale[] AvalLoc = Locale.getAvailableLocales();
+
+	        for( Locale l: AvalLoc){
+	        	if(TextToSpeech.LANG_AVAILABLE ==tts.isLanguageAvailable(l))
+	        		Log.i("TTS",l.toString());
+	        }
+	        //Log.i("TTS","Available locales " + Arrays.toString(AvalLoc));
+	        
+			Locale pol_loc = new Locale("pl", "pl_PL");
+			if(TextToSpeech.LANG_AVAILABLE ==tts.isLanguageAvailable(Locale.ENGLISH)){
+				result = tts.setLanguage(pol_loc);
+				}
+			else{
+				result=tts.setLanguage(Locale.ITALIAN);
+			}
+				
+			if (result == TextToSpeech.LANG_MISSING_DATA
+					|| result == TextToSpeech.LANG_NOT_SUPPORTED) {
+				Log.e("TTS", "LANG_NOT_SUPPORTED");
+			} else {
+				//btnSpeak.setEnabled(true);
+				speakOut("init successful");
+			}
+
+		} else {
+			Log.e("TTS", "Initialization Failed");
+		}
+
+	}
+
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		if (requestCode == MY_DATA_CHECK_CODE) {
+			if (resultCode == TextToSpeech.Engine.CHECK_VOICE_DATA_PASS) {
+				// success, crate the TTS instance
+				tts = new TextToSpeech(this, this);
+			} else {
+				// missing data, install it
+				Intent installIntent = new Intent();
+				installIntent
+						.setAction(TextToSpeech.Engine.ACTION_INSTALL_TTS_DATA);
+				startActivity(installIntent);
+			}
+		}
+	}
+	
+	public static void speakOut(String text) {
+		tts.speak(text, TextToSpeech.QUEUE_FLUSH, null);
+	}
+
+	public static void refreshDrawer(Long img_id){
+	     Database db = Database.getInstance(App_2.getAppContext());
+	     db.open();
+		List<CategoryObject> parentCategory = db.getParentCategory(img_id);
+		List<CategoryObject> subcategories = db.getSubcategories(img_id);
+		List<String> categoryTitles = new LinkedList<String>();
+		
+        for(CategoryObject i : parentCategory){
+        	categoryTitles.add(i.getCategoryName());			
+        }	
+        for(CategoryObject i : subcategories){
+        	categoryTitles.add(i.getCategoryName());			
+        }	
+        // Set the adapter for the list view
+        mDrawerList.setAdapter(new ArrayAdapter<String>(App_2.getAppContext(), R.layout.drawer_list_item, categoryTitles));
+	}
 }
