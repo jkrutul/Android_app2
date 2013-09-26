@@ -17,7 +17,7 @@ import android.database.sqlite.SQLiteDatabase.CursorFactory;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
-import com.example.app_2.models.CategoryObject;
+
 import com.example.app_2.models.ImageObject;
 
 
@@ -27,11 +27,11 @@ public class Database {
 	public static myDbHelper dbHelper; 	// Database open/upgrade helper
 	private static Context context = null;
 	
-	SimpleDateFormat dateFormat;
-	Date date;
+	private static SimpleDateFormat dateFormat;
+	private static Date date;
 	
 	private static final String DATABASE_NAME="myDatabase.db";
-	private static Database instance = null;
+	private static Database db_instance = null;
 	private static final String LOG_TAG = "Database";
 	
 	
@@ -49,10 +49,7 @@ public class Database {
 	public static final String COL_IS_CAT = "is_category";
 	public static final String COL_CAT = "category";
 	public static final String COL_PARENT = "parent_fk";
-	
-	private static final String TABLE_CAT = "category";
-	private static final String COL_NAME = "name";
-	
+		
     private static final String TABLE_DIC = "dictionary";
     private static final String COL_WORD = "word";
     private static final String COL_DEFINITION = "definition";
@@ -62,14 +59,7 @@ public class Database {
     
 	
 	private static final int DATABASE_VERSION = 1;
-	
-	
-	private static final String TABLE_CAT_CREATE = "CREATE TABLE "+
-	TABLE_CAT+" ("+
-			KEY_ID+" INTEGER PRIMARY KEY AUTOINCREMENT, "+
-			COL_NAME+ " TEXT NOT NULL "+
-	");";	
-	
+		
 	private static final String TABLE_IMAGES_CREATE = "CREATE TABLE "+
 	TABLE_IMAGE+" ("+
 			KEY_ID+" INTEGER PRIMARY KEY AUTOINCREMENT,"+
@@ -80,11 +70,11 @@ public class Database {
 			COL_TIME_USED+ " INTEGER DEFAULT 0 ,"+
 			COL_LAST_USED+ " DATETIME, "+
 			COL_IS_CAT+ " INTEGER DEFAULT 0, "+
-			COL_CAT+ " INTEGER DEFAULT 0, "+
+			COL_CAT+ " TEXT, "+
 			COL_PARENT+ " INTEGER DEFAULT 0, "+
 		    "FOREIGN KEY("+COL_PARENT+") REFERENCES "+TABLE_IMAGE+"("+KEY_ID+") "+
-		    "FOREIGN KEY("+COL_CAT+") REFERENCES "+TABLE_CAT+"("+KEY_ID+") "+
 	");";
+	
 	
     private static final String DICTIONARY_TABLE_CREATE = "CREATE TABLE "+
     		TABLE_DIC+ " ("+
@@ -99,22 +89,16 @@ public class Database {
             COL_URL + " TEXT" +
     ");";
 	
-    private static final String INSERT_MAIN_CATEGORY = "INSERT INTO " +
-    TABLE_CAT+"("+KEY_ID+","+COL_NAME+") VALUES(0,\'GLÓWNA\');";    
+    //private static final String INSERT_MAIN_CATEGORY = "INSERT INTO " +
+    //TABLE_CAT+"("+KEY_ID+","+COL_NAME+") VALUES(0,\'GLÓWNA\');";    
     
 	public void recreateDB(){
 		open();
 		String drop_table = "DROP TABLE IF EXISTS ";
 		db.execSQL(drop_table+TABLE_IMAGE);
-		//db.execSQL(drop_table+TABLE_DESC);
-		db.execSQL(drop_table+TABLE_CAT);
-		db.execSQL(drop_table+TABLE_HTTP);
+		//db.execSQL(drop_table+TABLE_HTTP);
 
 		dbHelper.onCreate(db);
-		insertCategory((new CategoryObject("cat1")));
-		insertCategory((new CategoryObject("cat2")));
-		insertCategory((new CategoryObject("cat3")));
-		insertCategory((new CategoryObject("cat4")));
 	}
 	
 	private Database(Context context ){
@@ -127,11 +111,11 @@ public class Database {
 	}
 	
 	public static Database getInstance(Context context){
-		if (instance == null){
-			instance = new Database(context);
-			return instance;
+		if (db_instance == null){
+			db_instance = new Database(context);
+			return db_instance;
 		}else
-			return instance;
+			return db_instance;
 	}
 	
 	public static Database open() throws SQLException{
@@ -144,7 +128,7 @@ public class Database {
 					Log.w(LOG_TAG, "Database not open");
 					db = dbHelper.getReadableDatabase();
 				}
-			return instance;
+			return db_instance;
 	}
 	
 	public void close(){
@@ -162,11 +146,11 @@ public class Database {
 	public ImageObject insertImage(ImageObject mio){
 		ContentValues cv = new ContentValues();
 		cv.put(COL_PATH, mio.getImageName() );
-		cv.put(COL_CAT, mio.getCategory_fk());
+		cv.put(COL_CAT, mio.getCategory());
 		cv.put(COL_DESC, mio.getDescription());
 		cv.put(COL_PARENT, mio.getParent_fk());
 		cv.put(COL_MODIFIED, dateFormat.format(date));
-		cv.put(COL_IS_CAT, mio.getIs_category());
+
 
 		if(db == null)
 			open();
@@ -193,7 +177,7 @@ public class Database {
 		ContentValues cv = new ContentValues();
 		cv.put(KEY_ID,mio.getId());
 		cv.put(COL_PATH, mio.getImageName() );
-		cv.put(COL_CAT, mio.getCategory_fk());
+		cv.put(COL_CAT, mio.getCategory());
 		cv.put(COL_DESC, mio.getDescription());
 		return db.update(TABLE_IMAGE, cv, where, null);
 	}
@@ -216,7 +200,7 @@ public class Database {
 	public List<ImageObject> getAllImagesByCategory(long category_id){
 		ImageObject mio;
 		List<ImageObject> images = new LinkedList<ImageObject>();
-		Cursor c = db.query(TABLE_IMAGE, null,COL_CAT+ " = "+category_id, null,null, null,null);
+		Cursor c = db.query(TABLE_IMAGE, null,COL_PARENT+ " = "+category_id, null,null, null,null);
 		c.moveToFirst();
 		while(!c.isAfterLast()){
 			mio = cursorToImage(c);
@@ -242,18 +226,41 @@ public class Database {
 		return img_paths;
 	}
 	
+	public ImageObject getRootCategory(){
+		ImageObject category =null;
+
+		String[] columns = {KEY_ID, COL_PATH, COL_CAT};
+		String selection = COL_CAT+"=\"ROOT\"";
+		try{
+			Cursor c = db.query(TABLE_IMAGE, columns,selection, null,null, null,null);
+			c.moveToFirst();
+			while(!c.isAfterLast()){
+				category = cursorToCategory(c);
+				c.moveToNext();
+			}
+			c.close();
+		}
+		catch(SQLException ex){Log.w(LOG_TAG,ex);}
+		return category;
+	}
+	
 	public List<ImageObject> getAllImages(){
 		ImageObject mio;
 		List<ImageObject> images = new LinkedList<ImageObject>();
+		//String selection = COL_CAT+" NOT LIKE \"ROOT\" ";
+		//String sql = "select * from "+TABLE_IMAGE+" where " +COL_CAT+ " not like \"ROOT\";";
 		try{
-		Cursor c = db.query(TABLE_IMAGE, null,null, null,null, null,null);
-		c.moveToFirst();
-		while(!c.isAfterLast()){
-			mio = cursorToImage(c);
-			images.add(mio);
-			c.moveToNext();
-		}
-		c.close();
+			Cursor c = db.query(TABLE_IMAGE, null,null, null,null, null,null);
+			//c = db.rawQuery(sql, null);
+			c.moveToFirst();
+			if(!c.isAfterLast())
+				c.moveToNext();
+			while(!c.isAfterLast()){
+				mio = cursorToImage(c);
+				images.add(mio);
+				c.moveToNext();
+			}
+			c.close();
 		}
 		catch(SQLException ex){
 			Log.w(LOG_TAG,ex);
@@ -262,121 +269,111 @@ public class Database {
 		return images;
 	}
 	
-	public List<CategoryObject> getAllCategories(){
-		CategoryObject co;
-		List<CategoryObject> categories = new LinkedList<CategoryObject>();
-		try{
-			Cursor c = db.query(true,TABLE_CAT, null,null, null,null, null,null, null);
-			c.moveToFirst();
-			while(!c.isAfterLast()){
-				co=cursorToCategory(c);
-				categories.add(co);
-				c.moveToNext();
-		}
-		c.close();
-			
-		}catch(SQLException ex){
-			Log.w(LOG_TAG,ex);
-		}
-
-		return categories;
-	}
 	
-	public List<CategoryObject> getSubcategories(Long img_id){
-		CategoryObject co;
-		List<CategoryObject> categories = new LinkedList<CategoryObject>();
+	public static Cursor getCursorOfAllImages(){
+		Cursor c=null;
+		String selection = COL_CAT+"!= \"ROOT\"";
 		
-		/*
-		String sql = "SELECT "+KEY_ID+", "+COL_NAME+"" +
-					" FROM "+TABLE_CAT+"" +
-					" WHERE "+KEY_ID+" = (SELECT "+COL_CAT+
-										" FROM "+TABLE_IMAGE+
-										" WHERE "+ COL_PARENT+"="+
-											"(SELECT "+COL_PARENT+
-											" FROM "+TABLE_IMAGE+
-											" WHERE "+KEY_ID	+	"="+img_id.toString()+"));";
-		*/
-		String sql = "SELECT "+KEY_ID+" , "+COL_NAME+
-					 " FROM "+TABLE_CAT+
-					 " WHERE "+KEY_ID + " = "+
-						 "(SELECT " +COL_CAT+ 
-						" FROM "+TABLE_IMAGE+
-						" WHERE "+COL_PARENT+ " = " + img_id.toString()+");";
 		try{
-			Cursor c = db.rawQuery(sql, null);
-			c.moveToFirst();
-			while(!c.isAfterLast()){
-				co=cursorToCategory(c);
-				categories.add(co);
-				c.moveToNext();
-		}
-		c.close();
-			
-		}catch(SQLException ex){
+			if(db == null)
+				open();
+			c = db.query(TABLE_IMAGE, null,selection, null,null, null,null);
+			}
+		catch(SQLException ex){
 			Log.w(LOG_TAG,ex);
 		}
-
+		return c;
+	}
+	
+	public List<ImageObject> getAllCategories(){
+		ImageObject category;
+		List<ImageObject> categories = new LinkedList<ImageObject>();
+		String[] columns = {KEY_ID, COL_PATH, COL_CAT};
+		String selection = COL_CAT + " IS NOT NULL ";
+		try{
+			Cursor c = db.query(TABLE_IMAGE, columns,selection, null,null, null,null);
+			c.moveToFirst();
+			while(!c.isAfterLast()){
+				category = cursorToImage(c);
+				//category = c.getString(c.getColumnIndex(COL_CAT));
+				categories.add(category);
+				c.moveToNext();
+			}
+			c.close();
+		}
+		catch(SQLException ex){Log.w(LOG_TAG,ex);}
+		
 		return categories;
 	}
 	
-	public List<CategoryObject> getParentCategory(Long img_id){
-		CategoryObject co;
-		List<CategoryObject> categories = new LinkedList<CategoryObject>();
-		//String[] selectionArgs = {img_id.toString()};
-		String sql = "SELECT "+KEY_ID+", "+COL_NAME+
-					" FROM "+TABLE_CAT+
-					" WHERE "+KEY_ID+" = (SELECT "+COL_PARENT+
-										" FROM "+TABLE_IMAGE+
-										" WHERE "+ KEY_ID+"="+img_id.toString()+");";
+	public List<ImageObject> getSubcategories(Long img_id){
+		ImageObject category;
+		List<ImageObject> categories = new LinkedList<ImageObject>();
+
+		String[] columns = {KEY_ID, COL_PATH, COL_CAT};
+		String selection = COL_CAT + " IS NOT NULL AND "+COL_PARENT+"="+img_id.toString();
 		try{
-			Cursor c = db.rawQuery(sql, null);
+			Cursor c = db.query(TABLE_IMAGE, columns,selection, null,null, null,null);
 			c.moveToFirst();
 			while(!c.isAfterLast()){
-				co=cursorToCategory(c);
-				categories.add(co);
+				//category = cursorToCategory(c);
+				category = cursorToImage(c);
+				//category = c.getString(c.getColumnIndex(COL_CAT));
+				categories.add(category);
 				c.moveToNext();
+			}
+			c.close();
 		}
-		c.close();
-			
-		}catch(SQLException ex){
-			Log.w(LOG_TAG,ex);
-		}
-
-		return categories;
-	}
-	public List<CategoryObject> getParentSubcategories(Long img_id){
-		CategoryObject co;
-		List<CategoryObject> categories = new LinkedList<CategoryObject>();
-		//String[] selectionArgs = {img_id.toString()};
-		String sql = "SELECT "+KEY_ID+", "+COL_NAME+
-					" FROM "+TABLE_CAT+
-					" WHERE "+KEY_ID+" = (SELECT "+COL_CAT+
-										" FROM "+TABLE_IMAGE+
-										" WHERE "+ COL_PARENT+"="+
-											"(SELECT "+COL_CAT+
-											" FROM "+TABLE_IMAGE+
-											" WHERE "+COL_PARENT+ "="+img_id.toString()+"));";
-		try{
-			Cursor c = db.rawQuery(sql, null);
-			c.moveToFirst();
-			while(!c.isAfterLast()){
-				co=cursorToCategory(c);
-				categories.add(co);
-				c.moveToNext();
-		}
-		c.close();
-			
-		}catch(SQLException ex){
-			Log.w(LOG_TAG,ex);
-		}
-
+		catch(SQLException ex){Log.w(LOG_TAG,ex);}
 		return categories;
 	}
 	
+	public List<ImageObject> getCategoryLeafs(Long img_id){
+		ImageObject category;
+		List<ImageObject> categories = new LinkedList<ImageObject>();
+
+		String[] columns = {KEY_ID, COL_PATH, COL_CAT};
+		String selection = COL_CAT + " IS NULL AND "+COL_PARENT+"="+img_id.toString();
+		try{
+			Cursor c = db.query(TABLE_IMAGE, columns,selection, null,null, null,null);
+			c.moveToFirst();
+			while(!c.isAfterLast()){
+				category = cursorToImage(c);
+				//category = c.getString(c.getColumnIndex(COL_CAT));
+				categories.add(category);
+				c.moveToNext();
+			}
+			c.close();
+		}
+		catch(SQLException ex){Log.w(LOG_TAG,ex);}
+		return categories;
+	}
 	
+	public List<ImageObject> getParentCategory(Long img_id){
+		ImageObject category = new ImageObject();
+		List<ImageObject> categories = new LinkedList<ImageObject>();
+		String[] columns = {KEY_ID, COL_PATH, COL_CAT};
+		String selection = KEY_ID +"=(SELECT "+COL_PARENT+" FROM " +TABLE_IMAGE+" WHERE "+KEY_ID+"="+img_id.toString()+");";                    //COL_CAT + "IS NOT NULL AND "+COL_; //SELECT * FROM IMAGE WHERE ID = (SELECT COL_PARENT FROM IMAGE WHERE ID = 
+		try{
+			Cursor c = db.query(TABLE_IMAGE, columns,selection, null,null, null,null);
+			c.moveToFirst();
+			while(!c.isAfterLast()){		
+				category.setId(			c.getLong(		0));
+				category.setImageName(	c.getString(	1));
+				category.setCategory(	c.getString(	2));
+				//category = c.getString(c.getColumnIndex(COL_CAT));
+				categories.add(category);
+				c.moveToNext();
+			}
+			c.close();
+		}
+		catch(SQLException ex){Log.w(LOG_TAG,ex);}
+
+		return categories;
+	}
 	
 	/* image - cursor */
-	private ImageObject cursorToImage(Cursor cursor){
+	private static ImageObject cursorToImage(Cursor cursor){
 		ImageObject mio = new ImageObject();
 		mio.setId(			cursor.getLong(		cursor.getColumnIndex(KEY_ID)));
 		mio.setImageName(	cursor.getString(	cursor.getColumnIndex(COL_PATH)));
@@ -385,58 +382,17 @@ public class Database {
 		mio.setModified(	cursor.getString(	cursor.getColumnIndex(COL_MODIFIED)));
 		mio.setTimes_used(	cursor.getLong(		cursor.getColumnIndex(COL_TIME_USED)));
 		mio.setLast_used(	cursor.getString(	cursor.getColumnIndex(COL_LAST_USED)));
-		mio.setIs_category(	cursor.getLong(		cursor.getColumnIndex(COL_IS_CAT)));
-		mio.setCategory_fk(	cursor.getLong(		cursor.getColumnIndex(COL_CAT)));
 		mio.setParent_fk(	cursor.getLong(		cursor.getColumnIndex(COL_PARENT)));
+		mio.setCategory(	cursor.getString(	cursor.getColumnIndex(COL_CAT)));
 		return mio;
 	}
 	
-	/* C A T E G O R Y */
-	/* category -insert */
-	public CategoryObject insertCategory(CategoryObject co){
-		ContentValues cv = new ContentValues();
-		cv.put(COL_NAME, co.getCategoryName());
-		if(db == null)
-			open();
-		long l = db.insert(TABLE_CAT, null, cv);
-	    if(l==-1){
-	    	return null;
-	    }
-		Cursor c = db.query(TABLE_CAT,  null, KEY_ID+" = "+l, null,null, null,null);
-		c.moveToFirst();
-		co = cursorToCategory(c);
-		c.close();
-		return co;
-	}
-		
-	/* category - remove */
-	public boolean deleteCategory(CategoryObject co){
-		long row_id = co.getId();
-		return db.delete(TABLE_CAT, KEY_ID+" = "+row_id, null)>0;
-	}
-	
-	/* category - update */
-	public int updateCategory(long _rowIndex, CategoryObject co){
-		String where = KEY_ID + "=" + _rowIndex;
-		ContentValues cv = new ContentValues();
-		cv.put(KEY_ID,co.getId());
-		cv.put(COL_NAME, co.getCategoryName() );
-		return db.update(TABLE_CAT, cv, where, null);
-	}
-	
-	/* category - get */
-	public ImageObject getCategory(long _rowIndex){
-		Cursor c = db.query(TABLE_CAT,  null, KEY_ID+" = "+_rowIndex, null,null, null,null);
-		c.moveToFirst();
-		return cursorToImage(c);
-	}
-
-	/* category - cursor*/
-	private CategoryObject cursorToCategory(Cursor c){
-		CategoryObject co = new CategoryObject();
-		co.setId(c.getLong(	c.getColumnIndex(KEY_ID)));
-		co.setCategoryName(c.getString(c.getColumnIndex(COL_NAME)));
-		return co;		
+	private static ImageObject cursorToCategory(Cursor cursor){
+		ImageObject mio = new ImageObject();
+		mio.setId(			cursor.getLong(		cursor.getColumnIndex(KEY_ID)));
+		mio.setImageName(	cursor.getString(	cursor.getColumnIndex(COL_PATH)));
+		mio.setCategory(	cursor.getString(	cursor.getColumnIndex(COL_CAT)));
+		return mio;
 	}
 	
 	
@@ -485,19 +441,18 @@ public class Database {
 		@Override
 		public void onCreate(SQLiteDatabase _db) {
 			try{
-				_db.execSQL(TABLE_CAT_CREATE);
-				
-				_db.execSQL(INSERT_MAIN_CATEGORY);
-				
+
 				_db.execSQL(TABLE_IMAGES_CREATE);
-				//_db.execSQL(TABLE1_CREATE);
-				//_db.execSQL(DICTIONARY_TABLE_CREATE);
-				_db.execSQL(HTTP_IMG_TABLE_CREATE);				
+				ImageObject img_o = new ImageObject();
+				img_o.setCategory("ROOT");
+				
+				db_instance.insertImage(img_o);
+				
+				//_db.execSQL(HTTP_IMG_TABLE_CREATE);				
 			}catch(SQLException ex){
 				Log.w(LOG_TAG, ex);
 			}
-			
-			
+
 		}
 
 		@Override
@@ -507,8 +462,7 @@ public class Database {
 			Log.w("TaskDBAdapter", "Upgrading from version "+	oldVersion + " to "+ newVersion + ", witch will destroy all old data");
 			db.execSQL(drop_table+TABLE_IMAGE);
 			//db.execSQL(drop_table+TABLE_DESC);
-			db.execSQL(drop_table+TABLE_CAT);
-			db.execSQL(drop_table+TABLE_HTTP);
+			//db.execSQL(drop_table+TABLE_HTTP);
 			onCreate(db);
 			
 		}

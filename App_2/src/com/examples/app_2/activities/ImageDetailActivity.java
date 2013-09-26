@@ -8,6 +8,7 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
@@ -23,7 +24,8 @@ import com.example.app_2.storage.Storage;
 import com.example.app_2.utils.ImageLoader;
 
 public class ImageDetailActivity extends Activity{
-	 private Spinner mCategory;
+	private EditText mId;
+	 private EditText mCategory;
 	  private EditText mTitleText;
 	  private EditText mDescText;
 	  private EditText mParent;
@@ -38,12 +40,13 @@ public class ImageDetailActivity extends Activity{
 	    getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
 	    
 	    setContentView(R.layout.image_edit);
+	    mId = (EditText) findViewById(R.id.img_id);
 	    mImage = (ImageView) findViewById(R.id.img);
-	    mCategory = (Spinner) findViewById(R.id.category);
-	    mTitleText = (EditText) findViewById(R.id.todo_edit_summary);
-	    mDescText = (EditText) findViewById(R.id.todo_edit_description);
+	    mTitleText = (EditText) findViewById(R.id.edit_name);
+	    mCategory = (EditText) findViewById(R.id.edit_category);
+	    mDescText = (EditText) findViewById(R.id.edit_description);
 	    mParent = (EditText) findViewById(R.id.edit_parent);
-	    Button confirmButton = (Button) findViewById(R.id.todo_edit_button);
+	    Button confirmButton = (Button) findViewById(R.id.edit_button);
 	    Bundle extras = getIntent().getExtras();
 	    imgLoader = new ImageLoader();
 
@@ -72,29 +75,32 @@ public class ImageDetailActivity extends Activity{
 	  }
 
 	  private void fillData(Uri uri) {
-	    String[] projection = { Database.COL_PATH, Database.COL_DESC, Database.COL_CAT, Database.COL_PARENT};
+	    String[] projection = { Database.KEY_ID, Database.COL_PATH, Database.COL_DESC, Database.COL_CAT, Database.COL_PARENT};
 	    Cursor cursor = getContentResolver().query(uri, projection, null, null,null);
 	    if (cursor != null) {
+	    	Log.i("imageDetail",String.valueOf(cursor.getCount()));
 	      cursor.moveToFirst();
-	      String category = cursor.getString(cursor.getColumnIndexOrThrow(Database.COL_CAT));
 
+	      /*
 	      for (int i = 0; i < mCategory.getCount(); i++) {
 	        String s = (String) mCategory.getItemAtPosition(i);
 	        if (s.equalsIgnoreCase(category)) {
 	          mCategory.setSelection(i);
 	        }
 	      }
-	      
-
-	      
-	      mParent.setText(cursor.getString(cursor.getColumnIndexOrThrow(Database.COL_PARENT)));
-	      String imgName = cursor.getString(cursor.getColumnIndexOrThrow(Database.COL_PATH));
-	      mTitleText.setText(imgName);
-	      mDescText.setText(cursor.getString(cursor.getColumnIndexOrThrow(Database.COL_DESC)));
-
-	      // Always close the cursor
-	      cursor.close();
-		  imgLoader.loadBitmap(Storage.getThumbsDir()+File.separator+imgName, mImage);
+	      */
+	      	  String img_id = cursor.getString(cursor.getColumnIndex(Database.KEY_ID));
+	      	  mId.setText(img_id);
+		      String category = cursor.getString(cursor.getColumnIndexOrThrow(Database.COL_CAT));
+		      mCategory.setText(category);
+		      mParent.setText(cursor.getString(cursor.getColumnIndexOrThrow(Database.COL_PARENT)));
+		      String imgName = cursor.getString(cursor.getColumnIndexOrThrow(Database.COL_PATH));
+		      mTitleText.setText(imgName);
+		      mDescText.setText(cursor.getString(cursor.getColumnIndexOrThrow(Database.COL_DESC)));
+	
+		      // Always close the cursor
+		      cursor.close();
+			  imgLoader.loadBitmap(Storage.getThumbsDir()+File.separator+imgName, mImage);
 	    }
 	  }
 
@@ -111,7 +117,7 @@ public class ImageDetailActivity extends Activity{
 	  }
 
 	  private void saveState() {
-	    String category = (String) mCategory.getSelectedItem();
+	    String category = mCategory.getText().toString();
 	    String summary = mTitleText.getText().toString();
 	    String description = mDescText.getText().toString();
 	    String patent = mParent.getText().toString();

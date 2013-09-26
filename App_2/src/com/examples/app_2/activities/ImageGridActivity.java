@@ -16,7 +16,6 @@
 
 package com.examples.app_2.activities;
 
-import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
@@ -28,6 +27,7 @@ import android.content.Intent;
 import android.content.res.Configuration;
 import android.os.Build;
 import android.os.Bundle;
+import android.speech.tts.TextToSpeech;
 import android.support.v4.app.ActionBarDrawerToggle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
@@ -40,15 +40,12 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
-import android.widget.EditText;
 import android.widget.ListView;
-import android.speech.tts.TextToSpeech;
 
 import com.example.app_2.App_2;
 import com.example.app_2.R;
 import com.example.app_2.fragments.ImageGridFragment;
-import com.example.app_2.models.CategoryObject;
+import com.example.app_2.models.ImageObject;
 import com.example.app_2.storage.Database;
 
 /**
@@ -63,7 +60,15 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
     private Animator mCurrentAnimator;
     private int mShortAnimationDuration;
     public static ImageGridActivity mInstance;
-    private List<CategoryObject> categories;
+    
+    private ImageObject rootCategory;
+    private List<ImageObject> allCategories;
+    private ImageObject parentCategory;
+    private List<ImageObject> subCategories;
+    private List<ImageObject> categoryLeafs;
+    
+    private List<ImageObject> categoriesInDrawer;
+    
     CharSequence mTitle;
     CharSequence mDrawerTitle;
     
@@ -121,13 +126,17 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
         
         mDrawerList  = (ListView) findViewById(R.id.left_drawer);
         
-        categories = db.getAllCategories();
-        //parentSubcategories = db.getParentSubcategories(img_id);
-        for(CategoryObject i : categories){
-        	mCategoryTitles.add(i.getCategoryName());			//TODO ³adowanie kategorii do drawera, co je¿eli pierwszy raz ³aduje 
-        }	
+        rootCategory = db.getRootCategory();
+        if(rootCategory!=null){
+	        subCategories = db.getSubcategories(rootCategory.getId());
+	        
+	        for(ImageObject i: subCategories){
+	        	mCategoryTitles.add(i.getCategory());
+	        }
+        }
+        
         // Set the adapter for the list view
-        mDrawerList.setAdapter(new ArrayAdapter<String>(this, R.layout.drawer_list_item, mCategoryTitles));
+        mDrawerList.setAdapter(new ArrayAdapter<String>(this, R.layout.drawer_list_item, mCategoryTitles)); // TODO zmieniæ na adapter z obrazkiem
         // Set the list's click listener
         mDrawerList.setOnItemClickListener(new DrawerItemClickListener());
         
@@ -198,7 +207,7 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 		private void selectItem(int position){
 			Fragment fragment = new ImageGridFragment();
 			Bundle args = new Bundle();
-			Long cat_id = categories.get(position).getId();
+			Long cat_id = subCategories.get(position).getId();
 			args.putLong("CATEGORY_ID", cat_id);
 			fragment.setArguments(args);
 			
@@ -211,7 +220,7 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 			
 			 // Highlight the selected item, update the title, and close the drawer
 		    mDrawerList.setItemChecked(position, true);
-		    setTitle(categories.get(position).getCategoryName());
+		    setTitle(subCategories.get(position).getCategory());
 		    mTitle = getTitle();
 		    mDrawerLayout.closeDrawer(mDrawerList);
 		}
@@ -283,15 +292,15 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 	public static void refreshDrawer(Long img_id){
 	     Database db = Database.getInstance(App_2.getAppContext());
 	     db.open();
-		List<CategoryObject> parentCategory = db.getParentCategory(img_id);
-		List<CategoryObject> subcategories = db.getSubcategories(img_id);
+		List<ImageObject> parentCategory = db.getParentCategory(img_id);
+		List<ImageObject> subcategories = db.getSubcategories(img_id);
 		List<String> categoryTitles = new LinkedList<String>();
 		
-        for(CategoryObject i : parentCategory){
-        	categoryTitles.add(i.getCategoryName());			
+        for(ImageObject i : parentCategory){
+        	categoryTitles.add(i.getCategory());			
         }	
-        for(CategoryObject i : subcategories){
-        	categoryTitles.add(i.getCategoryName());			
+        for(ImageObject i : subcategories){
+        	categoryTitles.add(i.getCategory());			
         }	
         // Set the adapter for the list view
         mDrawerList.setAdapter(new ArrayAdapter<String>(App_2.getAppContext(), R.layout.drawer_list_item, categoryTitles));

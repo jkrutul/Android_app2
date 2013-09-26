@@ -49,7 +49,7 @@ public class ImageAdapter extends BaseAdapter {
         //Images.generateThumbs();
     }
     
-    public ImageAdapter(Context context, int category_id,ImageLoader il){
+    public ImageAdapter(Context context, int category_id, ImageLoader il){
         super();
         mContext = context;
         imageLoader = il;
@@ -157,9 +157,7 @@ public class ImageAdapter extends BaseAdapter {
         // TODO 1
         imageLoader.loadBitmap(Images.getImageThubms(position), imageView);
         //ImageLoader.loadImage(Images.imagesPaths.get(position - mNumColumns), imageView);  
-        if(Images.images.get(position).getIs_category()==0){
-        	imageView.setBackgroundColor(Color.RED);
-        }
+
         return imageView;
     }
 

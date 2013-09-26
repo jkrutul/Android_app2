@@ -13,28 +13,26 @@
         android:layout_marginTop="8dp"
         android:src="@drawable/image_placeholder" />
 
-    <Spinner
-        android:id="@+id/category"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:entries="@array/categories" />
-
-    <LinearLayout
-        android:id="@+id/LinearLayout01"
+    <EditText
+        android:id="@+id/img_id"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" >
-
-        <EditText
-            android:id="@+id/todo_edit_summary"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:hint="summary"
-            android:imeOptions="actionNext" />
-    </LinearLayout>
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:gravity="top"
+        android:hint="description"
+        android:imeOptions="actionNext" />
 
     <EditText
-        android:id="@+id/todo_edit_description"
+        android:id="@+id/edit_name"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:gravity="top"
+        android:hint="description"
+        android:imeOptions="actionNext" />
+
+    <EditText
+        android:id="@+id/edit_description"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_weight="1"
@@ -48,11 +46,20 @@
         android:layout_height="match_parent"
         android:layout_weight="1"
         android:gravity="top"
-        android:hint="description"
-        android:imeOptions="actionNext"/>
+        android:hint="parent_fk"
+        android:imeOptions="actionNext" />
+
+    <EditText
+        android:id="@+id/edit_category"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:gravity="top"
+        android:hint="category"
+        android:imeOptions="actionNext" />
 
     <Button
-        android:id="@+id/todo_edit_button"
+        android:id="@+id/edit_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="confirm" />

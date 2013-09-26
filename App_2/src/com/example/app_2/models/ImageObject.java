@@ -8,10 +8,18 @@ public class ImageObject { //ID imageName, AUDIOPATH, DESCRIPTION, CATEGORY_FK
 	private Long times_used;
 	private String modified;
 	private String last_used;
-	private Long is_category;
-	private Long category_fk;
+	private String category;
 	private Long parent_fk;
 	
+	
+	public String getCategory() {
+		return category;
+	}
+	public void setCategory(String category) {
+		this.category = category;
+	}
+
+
 	public Long getId() {
 		return id;
 	}
@@ -21,10 +29,24 @@ public class ImageObject { //ID imageName, AUDIOPATH, DESCRIPTION, CATEGORY_FK
 	public ImageObject(){
 		
 	}
+	
 	public ImageObject(String imageName){
-		this.imageName= imageName;
-		this.category_fk= Long.valueOf(0);
+		this.imageName = imageName;
 	}
+	
+	public ImageObject(String imageName, Long parent_fk){ 					// konstruktor dla liœcia
+		this.imageName = imageName;
+		this.parent_fk = parent_fk;
+	}
+	
+	public ImageObject(String imageName, String audioPath, String description,String category, Long paretn_fk){
+		this.imageName = imageName;
+		this.audioPath = audioPath;
+		this.description = description;
+		this.category = category;
+		this.parent_fk =paretn_fk;
+	}
+
 	public String getImageName() {
 		return imageName;
 	}
@@ -37,12 +59,7 @@ public class ImageObject { //ID imageName, AUDIOPATH, DESCRIPTION, CATEGORY_FK
 	public void setDescription(String description) {
 		this.description = description;
 	}
-	public Long getCategory_fk() {
-		return category_fk;
-	}
-	public void setCategory_fk(Long category_fk) {
-		this.category_fk = category_fk;
-	}
+
 	public String getAudioPath() {
 		return audioPath;
 	}
@@ -54,8 +71,6 @@ public class ImageObject { //ID imageName, AUDIOPATH, DESCRIPTION, CATEGORY_FK
 	public Long getTimes_used() {
 		return times_used;
 	}
-
-
 	public void setTimes_used(Long times_used) {
 		this.times_used = times_used;
 	}
@@ -74,12 +89,6 @@ public class ImageObject { //ID imageName, AUDIOPATH, DESCRIPTION, CATEGORY_FK
 	public Long getParent_fk() {
 		return parent_fk;
 	}
-	public Long getIs_category() {
-		return is_category;
-	}
-	public void setIs_category(Long is_category) {
-		this.is_category = is_category;
-	}
 
 	public void setParent_fk(Long parent_fk) {
 		this.parent_fk = parent_fk;
@@ -88,7 +97,7 @@ public class ImageObject { //ID imageName, AUDIOPATH, DESCRIPTION, CATEGORY_FK
 	@Override
 	public String toString(){				//ID imageName, AUDIOPATH, DESCRIPTION, CATEGORY_FK
 		//return "ID:"+id+" P:"+imageName+" D:"+description+" M:"+modified+" TU:"+times_used+" C_FK:"+category_fk+" P_FK:"+parent_fk+" isCategory:"+is_category;
-		return "ID:"+id+" P:"+imageName+" C_FK:"+category_fk+" P_FK:"+parent_fk+" isCategory:"+is_category;
+		return "ID:"+id+" P:"+imageName+" CAT:"+category+" P_FK:"+parent_fk;
 		
 	}
 

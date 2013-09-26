@@ -8,6 +8,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.ArrayAdapter;
 
+import com.example.app_2.App_2;
 import com.example.app_2.R;
 import com.example.app_2.models.ImageObject;
 import com.example.app_2.storage.Database;
@@ -22,7 +23,8 @@ public class DatabaseTestActivity extends ListActivity {
 	    super.onCreate(savedInstanceState);
 	    setContentView(R.layout.activity_test_db);
 
-	    mda = Database.getInstance(this.getApplicationContext());
+	    //mda = Database.getInstance(this.getApplicationContext());
+	    mda = Database.getInstance(App_2.getAppContext());
 	    mda.open();
 
 	    List<ImageObject> values = mda.getAllImages();

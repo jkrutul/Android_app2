@@ -25,6 +25,7 @@ public class Images {
 	public static long img_dir_last_read = Long.valueOf(Storage.readFromSharedPreferences(String.valueOf(0), "imgDirLastRead", "imgDirLastRead", App_2.getAppContext(), Context.MODE_PRIVATE));
 	public static long imgLastModified;
 	private static final String LOG_TAG = "Images";
+
 	
 	public static void readImagesFromDB(){ 				//TODO zmieniæ - u¿yteczne tylko do debugowania
 		Log.i(LOG_TAG, "images size: " +images.size());
@@ -35,9 +36,9 @@ public class Images {
 			if(imgLastModified> img_dir_last_read){
 				Log.w(LOG_TAG, "images in directory has changed:"+String.valueOf(img_dir_last_read)+"<"+String.valueOf(imgLastModified));
 			}
-			if(images.size()<=0 || Storage.getImagesDir().lastModified()> img_dir_last_read ){
+			if(images.size()<=1 || Storage.getImagesDir().lastModified()> img_dir_last_read ){
 				Log.i(LOG_TAG, "images size2: " +images.size());
-				populateImagePaths();
+				populateImagePaths();								 //wstawia wszystko do g³ównej kategorii
 				//images = db.getAllImages();
 				generateThumbs();
 				img_dir_last_read = Storage.getImagesDir().lastModified();
@@ -47,9 +48,10 @@ public class Images {
 		}
 	
 	public static void populateImagePaths(){
-		Random rnd = new Random();
 		images.clear();
 		Database db = Database.open();	
+		ImageObject rootCategory = db.getRootCategory();
+		Long rootCatId = rootCategory.getId();
 		List<String> fileNames = new LinkedList<String>();
 		fileNames = Storage.getFilesNamesFromDir(Storage.getImagesDir());		// TODO info jak folder images jest pusty
 		
@@ -64,8 +66,7 @@ public class Images {
 			img_obj= db.isImageAlreadyExist(filename);		// je¿eli tak to zwaracam do img_obj
 			if(img_obj == null){							// brak obiektu w bazie danych
 				img_obj = new ImageObject(filename);		// TODO zamieniæ na klucz generowany z MD5
-				img_obj.setCategory_fk(Long.valueOf(rnd.nextInt(4)));  	//  wstawienie do g³ównej kategorii
-				img_obj.setParent_fk(Long.valueOf(rnd.nextInt(4)));
+				img_obj.setParent_fk(rootCatId);
 				images.add(db.insertImage(img_obj));
 			}else{
 				images.add(img_obj);

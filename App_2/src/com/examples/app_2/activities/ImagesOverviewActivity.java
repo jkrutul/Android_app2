@@ -1,5 +1,8 @@
 package com.examples.app_2.activities;
 
+import java.util.LinkedList;
+import java.util.List;
+
 import android.annotation.TargetApi;
 import android.app.ListActivity;
 import android.app.LoaderManager.LoaderCallbacks;
@@ -10,6 +13,7 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.v4.widget.CursorAdapter;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.Menu;
@@ -21,7 +25,9 @@ import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
 
 import com.example.app_2.R;
+import com.example.app_2.adapters.ItemAdapter;
 import com.example.app_2.contentprovider.ImagesContentProvider;
+import com.example.app_2.models.ImageObject;
 import com.example.app_2.storage.Database;
 
 @TargetApi(Build.VERSION_CODES.HONEYCOMB)
@@ -32,8 +38,8 @@ public class ImagesOverviewActivity extends ListActivity implements
 	private static final int ACTIVITY_EDIT = 1;
 	private static final int DELETE_ID = Menu.FIRST + 1;
 	// private Cursor cursor;
+	//private SimpleCursorAdapter adapter;
 	private SimpleCursorAdapter adapter;
-
 	/** Called when the activity is first created. */
 
 	@Override
@@ -103,8 +109,14 @@ public class ImagesOverviewActivity extends ListActivity implements
 		int[] to = new int[] { R.id.label };
 
 		getLoaderManager().initLoader(0, null, this);
-		adapter = new SimpleCursorAdapter(this, R.layout.image_row, null, from,	to, 0);
+		Database.open();
+		Cursor c = Database.getCursorOfAllImages();
+		
+		adapter = new SimpleCursorAdapter(this, R.layout.image_row, c, from,to, 0);
+		
 
+
+		//adapter = new ItemAdapter(this, c);
 		setListAdapter(adapter);
 	}
 
