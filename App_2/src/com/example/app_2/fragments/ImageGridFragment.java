@@ -6,31 +6,23 @@ import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
-import android.content.Context;
-import android.graphics.Color;
+import android.app.Dialog;
+import android.app.ProgressDialog;
 import android.graphics.Point;
 import android.graphics.Rect;
 import android.os.Build;
 import android.os.Bundle;
-import android.speech.tts.TextToSpeech;
 import android.support.v4.app.Fragment;
 import android.util.Log;
-import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.ViewGroup.LayoutParams;
 import android.view.ViewTreeObserver;
-import android.view.Window;
-import android.view.WindowManager;
 import android.view.animation.DecelerateInterpolator;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
-import android.widget.BaseAdapter;
-import android.widget.Button;
-import android.widget.EditText;
 import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.Toast;
@@ -41,9 +33,7 @@ import com.example.app_2.adapters.ImageAdapter;
 import com.example.app_2.models.ImageObject;
 import com.example.app_2.provider.Images;
 import com.example.app_2.utils.ImageLoader;
-import com.example.app_2.utils.TTS;
 import com.example.app_2.utils.Utils;
-import com.example.app_2.views.RecyclingImageView;
 
 @TargetApi(Build.VERSION_CODES.HONEYCOMB)
 public class ImageGridFragment extends Fragment implements AdapterView.OnItemClickListener{
@@ -85,6 +75,7 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
 		}
 		
 	}
+    
     
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup containter, Bundle sacedInstanceState){
@@ -155,7 +146,7 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
 	@SuppressLint("NewApi")
 	@Override
 	public void onItemClick(AdapterView<?> parent, final  View thumbView, int position, long id) {
-		ImageObject imgO = mAdapter.getItemAtPosition(position);							// TODO debug info
+		ImageObject imgO = mAdapter.getItemAtPosition(position);							// TODO przejœcie do nowej kategorii
 		Toast.makeText(App_2.getAppContext(), "pos:"+position+"\n"+imgO, Toast.LENGTH_SHORT).show();
 		/*
 		intent = new Intent(this, ImageGridActivity.class);

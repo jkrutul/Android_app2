@@ -1,12 +1,15 @@
 package com.example.app_2.storage;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.text.SimpleDateFormat;
-import java.util.Collections;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 
 import android.content.ContentValues;
 import android.content.Context;
@@ -15,10 +18,11 @@ import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteDatabase.CursorFactory;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.os.Environment;
 import android.util.Log;
 
-
 import com.example.app_2.models.ImageObject;
+import com.example.app_2.utils.Utils;
 
 
 
@@ -182,6 +186,18 @@ public class Database {
 		return db.update(TABLE_IMAGE, cv, where, null);
 	}
 	
+	public int updateImage(String imageName, ImageObject mio){
+		String where = COL_PATH + "=\"" + imageName+"\"";
+		ContentValues cv = new ContentValues();
+		//cv.put(KEY_ID,mio.getId());
+		cv.put(COL_PATH, mio.getImageName() );
+		cv.put(COL_CAT, mio.getCategory());
+		cv.put(COL_DESC, mio.getDescription());
+		cv.put(COL_PARENT, mio.getParent_fk());
+		Log.i(LOG_TAG, "updating image:"+mio);
+		return db.update(TABLE_IMAGE, cv, where, null);
+	}
+	
 	/* image - get */
 	public ImageObject getImage(long _rowIndex){
 		Cursor c = db.query(TABLE_IMAGE,  null, KEY_ID+" = "+_rowIndex, null,null, null,null);
@@ -307,17 +323,20 @@ public class Database {
 	}
 	
 	public List<ImageObject> getSubcategories(Long img_id){
-		ImageObject category;
+		ImageObject category = new ImageObject();
 		List<ImageObject> categories = new LinkedList<ImageObject>();
 
 		String[] columns = {KEY_ID, COL_PATH, COL_CAT};
-		String selection = COL_CAT + " IS NOT NULL AND "+COL_PARENT+"="+img_id.toString();
+		//String selection = COL_CAT + " NOTNULL AND "+COL_PARENT+"="+img_id.toString();
+		String selection = COL_CAT + " !=\"null\" AND " +COL_PARENT+"="+img_id.toString();
 		try{
 			Cursor c = db.query(TABLE_IMAGE, columns,selection, null,null, null,null);
+			//Cursor c = db.rawQuery("SELECT "+KEY_ID+","+COL_PATH+","+COL_CAT+" FROM "+TABLE_IMAGE+" WHERE ("+ COL_CAT+" IS NOT NULL) AND "+COL_PARENT+ " = " + img_id.toString()+";", null);
 			c.moveToFirst();
 			while(!c.isAfterLast()){
-				//category = cursorToCategory(c);
-				category = cursorToImage(c);
+				category.setId(			c.getLong(		0));
+				category.setImageName(	c.getString(	1));
+				category.setCategory(	c.getString(	2));
 				//category = c.getString(c.getColumnIndex(COL_CAT));
 				categories.add(category);
 				c.moveToNext();
@@ -407,6 +426,43 @@ public class Database {
 			}
 		}
 
+	}
+
+	public void exportImageToCsv(String filename){
+		File f  = ExternalStorage.getExternalStorageDir(filename);
+	    try{
+	    	FileOutputStream out = new FileOutputStream(f);
+			OutputStreamWriter osw = new OutputStreamWriter(out);
+			for(ImageObject img_o : getAllImages()){       
+				osw.write(img_o+"\n");
+			}
+			osw.flush();
+			osw.close();
+		}catch (Exception e) {
+			Log.e(LOG_TAG, "File write failed:" + e.toString());
+		}	
+	}
+	
+	public void importImageFromCsv(String filename){
+		File file = new File(Environment.getExternalStorageDirectory(),	filename);
+		if(file.exists()){
+			try{
+				FileInputStream in = new FileInputStream(file);
+				BufferedReader reader = new BufferedReader(new InputStreamReader(in));
+				String line = null;
+				String tv[] = null;
+				recreateDB();
+				while((line = reader.readLine())!=null){
+					tv = line.split("\\;"); //ID imageName, AUDIOPATH, DESCRIPTION, times_used, modified, last_used, category,parent_fk 
+					ImageObject io = new ImageObject(tv[1],tv[2],tv[3],tv[7],tv[8]);  //String imageName, String audioPath, String description,String category, Long paretn_fk
+					insertImage(io);
+				}
+				in.close();
+			}catch(Exception e){
+				Log.e(LOG_TAG, "File read failed:" + e.toString());
+			}
+		}else
+			Log.i(LOG_TAG, "file not exists");
 	}
 	
 	

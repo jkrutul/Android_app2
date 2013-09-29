@@ -4,11 +4,12 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Random;
 
+import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.os.AsyncTask;
 import android.util.Log;
 import android.view.Display;
 import android.view.WindowManager;
@@ -19,6 +20,8 @@ import com.example.app_2.models.ImageObject;
 import com.example.app_2.storage.Database;
 import com.example.app_2.storage.Storage;
 import com.example.app_2.utils.BitmapCalc;
+import com.examples.app_2.activities.ImageGridActivity;
+import com.examples.app_2.activities.ProgressActivity;
 
 public class Images {
 	public static List<ImageObject> images = new LinkedList<ImageObject>();  // list of ImageObject selected by category id
@@ -127,13 +130,6 @@ public class Images {
         	
 
 		}
-		
-
-		
-
-		
-
-		
 	}
 	
 	
@@ -172,7 +168,104 @@ public class Images {
 		}
 	}
 	
-	
-	
+	public static class ThumbsProcessTask extends AsyncTask<Void, Integer, Void>{
+		Activity executing_activity;
+		
+		public ThumbsProcessTask(Activity activity){
+			this.executing_activity = activity;
+		}
+		
+	@Override
+		    protected void onPreExecute() {
+			executing_activity.showDialog(ImageGridActivity.PLEASE_WAIT_DIALOG);
+		    }
+		
+		@Override
+		protected Void doInBackground(Void... arg0) {
+			int count;
 
+			
+			Log.i(LOG_TAG, "images size: " +images.size());
+			if(images.size()<=0){
+				Database db = Database.open();	
+				images = db.getAllImages();
+				imgLastModified = Storage.getImagesDir().lastModified();
+				if(imgLastModified> img_dir_last_read){
+					Log.w(LOG_TAG, "images in directory has changed:"+String.valueOf(img_dir_last_read)+"<"+String.valueOf(imgLastModified));
+				}
+				if(images.size()<=1 || Storage.getImagesDir().lastModified()> img_dir_last_read ){
+					Log.i(LOG_TAG, "images size2: " +images.size());
+					populateImagePaths();								 //wstawia wszystko do g³ównej kategorii
+					//images = db.getAllImages();
+													// GENERUJ MINIATURKI
+					String path_toIMG, path_toTHUMB, path_toFullScreenTHUMB;
+					Bitmap bitmap =null;
+					List<ImageObject> all_images =  db.getAllImages();
+					//int thumbWidth=ImageLoader.mWidth;
+					//int thumbHeight = ImageLoader.mHeight;
+					int thumbWidth, thumbHeight;
+					thumbWidth =App_2.getAppContext().getResources().getDimensionPixelSize(R.dimen.image_thumbnail_size);
+					thumbHeight= App_2.getAppContext().getResources().getDimensionPixelSize(R.dimen.image_thumbnail_size);
+					
+					//full screen thumbs
+					WindowManager wm = (WindowManager) App_2.getAppContext().getSystemService(Context.WINDOW_SERVICE);
+					Display display = wm.getDefaultDisplay();
+					int maxWidth = display.getWidth();
+					int maxHeight = display.getHeight();		
+
+					Log.i(LOG_TAG, "thumbs will be w:"+thumbWidth+" h:"+thumbHeight);
+					Log.i(LOG_TAG, "max thumbs will be w:"+maxWidth+" h:"+maxHeight);
+					count = all_images.size();
+					
+					int i= 0;
+					for(ImageObject img_o : all_images){
+						path_toIMG = Storage.getImagesDir() + File.separator + img_o.getImageName();
+						path_toTHUMB = Storage.getThumbsDir() + File.separator + img_o.getImageName();
+						path_toFullScreenTHUMB = Storage.getThumbsMaxDir() + File.separator + img_o.getImageName();
+						
+			        	bitmap = BitmapCalc.decodeSampleBitmapFromFile(path_toIMG, maxWidth,maxHeight);
+			        	Log.w(LOG_TAG, bitmap.getHeight() + " " +bitmap.getWidth());
+			        	try {
+			        	       FileOutputStream out = new FileOutputStream(path_toFullScreenTHUMB);
+			        	       bitmap.compress(Bitmap.CompressFormat.JPEG, 100, out);
+			        	} catch (Exception e) {
+			        	       e.printStackTrace();
+			        	}
+			        	
+			        	bitmap = BitmapCalc.decodeSampleBitmapFromFile(path_toFullScreenTHUMB, thumbWidth,thumbHeight);
+			        	try {
+			        	       FileOutputStream out = new FileOutputStream(path_toTHUMB);
+			        	       bitmap.compress(Bitmap.CompressFormat.JPEG, 100, out);
+			        	} catch (Exception e) {
+			        	       e.printStackTrace();
+			        	}
+			        	i++;
+			        	publishProgress((int) ((i/ (float) count)*100));
+			        	//Escape early if cancel() is called
+			        	if(isCancelled()) break;
+			        	
+
+					}
+					
+					img_dir_last_read = Storage.getImagesDir().lastModified();
+					Storage.saveToSharedPreferences("imgDirLastRead", Long.toString(img_dir_last_read), "imgDirLastRead", App_2.getAppContext(), Context.MODE_PRIVATE);
+					}
+				}
+
+
+			
+			return null;
+		}
+		
+	     protected void onProgressUpdate(Integer... progress) {
+	    	 ImageGridActivity.dialog.setProgress(progress[0]);
+	 		//ProgressActivity.mProgressStatus = progress[0];
+	 		
+	 		
+	     }
+
+	     protected void onPostExecute(Void result) {
+	         executing_activity.removeDialog(ImageGridActivity.PLEASE_WAIT_DIALOG);
+	     }
+	}
 }

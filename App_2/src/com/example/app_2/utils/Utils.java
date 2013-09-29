@@ -16,17 +16,31 @@
 
 package com.example.app_2.utils;
 
-import com.examples.app_2.activities.ImageGridActivity;
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 
 import android.annotation.TargetApi;
 import android.os.Build;
 import android.os.StrictMode;
+
+import com.examples.app_2.activities.ImageGridActivity;
 
 /**
  * Class containing some static utility methods.
  */
 public class Utils {
     private Utils() {};
+    
+    public static String convertStreamToString(InputStream is) throws Exception {
+        BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+        StringBuilder sb = new StringBuilder();
+        String line = null;
+        while ((line = reader.readLine()) != null) {
+          sb.append(line).append("\n");
+        }
+        return sb.toString();
+    }
 
     @TargetApi(11)
     public static void enableStrictMode() {

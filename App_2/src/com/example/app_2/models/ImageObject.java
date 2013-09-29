@@ -1,6 +1,6 @@
 package com.example.app_2.models;
 
-public class ImageObject { //ID imageName, AUDIOPATH, DESCRIPTION, CATEGORY_FK
+public class ImageObject { //ID imageName, AUDIOPATH, DESCRIPTION, times_used, modified, last_used, category,parent_fk 
 	private Long id;  		
 	private String imageName;
 	private String audioPath;
@@ -39,12 +39,12 @@ public class ImageObject { //ID imageName, AUDIOPATH, DESCRIPTION, CATEGORY_FK
 		this.parent_fk = parent_fk;
 	}
 	
-	public ImageObject(String imageName, String audioPath, String description,String category, Long paretn_fk){
+	public ImageObject(String imageName, String audioPath, String description,String category, String paretn_fk){
 		this.imageName = imageName;
 		this.audioPath = audioPath;
 		this.description = description;
 		this.category = category;
-		this.parent_fk =paretn_fk;
+		this.parent_fk =Long.valueOf(paretn_fk);
 	}
 
 	public String getImageName() {
@@ -95,10 +95,8 @@ public class ImageObject { //ID imageName, AUDIOPATH, DESCRIPTION, CATEGORY_FK
 	}
 	
 	@Override
-	public String toString(){				//ID imageName, AUDIOPATH, DESCRIPTION, CATEGORY_FK
-		//return "ID:"+id+" P:"+imageName+" D:"+description+" M:"+modified+" TU:"+times_used+" C_FK:"+category_fk+" P_FK:"+parent_fk+" isCategory:"+is_category;
-		return "ID:"+id+" P:"+imageName+" CAT:"+category+" P_FK:"+parent_fk;
-		
+	public String toString(){				//ID imageName, AUDIOPATH, DESCRIPTION, times_used, modified, last_used, category,parent_fk 
+		return id+";"+imageName+";"+audioPath+";"+description+";"+times_used+";"+modified+";"+last_used+";"+category+";"+parent_fk;
 	}
 
 }

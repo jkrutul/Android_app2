@@ -23,8 +23,11 @@ import java.util.Locale;
 import android.animation.Animator;
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
+import android.app.Dialog;
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.res.Configuration;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.speech.tts.TextToSpeech;
@@ -47,12 +50,17 @@ import com.example.app_2.R;
 import com.example.app_2.fragments.ImageGridFragment;
 import com.example.app_2.models.ImageObject;
 import com.example.app_2.storage.Database;
+import com.example.app_2.provider.Images;
+import com.example.app_2.provider.Images.ThumbsProcessTask;
 
 /**
  * Simple FragmentActivity to hold the main {@link ImageGridFragment} and not much else.
  */
 public class ImageGridActivity extends FragmentActivity implements TextToSpeech.OnInitListener{
     private static final String TAG = "ImageGridActivity";
+    public static final int PLEASE_WAIT_DIALOG = 1;
+    public static ProgressDialog dialog;
+    
     private List<String> mCategoryTitles = new LinkedList<String>();
     private DrawerLayout mDrawerLayout;
     private ActionBarDrawerToggle mDrawerToggle;
@@ -83,6 +91,7 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_grid);
+
         
 		Intent checkIntent = new Intent();
 		checkIntent.setAction(TextToSpeech.Engine.ACTION_CHECK_TTS_DATA);
@@ -151,6 +160,25 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 
     }
     
+    @Override
+    public Dialog onCreateDialog(int dialogId) {
+ 
+        switch (dialogId) {
+        case PLEASE_WAIT_DIALOG:
+            dialog = new ProgressDialog(this);
+            dialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+            dialog.setCancelable(false);
+            dialog.setTitle("Obliczanie");
+            dialog.setMessage("Proszê czekaæ....");
+            dialog.setCancelable(true);
+            return dialog;
+ 
+        default:
+            break;
+        }
+ 
+        return null;
+    }
     
     @Override
     protected void onPostCreate(Bundle savedInstanceState) {

@@ -10,8 +10,10 @@ import android.widget.BaseAdapter;
 import android.widget.GridView;
 import android.widget.ImageView;
 
+import com.example.app_2.App_2;
 import com.example.app_2.models.ImageObject;
 import com.example.app_2.provider.Images;
+import com.example.app_2.provider.Images.ThumbsProcessTask;
 import com.example.app_2.utils.ImageLoader;
 import com.example.app_2.views.RecyclingImageView;
 
@@ -43,8 +45,8 @@ public class ImageAdapter extends BaseAdapter {
             mActionBarHeight = TypedValue.complexToDimensionPixelSize(
                     tv.data, context.getResources().getDisplayMetrics());
         }
-        
-        Images.readImagesFromDB();
+        new ThumbsProcessTask(App_2.actvity).execute();
+        //Images.readImagesFromDB();
         //Images.populateImagePaths(Long.valueOf(1)); // main category in tree     
         //Images.generateThumbs();
     }

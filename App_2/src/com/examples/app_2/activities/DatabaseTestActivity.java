@@ -61,6 +61,15 @@ public class DatabaseTestActivity extends ListActivity {
 	     
 	    case R.id.recreateDB:
 	    	mda.recreateDB();
+	    	adapter.notifyDataSetChanged();
+	    	break;
+	    	
+	    case R.id.import_db:
+	    	mda.importImageFromCsv("image_table.csv");
+	    	break;
+	    
+	    case R.id.export_db:
+	    	mda.exportImageToCsv("image_table.csv");
 	    	break;
 	    }
 	    adapter.notifyDataSetChanged();

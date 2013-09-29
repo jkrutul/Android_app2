@@ -4,33 +4,52 @@
     android:layout_height="match_parent"
     android:orientation="vertical" >
 
-    <LinearLayout
-        android:id="@+id/group"
+    <ScrollView
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content" >
+        android:layout_height="wrap_content"
+        android:orientation="horizontal" >
 
-        <Button
-            android:id="@+id/add"
+        <LinearLayout
+            android:id="@+id/group"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Add New" 
-            android:onClick="onClick"/>
+            android:layout_height="wrap_content" >
 
-        <Button
-            android:id="@+id/delete"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Delete First" 
-            android:onClick="onClick"/>
-        
-         <Button
-            android:id="@+id/recreateDB"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Recreate DB" 
-            android:onClick="onClick"/>
-        
-    </LinearLayout>
+            <Button
+                android:id="@+id/add"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:onClick="onClick"
+                android:text="Add New" />
+
+            <Button
+                android:id="@+id/delete"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:onClick="onClick"
+                android:text="Delete First" />
+
+            <Button
+                android:id="@+id/recreateDB"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:onClick="onClick"
+                android:text="Recreate DB" />
+
+            <Button
+                android:id="@+id/export_db"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:onClick="onClick"
+                android:text="export DB" />
+
+            <Button
+                android:id="@+id/import_db"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:onClick="onClick"
+                android:text="import DB" />
+        </LinearLayout>
+    </ScrollView>
 
     <ListView
         android:id="@android:id/list"
@@ -39,4 +58,4 @@
         android:text="hello"
         android:textSize="4sp" />
 
-</LinearLayout> 
+</LinearLayout>

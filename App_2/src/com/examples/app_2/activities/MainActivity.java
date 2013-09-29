@@ -41,6 +41,7 @@ public class MainActivity extends Activity {
 		switch(view.getId()){
 			case R.id.grid_activity:
 				intent = new Intent(this, ImageGridActivity.class);
+				//intent = new Intent(this, ProgressActivity.class);
 				startActivity(intent);
 				break;
 		

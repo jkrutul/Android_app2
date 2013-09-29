@@ -240,6 +240,7 @@ public class ImageLoader {
 	        return null;
 	    }
 	}
+	
 
 	public static void setImageSize(int height) {
 		mWidth= height;

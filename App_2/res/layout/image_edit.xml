@@ -1,67 +1,73 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical" >
+    android:background="#ffc28ece" >
 
-    <ImageView
-        android:id="@+id/img"
-        android:layout_width="300dp"
-        android:layout_height="300dp"
-        android:layout_marginLeft="4dp"
-        android:layout_marginRight="8dp"
-        android:layout_marginTop="8dp"
-        android:src="@drawable/image_placeholder" />
-
-    <EditText
-        android:id="@+id/img_id"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_weight="1"
-        android:gravity="top"
-        android:hint="description"
-        android:imeOptions="actionNext" />
+        android:orientation="vertical" >
 
-    <EditText
-        android:id="@+id/edit_name"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_weight="1"
-        android:gravity="top"
-        android:hint="description"
-        android:imeOptions="actionNext" />
+        <ImageView
+            android:id="@+id/img"
+            android:layout_width="300dp"
+            android:layout_height="300dp"
+            android:layout_marginLeft="4dp"
+            android:layout_marginRight="8dp"
+            android:layout_marginTop="8dp"
+            android:src="@drawable/image_placeholder" />
 
-    <EditText
-        android:id="@+id/edit_description"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_weight="1"
-        android:gravity="top"
-        android:hint="description"
-        android:imeOptions="actionNext" />
+        <EditText
+            android:id="@+id/img_id"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="top"
+            android:hint="description"
+            android:imeOptions="actionNext" />
 
-    <EditText
-        android:id="@+id/edit_parent"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_weight="1"
-        android:gravity="top"
-        android:hint="parent_fk"
-        android:imeOptions="actionNext" />
+        <EditText
+            android:id="@+id/edit_name"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="top"
+            android:hint="description"
+            android:imeOptions="actionNext" />
 
-    <EditText
-        android:id="@+id/edit_category"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_weight="1"
-        android:gravity="top"
-        android:hint="category"
-        android:imeOptions="actionNext" />
+        <EditText
+            android:id="@+id/edit_description"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="top"
+            android:hint="description"
+            android:imeOptions="actionNext" />
 
-    <Button
-        android:id="@+id/edit_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="confirm" />
+        <EditText
+            android:id="@+id/edit_parent"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="top"
+            android:hint="parent_fk"
+            android:imeOptions="actionNext" />
 
-</LinearLayout>
+        <EditText
+            android:id="@+id/edit_category"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="top"
+            android:hint="category"
+            android:imeOptions="actionNext" />
+
+        <Button
+            android:id="@+id/edit_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="confirm" />
+    </LinearLayout>
+
+</ScrollView>

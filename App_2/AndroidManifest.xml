@@ -85,6 +85,14 @@
                 android:value="com.example.app_2.activities.MainActivity" />
         </activity>
         
+        <activity
+            android:name="com.examples.app_2.activities.ProgressActivity"
+            android:label="ProgressActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.example.app_2.activities.MainActivity" />
+        </activity>
+        
        <provider 
            android:name= "com.example.app_2.contentprovider.ImagesContentProvider"
            android:authorities="com.example.app_2.contentprovider">
