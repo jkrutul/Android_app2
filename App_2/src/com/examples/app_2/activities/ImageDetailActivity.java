@@ -1,6 +1,10 @@
 package com.examples.app_2.activities;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import android.app.Activity;
 import android.content.ContentValues;
@@ -11,26 +15,31 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
-import android.widget.Button;
+import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.app_2.R;
-import com.example.app_2.contentprovider.ImagesContentProvider;
+import com.example.app_2.contentprovider.ImageContentProvider;
+import com.example.app_2.contentprovider.ImageContract;
 import com.example.app_2.storage.Database;
 import com.example.app_2.storage.Storage;
 import com.example.app_2.utils.ImageLoader;
 
 public class ImageDetailActivity extends Activity{
-	private EditText mId;
-	 private EditText mCategory;
-	  private EditText mTitleText;
+	  private TextView mId;
+	  private EditText mCategory;
+	  private TextView mTitleText;
 	  private EditText mDescText;
 	  private EditText mParent;
 	  private ImageView mImage;
 	  private ImageLoader imgLoader;
+	  
+	  private Map<String,Long> categories_map;
+	  private Spinner mSpinner;
 
 	  private Uri todoUri;
 
@@ -40,42 +49,29 @@ public class ImageDetailActivity extends Activity{
 	    getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
 	    
 	    setContentView(R.layout.image_edit);
-	    mId = (EditText) findViewById(R.id.img_id);
+	    mId = (TextView) findViewById(R.id.img_id);
 	    mImage = (ImageView) findViewById(R.id.img);
-	    mTitleText = (EditText) findViewById(R.id.edit_name);
+	    mTitleText = (TextView) findViewById(R.id.edit_name);
 	    mCategory = (EditText) findViewById(R.id.edit_category);
 	    mDescText = (EditText) findViewById(R.id.edit_description);
 	    mParent = (EditText) findViewById(R.id.edit_parent);
-	    Button confirmButton = (Button) findViewById(R.id.edit_button);
+	    mSpinner = (Spinner) findViewById(R.id.parent_spinner);
 	    Bundle extras = getIntent().getExtras();
 	    imgLoader = new ImageLoader();
 
 	    // Check from the saved Instance
-	    todoUri = (bundle == null) ? null : (Uri) bundle
-	        .getParcelable(ImagesContentProvider.CONTENT_ITEM_TYPE);
+	    todoUri = (bundle == null) ? null : (Uri) bundle.getParcelable(ImageContract.CONTENT_ITEM_TYPE);
 
 	    // Or passed from the other activity
 	    if (extras != null) {
-	      todoUri = extras.getParcelable(ImagesContentProvider.CONTENT_ITEM_TYPE);
-
+	      todoUri = extras.getParcelable(ImageContract.CONTENT_ITEM_TYPE);
+	      categories_map = new HashMap<String,Long>();
 	      fillData(todoUri);
 	    }
-
-	    confirmButton.setOnClickListener(new View.OnClickListener() {
-	      public void onClick(View view) {
-	        if (TextUtils.isEmpty(mTitleText.getText().toString())) {
-	          makeToast();
-	        } else {
-	          setResult(RESULT_OK);
-	          finish();
-	        }
-	      }
-
-	    });
 	  }
 
 	  private void fillData(Uri uri) {
-	    String[] projection = { Database.KEY_ID, Database.COL_PATH, Database.COL_DESC, Database.COL_CAT, Database.COL_PARENT};
+	    String[] projection = {ImageContract.Columns._ID,ImageContract.Columns.PATH, ImageContract.Columns.DESC, ImageContract.Columns.CATEGORY, ImageContract.Columns.PARENT};
 	    Cursor cursor = getContentResolver().query(uri, projection, null, null,null);
 	    if (cursor != null) {
 	    	Log.i("imageDetail",String.valueOf(cursor.getCount()));
@@ -89,27 +85,58 @@ public class ImageDetailActivity extends Activity{
 	        }
 	      }
 	      */
-	      	  String img_id = cursor.getString(cursor.getColumnIndex(Database.KEY_ID));
+	      	  String img_id = cursor.getString(cursor.getColumnIndex(ImageContract.Columns._ID));
 	      	  mId.setText(img_id);
-		      String category = cursor.getString(cursor.getColumnIndexOrThrow(Database.COL_CAT));
+		      String category = cursor.getString(cursor.getColumnIndexOrThrow(ImageContract.Columns.CATEGORY));
 		      mCategory.setText(category);
-		      mParent.setText(cursor.getString(cursor.getColumnIndexOrThrow(Database.COL_PARENT)));
-		      String imgName = cursor.getString(cursor.getColumnIndexOrThrow(Database.COL_PATH));
+		      mParent.setText(cursor.getString(cursor.getColumnIndexOrThrow(ImageContract.Columns.PARENT)));
+		      String imgName = cursor.getString(cursor.getColumnIndexOrThrow(ImageContract.Columns.PATH));
 		      mTitleText.setText(imgName);
-		      mDescText.setText(cursor.getString(cursor.getColumnIndexOrThrow(Database.COL_DESC)));
+		      mDescText.setText(cursor.getString(cursor.getColumnIndexOrThrow(ImageContract.Columns.DESC)));
 	
 		      // Always close the cursor
 		      cursor.close();
 			  imgLoader.loadBitmap(Storage.getThumbsDir()+File.separator+imgName, mImage);
+			  
+			  // add items on spinner
+			  List<String> list = new ArrayList<String>();
+			  
+			  String[] projection2 = {ImageContract.Columns._ID, ImageContract.Columns.CATEGORY};
+			  String selection = ImageContract.Columns.CATEGORY + "!=\"null\"";
+			  cursor = getContentResolver().query(uri, projection2, selection, null,null);
+			  while(!cursor.isAfterLast()){
+					categories_map.put(cursor.getString(1), cursor.getLong(0));
+					cursor.moveToNext();
+			  }
+			  cursor.close();
+			  list.addAll(categories_map.keySet());
+			  list.add("Add new");
+			  ArrayAdapter<String> dataAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_dropdown_item, list);
+			  dataAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+			  mSpinner.setAdapter(dataAdapter);
 	    }
 	  }
 
+
+	  
 	  protected void onSaveInstanceState(Bundle outState) {
 	    super.onSaveInstanceState(outState);
 	    saveState();
-	    outState.putParcelable(ImagesContentProvider.CONTENT_ITEM_TYPE, todoUri);
+	    outState.putParcelable(ImageContract.CONTENT_ITEM_TYPE, todoUri);
 	  }
 
+	  public void onClick(View view){
+			switch(view.getId()){
+				case R.id.submit_button:
+			        if (TextUtils.isEmpty(mTitleText.getText().toString())) {
+				          makeToast();
+				        } else {
+				          setResult(RESULT_OK);
+				          finish();
+				        }			
+			}
+	  }
+	  
 	  @Override
 	  protected void onPause() {
 	    super.onPause();
@@ -130,14 +157,14 @@ public class ImageDetailActivity extends Activity{
 	    }
 
 	    ContentValues values = new ContentValues();
-	    values.put(Database.COL_CAT, category);
-	    values.put(Database.COL_PATH, summary);
-	    values.put(Database.COL_DESC, description);
-	    values.put(Database.COL_PARENT, patent);
+	    values.put(ImageContract.Columns.CATEGORY, category);
+	    values.put(ImageContract.Columns.PATH, summary);
+	    values.put(ImageContract.Columns.DESC, description);
+	    values.put(ImageContract.Columns.PARENT, patent);
 
 	    if (todoUri == null) {
 	      // New todo
-	      todoUri = getContentResolver().insert(ImagesContentProvider.CONTENT_URI, values);
+	      todoUri = getContentResolver().insert(ImageContract.CONTENT_URI, values);
 	    } else {
 	      // Update todo
 	      getContentResolver().update(todoUri, values, null, null);

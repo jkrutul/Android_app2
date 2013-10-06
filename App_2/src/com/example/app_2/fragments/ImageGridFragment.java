@@ -8,11 +8,16 @@ import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Dialog;
 import android.app.ProgressDialog;
+import android.database.Cursor;
 import android.graphics.Point;
 import android.graphics.Rect;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.LoaderManager.LoaderCallbacks;
+import android.support.v4.content.CursorLoader;
+import android.support.v4.content.Loader;
+import android.support.v4.widget.SimpleCursorAdapter;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -20,6 +25,7 @@ import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
+import android.view.ViewGroup.LayoutParams;
 import android.view.animation.DecelerateInterpolator;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
@@ -30,22 +36,29 @@ import android.widget.Toast;
 import com.example.app_2.App_2;
 import com.example.app_2.R;
 import com.example.app_2.adapters.ImageAdapter;
+import com.example.app_2.contentprovider.ImageContract;
 import com.example.app_2.models.ImageObject;
 import com.example.app_2.provider.Images;
+import com.example.app_2.provider.Images.ProcessBitmapsTask;
 import com.example.app_2.utils.ImageLoader;
 import com.example.app_2.utils.Utils;
 
-@TargetApi(Build.VERSION_CODES.HONEYCOMB)
-public class ImageGridFragment extends Fragment implements AdapterView.OnItemClickListener{
+//@TargetApi(Build.VERSION_CODES.HONEYCOMB)
+public class ImageGridFragment extends Fragment implements AdapterView.OnItemClickListener, LoaderCallbacks<Cursor>{
     private static final String TAG = "ImageGridFragment";
     private ImageView expandedImageView;
     private int mImageThumbSize;
     private int mImageThumbSpacing;
-    private ImageAdapter mAdapter;
+    private SimpleCursorAdapter adapter;
+    //private ImageAdapter mAdapter;
     //private ImageFetcher mImageFetcher;
     private ImageLoader imageLoader;
     private Animator mCurrentAnimator;
     private int mShortAnimationDuration;
+    
+    private GridView.LayoutParams mImageViewLayoutParams;
+    private int mItemHeight = 0;
+    private int mNumColumns = 0;
     	
     public ImageGridFragment(){
     	
@@ -54,6 +67,7 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
     @Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		mImageViewLayoutParams = new GridView.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
 		imageLoader = new ImageLoader();
 		if(App_2.actvity!=null){
 			expandedImageView = (ImageView) App_2.actvity.findViewById(R.id.expanded_image);
@@ -67,21 +81,65 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
 		setHasOptionsMenu(true);
 		mImageThumbSize = getResources().getDimensionPixelSize(R.dimen.image_thumbnail_size);
         mImageThumbSpacing = getResources().getDimensionPixelSize(R.dimen.image_thumbnail_spacing);
-		if(category_id != -1){
+		fillData(category_id);
+        /*
+        if(category_id != -1){
 			mAdapter = new ImageAdapter(getActivity(), category_id,imageLoader);
 		}else
 		{
 			mAdapter = new ImageAdapter(getActivity(),imageLoader);
 		}
+		*/
 		
 	}
+    
+    private void fillData(int category_fk){
+		String[] from = new String[] { ImageContract.Columns._ID,
+				   ImageContract.Columns.PATH,
+				   ImageContract.Columns.PATH };
+		int[] to = new int[] { 0,R.id.label, R.id.icon };
+				
+		getLoaderManager().initLoader(0, null, this);
+		new ProcessBitmapsTask(getActivity()).execute();
+		
+		Cursor c ;
+		if(category_fk == -1)
+			c = getActivity().getContentResolver().query(ImageContract.CONTENT_URI, from, null, null ,null);
+		else{
+			String selection = ImageContract.Columns.CATEGORY +" = ?";
+			String[] selectionArgs = new String[]{String.valueOf(category_fk)};
+			c = getActivity().getContentResolver().query(ImageContract.CONTENT_URI, from, selection, selectionArgs ,null);
+		}
+		if(c.getCount()<=0){
+		c.close();
+		}
+		
+		adapter = new SimpleCursorAdapter(getActivity(), R.layout.fragment_content, c, from,to, 0){
+			
+		};
+		
+		adapter.setViewBinder(new SimpleCursorAdapter.ViewBinder(){
+			/** Binds the Cursor column defined by the specified index to the specified view */
+			public boolean setViewValue(View view, Cursor cursor, int columnIndex){
+				if(view.getId() == R.id.icon){
+					 String path = Images.getImageThumbsPath(cursor.getString(cursor.getColumnIndex(ImageContract.Columns.PATH)));
+					 imageLoader.loadBitmap(path, (ImageView) view);
+					 return true; //true because the data was bound to the view
+				}
+				return false;
+			}
+		});
+		
+		//lv.setAdapter(adapter);
+    }
+    
     
     
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup containter, Bundle sacedInstanceState){
     	final View v = inflater.inflate(R.layout.fragment_image_grid, containter,false);
 		final GridView mGridView = (GridView) v.findViewById(R.id.gridView);
-	        mGridView.setAdapter(mAdapter);
+	        mGridView.setAdapter(adapter);
 	        mGridView.setOnItemClickListener(this);
 	        mGridView.setOnScrollListener(new AbsListView.OnScrollListener() {
 	            @Override
@@ -107,14 +165,14 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
 	                new ViewTreeObserver.OnGlobalLayoutListener() {
 	                    @Override
 	                    public void onGlobalLayout() {
-	                        if (mAdapter.getNumColumns() == 0) {
+	                        if (getNumColumns() == 0) {
 	                            final int numColumns = (int) Math.floor(
 	                                    mGridView.getWidth() / (mImageThumbSize + mImageThumbSpacing));
 	                            if (numColumns > 0) {
 	                                final int columnWidth =
 	                                        (mGridView.getWidth() / numColumns) - mImageThumbSpacing;
-	                                mAdapter.setNumColumns(numColumns);
-	                                mAdapter.setItemHeight(columnWidth);
+	                                setNumColumns(numColumns);
+	                                setItemHeight(columnWidth);
 	                                    Log.d(TAG, "onCreateView - numColumns set to " + numColumns);
 	                            }
 	                        }
@@ -124,11 +182,36 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
 	        return v;
 
     }
+    
+    /**
+     * Sets the item height. Useful for when we know the column width so the height can be set
+     * to match.
+     *
+     * @param height
+     */
+    public void setItemHeight(int height) {
+        if (height == mItemHeight) {
+            return;
+        }
+        mItemHeight = height;
+        mImageViewLayoutParams =
+                new GridView.LayoutParams(LayoutParams.MATCH_PARENT, mItemHeight);
+        ImageLoader.setImageSize(height);
+        //notifyDataSetChanged();
+    }
+    
+    public void setNumColumns(int numColumns) {
+        mNumColumns = numColumns;
+    }
+    
+    public int getNumColumns() {
+        return mNumColumns;
+    }
 
     @Override
     public void onResume() {
         super.onResume();
-        mAdapter.notifyDataSetChanged();
+        //mAdapter.notifyDataSetChanged();
     }
 
     @Override
@@ -143,10 +226,11 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
         
     }
     
-	@SuppressLint("NewApi")
+	//@SuppressLint("NewApi")
+	@TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
 	@Override
 	public void onItemClick(AdapterView<?> parent, final  View thumbView, int position, long id) {
-		ImageObject imgO = mAdapter.getItemAtPosition(position);							// TODO przejœcie do nowej kategorii
+		ImageObject imgO = (ImageObject) adapter.getItem(position);							// TODO przejœcie do nowej kategorii
 		Toast.makeText(App_2.getAppContext(), "pos:"+position+"\n"+imgO, Toast.LENGTH_SHORT).show();
 		/*
 		intent = new Intent(this, ImageGridActivity.class);
@@ -274,6 +358,7 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
 	                public void onAnimationEnd(Animator animation) {
 	                    thumbView.setAlpha(1f);
 	                    expandedImageView.setVisibility(View.GONE);
+	                    expandedImageView.setImageResource(R.drawable.image_placeholder);
 	                    mCurrentAnimator = null;
 	                }
 
@@ -298,4 +383,23 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         inflater.inflate(R.menu.main, menu);
     }
+
+	@Override
+	public Loader<Cursor> onCreateLoader(int arg0, Bundle arg1) {
+		String[] projection = { ImageContract.Columns._ID,	ImageContract.Columns.PATH };
+		CursorLoader cursorLoader = new CursorLoader(App_2.getAppContext(),ImageContract.CONTENT_URI, null, null, null, null);
+		return cursorLoader;
+	}
+
+	@Override
+	public void onLoadFinished(Loader<Cursor> arg0, Cursor data) {
+		adapter.swapCursor(data);
+		
+	}
+
+	@Override
+	public void onLoaderReset(Loader<Cursor> loader) {
+		adapter.swapCursor(null);
+		
+	}
 }

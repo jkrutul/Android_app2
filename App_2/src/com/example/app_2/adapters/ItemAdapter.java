@@ -13,6 +13,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.example.app_2.R;
+import com.example.app_2.contentprovider.ImageContract;
 import com.example.app_2.storage.Database;
 import com.example.app_2.storage.Storage;
 import com.example.app_2.utils.ImageLoader;
@@ -33,7 +34,7 @@ public class ItemAdapter extends CursorAdapter{
 
 	@Override
 	public void bindView(View v, Context context, Cursor c) {
-		String filename = c.getString(c.getColumnIndexOrThrow(Database.COL_PATH));
+		String filename = c.getString(c.getColumnIndexOrThrow(ImageContract.Columns.PATH));
 		
 		TextView img_name = (TextView) v.findViewById(R.id.label);
 		ImageView img_thumb = (ImageView) v.findViewById(R.id.icon);

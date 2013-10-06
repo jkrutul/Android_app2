@@ -24,8 +24,8 @@ public class DatabaseTestActivity extends ListActivity {
 	    setContentView(R.layout.activity_test_db);
 
 	    //mda = Database.getInstance(this.getApplicationContext());
-	    mda = Database.getInstance(App_2.getAppContext());
-	    mda.open();
+	    //mda = Database.getInstance(App_2.getAppContext());
+	    mda =Database.open();
 
 	    List<ImageObject> values = mda.getAllImages();
 

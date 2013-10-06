@@ -1,54 +1,57 @@
 package com.examples.app_2.activities;
 
-import java.util.LinkedList;
-import java.util.List;
 
-import android.annotation.TargetApi;
-import android.app.ListActivity;
-import android.app.LoaderManager.LoaderCallbacks;
-import android.content.CursorLoader;
 import android.content.Intent;
-import android.content.Loader;
 import android.database.Cursor;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
-import android.support.v4.widget.CursorAdapter;
+import android.support.v4.app.FragmentTransaction;
+import android.support.v4.app.LoaderManager.LoaderCallbacks;
+import android.support.v4.content.CursorLoader;
+import android.support.v4.content.Loader;
+import android.support.v4.widget.SimpleCursorAdapter;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.AdapterView.AdapterContextMenuInfo;
+import android.widget.ImageView;
 import android.widget.ListView;
-import android.widget.SimpleCursorAdapter;
+import android.widget.AdapterView.AdapterContextMenuInfo;
 
+import com.example.app_2.App_2;
 import com.example.app_2.R;
-import com.example.app_2.adapters.ItemAdapter;
-import com.example.app_2.contentprovider.ImagesContentProvider;
-import com.example.app_2.models.ImageObject;
-import com.example.app_2.storage.Database;
+import com.example.app_2.contentprovider.ImageContract;
 
-@TargetApi(Build.VERSION_CODES.HONEYCOMB)
-public class ImagesOverviewActivity extends ListActivity implements
-		LoaderCallbacks<Cursor> {
+import com.example.app_2.provider.Images;
+import com.example.app_2.utils.ImageLoader;
+
+
+//@TargetApi(Build.VERSION_CODES.HONEYCOMB)
+public class ImagesOverviewActivity extends android.support.v4.app.FragmentActivity implements	LoaderCallbacks<Cursor> {
 
 	private static final int ACTIVITY_CREATE = 0;
 	private static final int ACTIVITY_EDIT = 1;
 	private static final int DELETE_ID = Menu.FIRST + 1;
-	// private Cursor cursor;
-	//private SimpleCursorAdapter adapter;
+	ImageLoader il;
+	private static final String TAG = "ImagesOveriewActivity";
+
 	private SimpleCursorAdapter adapter;
+	private ListView lv;
+
+	
 	/** Called when the activity is first created. */
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		il = new ImageLoader();
 		setContentView(R.layout.image_list);
-		this.getListView().setDividerHeight(2);
+		lv = (ListView) findViewById(R.id.image_list_view);
+		//this.getListView().setDividerHeight(2);
 		fillData();
-		registerForContextMenu(getListView());
+		registerForContextMenu(lv);
 	}
 
 	// Create the menu based on the XML defintion
@@ -76,7 +79,7 @@ public class ImagesOverviewActivity extends ListActivity implements
 		case DELETE_ID:
 			AdapterContextMenuInfo info = (AdapterContextMenuInfo) item
 					.getMenuInfo();
-			Uri uri = Uri.parse(ImagesContentProvider.CONTENT_URI + "/"
+			Uri uri = Uri.parse(ImageContract.CONTENT_URI + "/"
 					+ info.id);
 			getContentResolver().delete(uri, null, null);
 			fillData();
@@ -91,33 +94,47 @@ public class ImagesOverviewActivity extends ListActivity implements
 	}
 
 	// Opens the second activity if an entry is clicked
-	@Override
+/*
 	protected void onListItemClick(ListView l, View v, int position, long id) {
 		super.onListItemClick(l, v, position, id);
 		Intent i = new Intent(this, ImageDetailActivity.class);
-		Uri todoUri = Uri.parse(ImagesContentProvider.CONTENT_URI + "/" + id);
-		i.putExtra(ImagesContentProvider.CONTENT_ITEM_TYPE, todoUri);
+		Uri todoUri = Uri.parse(ImageContract.CONTENT_URI + "/" + id);
+		i.putExtra(ImageContract.CONTENT_ITEM_TYPE, todoUri);
 
 		startActivity(i);
 	}
+	*/
 
 	private void fillData() {
 		// Fields from the database (projection)
 		// Must include the _id column for the adapter to work
-		String[] from = new String[] { Database.COL_PATH };
+		String[] from = new String[] { ImageContract.Columns._ID,
+									   ImageContract.Columns.PATH,
+									   ImageContract.Columns.PATH };
 		// Fields on the UI to which we map
-		int[] to = new int[] { R.id.label };
-
-		getLoaderManager().initLoader(0, null, this);
-		Database.open();
-		Cursor c = Database.getCursorOfAllImages();
+		int[] to = new int[] { 0,R.id.label, R.id.icon };
+		getSupportLoaderManager().initLoader(0, null, this);
 		
-		adapter = new SimpleCursorAdapter(this, R.layout.image_row, c, from,to, 0);
+		Cursor c = getContentResolver().query(ImageContract.CONTENT_URI, from, null, null ,null);
+		if(c.getCount()<=0){
+			c.close();
+		}
 		
+		adapter = new SimpleCursorAdapter(getApplicationContext(), R.layout.image_row, c, from,to, 0);
+		
+		adapter.setViewBinder(new SimpleCursorAdapter.ViewBinder(){
+			   /** Binds the Cursor column defined by the specified index to the specified view */
+			   public boolean setViewValue(View view, Cursor cursor, int columnIndex){
+			       if(view.getId() == R.id.icon){
+						 String path = Images.getImageThumbsPath(cursor.getString(cursor.getColumnIndex(ImageContract.Columns.PATH)));
+						 il.loadBitmap(path, (ImageView) view);
+			           return true; //true because the data was bound to the view
+			       }
+			       return false;
+			   }
+			});
 
-
-		//adapter = new ItemAdapter(this, c);
-		setListAdapter(adapter);
+		lv.setAdapter(adapter);
 	}
 
 	@Override
@@ -130,9 +147,8 @@ public class ImagesOverviewActivity extends ListActivity implements
 	// Creates a new loader after the initLoader () call
 	@Override
 	public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-		String[] projection = { Database.KEY_ID, Database.COL_PATH };
-		CursorLoader cursorLoader = new CursorLoader(this,
-				ImagesContentProvider.CONTENT_URI, projection, null, null, null);
+		String[] projection = { ImageContract.Columns._ID,	ImageContract.Columns.PATH };
+		CursorLoader cursorLoader = new CursorLoader(this,ImageContract.CONTENT_URI, projection, null, null, null);
 		return cursorLoader;
 	}
 
@@ -146,4 +162,5 @@ public class ImagesOverviewActivity extends ListActivity implements
 		// data is not available anymore, delete reference
 		adapter.swapCursor(null);
 	}
+
 }

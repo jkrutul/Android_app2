@@ -18,22 +18,22 @@
             android:layout_marginTop="8dp"
             android:src="@drawable/image_placeholder" />
 
-        <EditText
+        <TextView
             android:id="@+id/img_id"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:gravity="top"
-            android:hint="description"
+            android:hint="id"
             android:imeOptions="actionNext" />
 
-        <EditText
+        <TextView
             android:id="@+id/edit_name"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:gravity="top"
-            android:hint="description"
+            android:hint="image name"
             android:imeOptions="actionNext" />
 
         <EditText
@@ -53,6 +53,11 @@
             android:gravity="top"
             android:hint="parent_fk"
             android:imeOptions="actionNext" />
+        
+        <Spinner
+    		android:id="@+id/parent_spinner"
+   			android:layout_width="fill_parent"
+    		android:layout_height="wrap_content" />
 
         <EditText
             android:id="@+id/edit_category"
@@ -60,13 +65,14 @@
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:gravity="top"
-            android:hint="category"
+            android:hint="enter category name"
             android:imeOptions="actionNext" />
 
         <Button
-            android:id="@+id/edit_button"
+            android:id="@+id/submit_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:onClick="onClick"
             android:text="confirm" />
     </LinearLayout>
 

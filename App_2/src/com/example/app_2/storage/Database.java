@@ -21,6 +21,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.os.Environment;
 import android.util.Log;
 
+import com.example.app_2.contentprovider.ImageContract;
 import com.example.app_2.models.ImageObject;
 import com.example.app_2.utils.Utils;
 
@@ -41,67 +42,28 @@ public class Database {
 	
 	// The name and the column index of each column in your database
 	// The index (key) column name for use in where clauses.
-	public static final String KEY_ID="_id";
-	
-	public static final String TABLE_IMAGE = "image"; 					// KEY_ID, COL_PATH, COL_AUDIO_PATH, COL_DESC, COL_CAT
-	public static final String COL_PATH = "path";
-	public static final String COL_AUDIO_PATH = "audio";
-	public static final String COL_DESC = "description";
-	public static final String COL_TIME_USED = "used";
-	public static final String COL_MODIFIED  = "last_modified";
-	public static final String COL_LAST_USED = "last_used";
-	public static final String COL_IS_CAT = "is_category";
-	public static final String COL_CAT = "category";
-	public static final String COL_PARENT = "parent_fk";
-		
-    private static final String TABLE_DIC = "dictionary";
-    private static final String COL_WORD = "word";
-    private static final String COL_DEFINITION = "definition";
-    
-    private static final String TABLE_HTTP = "httpimages";
-    private static final String COL_URL  = "url";
-    
-	
+			
 	private static final int DATABASE_VERSION = 1;
 		
 	private static final String TABLE_IMAGES_CREATE = "CREATE TABLE "+
-	TABLE_IMAGE+" ("+
-			KEY_ID+" INTEGER PRIMARY KEY AUTOINCREMENT,"+
-			COL_PATH+ " TEXT, "+
-			COL_AUDIO_PATH + " TEXT, "+
-			COL_DESC+ " TEXT, "+
-			COL_MODIFIED+ " DATETIME, "+
-			COL_TIME_USED+ " INTEGER DEFAULT 0 ,"+
-			COL_LAST_USED+ " DATETIME, "+
-			COL_IS_CAT+ " INTEGER DEFAULT 0, "+
-			COL_CAT+ " TEXT, "+
-			COL_PARENT+ " INTEGER DEFAULT 0, "+
-		    "FOREIGN KEY("+COL_PARENT+") REFERENCES "+TABLE_IMAGE+"("+KEY_ID+") "+
+	ImageContract.TABLE_IMAGE+" ("+
+			ImageContract.Columns._ID+" INTEGER PRIMARY KEY AUTOINCREMENT,"+
+			ImageContract.Columns.PATH+ " TEXT, "+
+			ImageContract.Columns.AUDIO_PATH + " TEXT, "+
+			ImageContract.Columns.DESC+ " TEXT, "+
+			ImageContract.Columns.MODIFIED+ " DATETIME, "+
+			ImageContract.Columns.TIME_USED+ " INTEGER DEFAULT 0 ,"+
+			ImageContract.Columns.LAST_USED+ " DATETIME, "+
+			ImageContract.Columns.CATEGORY+ " TEXT, "+
+			ImageContract.Columns.PARENT+ " INTEGER DEFAULT 0, "+
+		    "FOREIGN KEY("+ImageContract.Columns.PARENT+") REFERENCES "+ImageContract.TABLE_IMAGE+"("+ImageContract.Columns._ID+") "+
 	");";
 	
-	
-    private static final String DICTIONARY_TABLE_CREATE = "CREATE TABLE "+
-    		TABLE_DIC+ " ("+
-    		KEY_ID+" INTEGER PRIMARY KEY AUTOINCREMENT,"+
-            COL_WORD + " TEXT, " +
-            COL_DEFINITION + " TEXT" +
-    ");";
- 
-    private static final String HTTP_IMG_TABLE_CREATE = "CREATE TABLE "+
-    		TABLE_HTTP+" ("+
-    		KEY_ID+" INTEGER PRIMARY KEY AUTOINCREMENT,"+
-            COL_URL + " TEXT" +
-    ");";
-	
-    //private static final String INSERT_MAIN_CATEGORY = "INSERT INTO " +
-    //TABLE_CAT+"("+KEY_ID+","+COL_NAME+") VALUES(0,\'GLÓWNA\');";    
-    
+	    
 	public void recreateDB(){
 		open();
 		String drop_table = "DROP TABLE IF EXISTS ";
-		db.execSQL(drop_table+TABLE_IMAGE);
-		//db.execSQL(drop_table+TABLE_HTTP);
-
+		db.execSQL(drop_table+ImageContract.TABLE_IMAGE);
 		dbHelper.onCreate(db);
 	}
 	
@@ -149,20 +111,20 @@ public class Database {
 	 */
 	public ImageObject insertImage(ImageObject mio){
 		ContentValues cv = new ContentValues();
-		cv.put(COL_PATH, mio.getImageName() );
-		cv.put(COL_CAT, mio.getCategory());
-		cv.put(COL_DESC, mio.getDescription());
-		cv.put(COL_PARENT, mio.getParent_fk());
-		cv.put(COL_MODIFIED, dateFormat.format(date));
+		cv.put(ImageContract.Columns.PATH, mio.getImageName() );
+		cv.put(ImageContract.Columns.CATEGORY, mio.getCategory());
+		cv.put(ImageContract.Columns.DESC, mio.getDescription());
+		cv.put(ImageContract.Columns.PARENT, mio.getParent_fk());
+		cv.put(ImageContract.Columns.MODIFIED, dateFormat.format(date));
 
 
 		if(db == null)
 			open();
-		long l = db.insert(TABLE_IMAGE, null, cv);
+		long l = db.insert(ImageContract.TABLE_IMAGE, null, cv);
 	    if(l==-1){
 	    	return null;
 	    }
-		Cursor c = db.query(TABLE_IMAGE,  null, KEY_ID+" = "+l, null,null, null,null);
+		Cursor c = db.query(ImageContract.TABLE_IMAGE,  null, ImageContract.Columns._ID+" = ?", new String[] {String.valueOf(l)},null, null,null);
 		c.moveToFirst();
 		mio = cursorToImage(c);
 		c.close();
@@ -172,41 +134,54 @@ public class Database {
 	/* image - remove */
 	public boolean deleteImage(ImageObject mio){
 		long row_id = mio.getId();
-		return db.delete(TABLE_IMAGE, KEY_ID+" = "+row_id, null)>0;
+		String where = ImageContract.Columns._ID + "=?";
+		String[] whereArgs = {""};
+		whereArgs[0]=String.valueOf(row_id);
+		return db.delete(ImageContract.TABLE_IMAGE, where, whereArgs)>0;
 	}
 	
 	/* image - update */
 	public int updateImage(long _rowIndex, ImageObject mio){
-		String where = KEY_ID + "=" + _rowIndex;
+		String where = ImageContract.Columns._ID + "=?";
+		String[] whereArgs = {""};
+		whereArgs[0] = String.valueOf(_rowIndex);
 		ContentValues cv = new ContentValues();
-		cv.put(KEY_ID,mio.getId());
-		cv.put(COL_PATH, mio.getImageName() );
-		cv.put(COL_CAT, mio.getCategory());
-		cv.put(COL_DESC, mio.getDescription());
-		return db.update(TABLE_IMAGE, cv, where, null);
+		cv.put(ImageContract.Columns._ID,mio.getId());
+		cv.put(ImageContract.Columns.PATH, mio.getImageName() );
+		cv.put(ImageContract.Columns.CATEGORY, mio.getCategory());
+		cv.put(ImageContract.Columns.DESC, mio.getDescription());
+		return db.update(ImageContract.TABLE_IMAGE, cv, where, whereArgs);
 	}
 	
 	public int updateImage(String imageName, ImageObject mio){
-		String where = COL_PATH + "=\"" + imageName+"\"";
+		String where = ImageContract.Columns.PATH + "=?";
+		String[] whereArgs = {""};
+		whereArgs[0] = imageName;
 		ContentValues cv = new ContentValues();
-		//cv.put(KEY_ID,mio.getId());
-		cv.put(COL_PATH, mio.getImageName() );
-		cv.put(COL_CAT, mio.getCategory());
-		cv.put(COL_DESC, mio.getDescription());
-		cv.put(COL_PARENT, mio.getParent_fk());
+		//cv.put(ImageContract.Columns._ID,mio.getId());
+		cv.put(ImageContract.Columns.PATH, mio.getImageName() );
+		cv.put(ImageContract.Columns.CATEGORY, mio.getCategory());
+		cv.put(ImageContract.Columns.DESC, mio.getDescription());
+		cv.put(ImageContract.Columns.PARENT, mio.getParent_fk());
 		Log.i(LOG_TAG, "updating image:"+mio);
-		return db.update(TABLE_IMAGE, cv, where, null);
+		return db.update(ImageContract.TABLE_IMAGE, cv, where, whereArgs);
 	}
 	
 	/* image - get */
 	public ImageObject getImage(long _rowIndex){
-		Cursor c = db.query(TABLE_IMAGE,  null, KEY_ID+" = "+_rowIndex, null,null, null,null);
+		String selection =ImageContract.Columns._ID+"=?";
+		String[] selectionArgs = {""};
+		selectionArgs[0] = String.valueOf(_rowIndex);
+		Cursor c = db.query(ImageContract.TABLE_IMAGE,  null,selection, selectionArgs,null, null,null);
 		c.moveToFirst();
 		return cursorToImage(c);
 	}
 	
 	public ImageObject isImageAlreadyExist(String imageName){
-		Cursor c = db.query(TABLE_IMAGE,  null, COL_PATH+" = "+"\""+imageName+"\"", null,null, null,null);
+		String selection =ImageContract.Columns.PATH+" = ?";
+		String[] selectionArgs = {""};
+		selectionArgs[0] = imageName;
+		Cursor c = db.query(ImageContract.TABLE_IMAGE,  null, selection, selectionArgs,null, null,null);
 		c.moveToFirst();
 		if(c.getCount()>0)
 			return cursorToImage(c);
@@ -215,8 +190,11 @@ public class Database {
 	
 	public List<ImageObject> getAllImagesByCategory(long category_id){
 		ImageObject mio;
+		String selection = ImageContract.Columns.PARENT+ " = ?";
+		String[] selectionArgs = {""};
+		selectionArgs[0] = String.valueOf(category_id);
 		List<ImageObject> images = new LinkedList<ImageObject>();
-		Cursor c = db.query(TABLE_IMAGE, null,COL_PARENT+ " = "+category_id, null,null, null,null);
+		Cursor c = db.query(ImageContract.TABLE_IMAGE, null,selection, selectionArgs, null,null, null,null);
 		c.moveToFirst();
 		while(!c.isAfterLast()){
 			mio = cursorToImage(c);
@@ -245,10 +223,13 @@ public class Database {
 	public ImageObject getRootCategory(){
 		ImageObject category =null;
 
-		String[] columns = {KEY_ID, COL_PATH, COL_CAT};
-		String selection = COL_CAT+"=\"ROOT\"";
+		String[] columns = {ImageContract.Columns._ID, ImageContract.Columns.PATH, ImageContract.Columns.CATEGORY};
+		String selection =ImageContract.Columns.CATEGORY+"=\'ROOT\'";
+		//String[] selectionArgs = {""};
+		//selectionArgs[0] = "\'ROOT\'";
+
 		try{
-			Cursor c = db.query(TABLE_IMAGE, columns,selection, null,null, null,null);
+			Cursor c = db.query(ImageContract.TABLE_IMAGE, columns,selection, null,null, null,null);
 			c.moveToFirst();
 			while(!c.isAfterLast()){
 				category = cursorToCategory(c);
@@ -262,19 +243,23 @@ public class Database {
 	
 	public List<ImageObject> getAllImages(){
 		ImageObject mio;
+		
+		String selection =ImageContract.Columns.CATEGORY+" NOT LIKE \'ROOT\'";
+		String[] selectionArgs = {""};
+		//selectionArgs[0] = "\'ROOT\'";		
+		
 		List<ImageObject> images = new LinkedList<ImageObject>();
-		//String selection = COL_CAT+" NOT LIKE \"ROOT\" ";
-		//String sql = "select * from "+TABLE_IMAGE+" where " +COL_CAT+ " not like \"ROOT\";";
 		try{
-			Cursor c = db.query(TABLE_IMAGE, null,null, null,null, null,null);
-			//c = db.rawQuery(sql, null);
+			Cursor c = db.query(ImageContract.TABLE_IMAGE, null, selection,null /*selectionArgs*/,null, null,ImageContract.Columns._ID);
 			c.moveToFirst();
-			if(!c.isAfterLast())
-				c.moveToNext();
-			while(!c.isAfterLast()){
-				mio = cursorToImage(c);
-				images.add(mio);
-				c.moveToNext();
+			//if(!c.isAfterLast())
+			//	c.moveToNext();
+			if(c.getCount()>0){
+				while(!c.isAfterLast()){
+					mio = cursorToImage(c);
+					images.add(mio);
+					c.moveToNext();
+				}
 			}
 			c.close();
 		}
@@ -287,31 +272,32 @@ public class Database {
 	
 	
 	public static Cursor getCursorOfAllImages(){
-		Cursor c=null;
-		String selection = COL_CAT+"!= \"ROOT\"";
+		String selection =ImageContract.Columns.CATEGORY+" NOT LIKE \'ROOT\'";
+		String[] selectionArgs = {""};
+		selectionArgs[0] = "\'ROOT\'";		
 		
 		try{
 			if(db == null)
 				open();
-			c = db.query(TABLE_IMAGE, null,selection, null,null, null,null);
+			return db.query(ImageContract.TABLE_IMAGE, null, selection, null,null, null,null);
 			}
 		catch(SQLException ex){
 			Log.w(LOG_TAG,ex);
 		}
-		return c;
+		return null;
 	}
 	
 	public List<ImageObject> getAllCategories(){
 		ImageObject category;
 		List<ImageObject> categories = new LinkedList<ImageObject>();
-		String[] columns = {KEY_ID, COL_PATH, COL_CAT};
-		String selection = COL_CAT + " IS NOT NULL ";
+		String[] columns = {ImageContract.Columns._ID, ImageContract.Columns.PATH, ImageContract.Columns.CATEGORY};
+		String selection = ImageContract.Columns.CATEGORY + " IS NOT NULL ";
 		try{
-			Cursor c = db.query(TABLE_IMAGE, columns,selection, null,null, null,null);
+			Cursor c = db.query(ImageContract.TABLE_IMAGE, columns,selection, null,null, null,null);
 			c.moveToFirst();
 			while(!c.isAfterLast()){
 				category = cursorToImage(c);
-				//category = c.getString(c.getColumnIndex(COL_CAT));
+				//category = c.getString(c.getColumnIndex(ImageContract.Columns.CATEGORY));
 				categories.add(category);
 				c.moveToNext();
 			}
@@ -326,18 +312,18 @@ public class Database {
 		ImageObject category = new ImageObject();
 		List<ImageObject> categories = new LinkedList<ImageObject>();
 
-		String[] columns = {KEY_ID, COL_PATH, COL_CAT};
-		//String selection = COL_CAT + " NOTNULL AND "+COL_PARENT+"="+img_id.toString();
-		String selection = COL_CAT + " !=\"null\" AND " +COL_PARENT+"="+img_id.toString();
+		String[] columns = {ImageContract.Columns._ID, ImageContract.Columns.PATH, ImageContract.Columns.CATEGORY};
+		//String selection = ImageContract.Columns.CATEGORY + " NOTNULL AND "+ImageContract.Columns.PARENT+"="+img_id.toString();
+		String selection = ImageContract.Columns.CATEGORY + " != ? AND " +ImageContract.Columns.PARENT+"="+img_id.toString();
 		try{
-			Cursor c = db.query(TABLE_IMAGE, columns,selection, null,null, null,null);
-			//Cursor c = db.rawQuery("SELECT "+KEY_ID+","+COL_PATH+","+COL_CAT+" FROM "+TABLE_IMAGE+" WHERE ("+ COL_CAT+" IS NOT NULL) AND "+COL_PARENT+ " = " + img_id.toString()+";", null);
+			Cursor c = db.query(ImageContract.TABLE_IMAGE, columns,selection, new String[] {"null"},null, null,null);
+			//Cursor c = db.rawQuery("SELECT "+ImageContract.Columns._ID+","+ImageContract.Columns.PATH+","+ImageContract.Columns.CATEGORY+" FROM "+ImageContract.TABLE_IMAGE+" WHERE ("+ ImageContract.Columns.CATEGORY+" IS NOT NULL) AND "+ImageContract.Columns.PARENT+ " = " + img_id.toString()+";", null);
 			c.moveToFirst();
 			while(!c.isAfterLast()){
 				category.setId(			c.getLong(		0));
 				category.setImageName(	c.getString(	1));
 				category.setCategory(	c.getString(	2));
-				//category = c.getString(c.getColumnIndex(COL_CAT));
+				//category = c.getString(c.getColumnIndex(ImageContract.Columns.CATEGORY));
 				categories.add(category);
 				c.moveToNext();
 			}
@@ -351,14 +337,14 @@ public class Database {
 		ImageObject category;
 		List<ImageObject> categories = new LinkedList<ImageObject>();
 
-		String[] columns = {KEY_ID, COL_PATH, COL_CAT};
-		String selection = COL_CAT + " IS NULL AND "+COL_PARENT+"="+img_id.toString();
+		String[] columns = {ImageContract.Columns._ID, ImageContract.Columns.PATH, ImageContract.Columns.CATEGORY};
+		String selection = ImageContract.Columns.CATEGORY + " IS NULL AND "+ImageContract.Columns.PARENT+"="+img_id.toString();
 		try{
-			Cursor c = db.query(TABLE_IMAGE, columns,selection, null,null, null,null);
+			Cursor c = db.query(ImageContract.TABLE_IMAGE, columns,selection, null,null, null,null);
 			c.moveToFirst();
 			while(!c.isAfterLast()){
 				category = cursorToImage(c);
-				//category = c.getString(c.getColumnIndex(COL_CAT));
+				//category = c.getString(c.getColumnIndex(ImageContract.Columns.CATEGORY));
 				categories.add(category);
 				c.moveToNext();
 			}
@@ -371,16 +357,16 @@ public class Database {
 	public List<ImageObject> getParentCategory(Long img_id){
 		ImageObject category = new ImageObject();
 		List<ImageObject> categories = new LinkedList<ImageObject>();
-		String[] columns = {KEY_ID, COL_PATH, COL_CAT};
-		String selection = KEY_ID +"=(SELECT "+COL_PARENT+" FROM " +TABLE_IMAGE+" WHERE "+KEY_ID+"="+img_id.toString()+");";                    //COL_CAT + "IS NOT NULL AND "+COL_; //SELECT * FROM IMAGE WHERE ID = (SELECT COL_PARENT FROM IMAGE WHERE ID = 
+		String[] columns = {ImageContract.Columns._ID, ImageContract.Columns.PATH, ImageContract.Columns.CATEGORY};
+		String selection = ImageContract.Columns._ID +"=(SELECT "+ImageContract.Columns.PARENT+" FROM " +ImageContract.TABLE_IMAGE+" WHERE "+ImageContract.Columns._ID+"="+img_id.toString()+");";                    //ImageContract.Columns.CATEGORY + "IS NOT NULL AND "+COL_; //SELECT * FROM IMAGE WHERE ID = (SELECT ImageContract.Columns.PARENT FROM IMAGE WHERE ID = 
 		try{
-			Cursor c = db.query(TABLE_IMAGE, columns,selection, null,null, null,null);
+			Cursor c = db.query(ImageContract.TABLE_IMAGE, columns,selection, null,null, null,null);
 			c.moveToFirst();
 			while(!c.isAfterLast()){		
 				category.setId(			c.getLong(		0));
 				category.setImageName(	c.getString(	1));
 				category.setCategory(	c.getString(	2));
-				//category = c.getString(c.getColumnIndex(COL_CAT));
+				//category = c.getString(c.getColumnIndex(ImageContract.Columns.CATEGORY));
 				categories.add(category);
 				c.moveToNext();
 			}
@@ -394,40 +380,26 @@ public class Database {
 	/* image - cursor */
 	private static ImageObject cursorToImage(Cursor cursor){
 		ImageObject mio = new ImageObject();
-		mio.setId(			cursor.getLong(		cursor.getColumnIndex(KEY_ID)));
-		mio.setImageName(	cursor.getString(	cursor.getColumnIndex(COL_PATH)));
-		mio.setAudioPath(	cursor.getString(	cursor.getColumnIndex(COL_AUDIO_PATH)));
-		mio.setDescription(	cursor.getString(	cursor.getColumnIndex(COL_DESC)));
-		mio.setModified(	cursor.getString(	cursor.getColumnIndex(COL_MODIFIED)));
-		mio.setTimes_used(	cursor.getLong(		cursor.getColumnIndex(COL_TIME_USED)));
-		mio.setLast_used(	cursor.getString(	cursor.getColumnIndex(COL_LAST_USED)));
-		mio.setParent_fk(	cursor.getLong(		cursor.getColumnIndex(COL_PARENT)));
-		mio.setCategory(	cursor.getString(	cursor.getColumnIndex(COL_CAT)));
+		mio.setId(			cursor.getLong(		cursor.getColumnIndex(ImageContract.Columns._ID)));
+		mio.setImageName(	cursor.getString(	cursor.getColumnIndex(ImageContract.Columns.PATH)));
+		mio.setAudioPath(	cursor.getString(	cursor.getColumnIndex(ImageContract.Columns.AUDIO_PATH)));
+		mio.setDescription(	cursor.getString(	cursor.getColumnIndex(ImageContract.Columns.DESC)));
+		mio.setModified(	cursor.getString(	cursor.getColumnIndex(ImageContract.Columns.MODIFIED)));
+		mio.setTimes_used(	cursor.getLong(		cursor.getColumnIndex(ImageContract.Columns.TIME_USED)));
+		mio.setLast_used(	cursor.getString(	cursor.getColumnIndex(ImageContract.Columns.LAST_USED)));
+		mio.setParent_fk(	cursor.getLong(		cursor.getColumnIndex(ImageContract.Columns.PARENT)));
+		mio.setCategory(	cursor.getString(	cursor.getColumnIndex(ImageContract.Columns.CATEGORY)));
 		return mio;
 	}
 	
 	private static ImageObject cursorToCategory(Cursor cursor){
 		ImageObject mio = new ImageObject();
-		mio.setId(			cursor.getLong(		cursor.getColumnIndex(KEY_ID)));
-		mio.setImageName(	cursor.getString(	cursor.getColumnIndex(COL_PATH)));
-		mio.setCategory(	cursor.getString(	cursor.getColumnIndex(COL_CAT)));
+		mio.setId(			cursor.getLong(		cursor.getColumnIndex(ImageContract.Columns._ID)));
+		mio.setImageName(	cursor.getString(	cursor.getColumnIndex(ImageContract.Columns.PATH)));
+		mio.setCategory(	cursor.getString(	cursor.getColumnIndex(ImageContract.Columns.CATEGORY)));
 		return mio;
 	}
 	
-	
-	
-	
-	public void insertHttpTable(String[] http_img){
-		ContentValues cv = new ContentValues();
-		for(int i=0; i<http_img.length; i++){
-			cv.put(COL_URL, http_img[i]);
-			if(db.insert(TABLE_HTTP, null, cv)==-1){
-				Log.w(LOG_TAG, "Value: "+http_img[i] + " not save in DB");
-			}
-		}
-
-	}
-
 	public void exportImageToCsv(String filename){
 		File f  = ExternalStorage.getExternalStorageDir(filename);
 	    try{
@@ -466,22 +438,12 @@ public class Database {
 	}
 	
 	
-/*
-	public long insertWord(MyWordObject mwo){
-		ContentValues cv = new ContentValues();
-		cv.put(COL_WORD,mwo.getKey_word());
-		cv.put(COL_DEFINITION, mwo.getKey_definition());
-		return db.insert(TABLE_DIC, null,cv);
-		
-	}
-	*/
-	
 	//----
 	public static class myDbHelper extends SQLiteOpenHelper{
 		
 		private static myDbHelper instance = null;
 		
-		private myDbHelper(Context context, String name, CursorFactory factory, int version){
+		public myDbHelper(Context context, String name, CursorFactory factory, int version){
 			super(context,name,factory,version);
 		}
 		
@@ -497,14 +459,8 @@ public class Database {
 		@Override
 		public void onCreate(SQLiteDatabase _db) {
 			try{
-
 				_db.execSQL(TABLE_IMAGES_CREATE);
-				ImageObject img_o = new ImageObject();
-				img_o.setCategory("ROOT");
-				
-				db_instance.insertImage(img_o);
-				
-				//_db.execSQL(HTTP_IMG_TABLE_CREATE);				
+		
 			}catch(SQLException ex){
 				Log.w(LOG_TAG, ex);
 			}
@@ -516,7 +472,7 @@ public class Database {
 			String drop_table = "DROP TABLE IF EXISTS ";
 			// Log the version upgrade/
 			Log.w("TaskDBAdapter", "Upgrading from version "+	oldVersion + " to "+ newVersion + ", witch will destroy all old data");
-			db.execSQL(drop_table+TABLE_IMAGE);
+			db.execSQL(drop_table+ImageContract.TABLE_IMAGE);
 			//db.execSQL(drop_table+TABLE_DESC);
 			//db.execSQL(drop_table+TABLE_HTTP);
 			onCreate(db);

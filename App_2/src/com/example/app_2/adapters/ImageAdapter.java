@@ -46,9 +46,6 @@ public class ImageAdapter extends BaseAdapter {
                     tv.data, context.getResources().getDisplayMetrics());
         }
         new ThumbsProcessTask(App_2.actvity).execute();
-        //Images.readImagesFromDB();
-        //Images.populateImagePaths(Long.valueOf(1)); // main category in tree     
-        //Images.generateThumbs();
     }
     
     public ImageAdapter(Context context, int category_id, ImageLoader il){

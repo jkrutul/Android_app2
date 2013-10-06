@@ -98,14 +98,17 @@ public class ImageLoader {
 	    }
 	}
 */
-	
+
 	@SuppressLint("NewApi")
 	public void loadBitmap(String path, ImageView imageView){
 		if(cancelPotentialWork(path, imageView)){
 			final BitmapWorkerTask task = new BitmapWorkerTask(imageView);
 			final AsyncDrawable asyncDrawable = new AsyncDrawable(context.getResources(), mPlaceHolderBitmap, task);
 			imageView.setImageDrawable(asyncDrawable);
-            task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, path);
+			if(Utils.hasHoneycomb())
+				task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, path);
+			else			
+				task.execute(path);
 		}
 	}
 	
@@ -153,16 +156,14 @@ public class ImageLoader {
 	        path = params[0];	        
 	        final String imageKey = String.valueOf(path);
 	        Bitmap bitmap = mMemoryCache.get(imageKey);
-	        if(bitmap ==null)
-	        // Check disk cache in background thread
-	        //Bitmap bitmap = getBitmapFromDiskCache(imageKey);
-	        //if (bitmap == null) { // Not found in disk cache
-	        	//bitmap = BitmapCalc.decodeSampleBitmapFromFile(path, mWidth, mHeight);
-	        	bitmap = BitmapFactory.decodeFile(path);
+	        if(bitmap ==null){	// Not found in disk cache
+	        	bitmap = BitmapCalc.decodeSampleBitmapFromFile(path, mWidth, mHeight);
+	        	//bitmap = BitmapFactory.decodeFile(path);
+	        	if(bitmap == null)
+	        		return null;
 	        	Log.i(LOG_TAG,"decoded image h:"+bitmap.getHeight()+" w:"+bitmap.getWidth());
-	        //}
-	        // add final bitmap to caches
-	        addBitmapToCache(imageKey,bitmap);
+	        	addBitmapToCache(imageKey,bitmap);
+	        }
 	        return BitmapCalc.getRoundedCornerBitmap(bitmap);
 	    }
 	    public void addBitmapToCache(String key, Bitmap bitmap) {

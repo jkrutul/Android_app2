@@ -92,27 +92,28 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_grid);
 
-        
+        // ustawienie syntezatora mowy
 		Intent checkIntent = new Intent();
 		checkIntent.setAction(TextToSpeech.Engine.ACTION_CHECK_TTS_DATA);
 		startActivityForResult(checkIntent, MY_DATA_CHECK_CODE);
         
+		// ustawienie drawera
         mInstance = this;
         App_2.actvity= mInstance;
         mDrawerTitle = "Wybierz kategoriê";
 
         
-        Database db = Database.getInstance(getApplicationContext());
-        db.open();
+        //Database db = Database.getInstance(getApplicationContext());
+        //db.open();
 					
         
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
         mDrawerToggle = new ActionBarDrawerToggle(
-                this,                  /* host Activity */
-                mDrawerLayout,         /* DrawerLayout object */
-                R.drawable.ic_drawer,  /* nav drawer icon to replace 'Up' caret */
-                R.string.drawer_open,  /* "open drawer" description */
-                R.string.drawer_close  /* "close drawer" description */
+	                this,                  /* host Activity */
+	                mDrawerLayout,         /* DrawerLayout object */
+	                R.drawable.ic_drawer,  /* nav drawer icon to replace 'Up' caret */
+	                R.string.drawer_open,  /* "open drawer" description */
+	                R.string.drawer_close  /* "close drawer" description */
                 ) {
 
             /** Called when a drawer has settled in a completely closed state. */
@@ -135,6 +136,7 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
         
         mDrawerList  = (ListView) findViewById(R.id.left_drawer);
         
+        /*
         rootCategory = db.getRootCategory();
         if(rootCategory!=null){
 	        subCategories = db.getSubcategories(rootCategory.getId());
@@ -143,15 +145,14 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 	        	mCategoryTitles.add(i.getCategory());
 	        }
         }
+        */
         
         // Set the adapter for the list view
         mDrawerList.setAdapter(new ArrayAdapter<String>(this, R.layout.drawer_list_item, mCategoryTitles)); // TODO zmieniæ na adapter z obrazkiem
         // Set the list's click listener
         mDrawerList.setOnItemClickListener(new DrawerItemClickListener());
         
-        getActionBar().setDisplayHomeAsUpEnabled(true);
-
-
+ 
         if (getSupportFragmentManager().findFragmentByTag(TAG) == null) {
             final FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
             ft.add(R.id.content_frame, new ImageGridFragment(), TAG);
@@ -289,7 +290,7 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 				Log.e("TTS", "LANG_NOT_SUPPORTED");
 			} else {
 				//btnSpeak.setEnabled(true);
-				speakOut("init successful");
+				//speakOut("init successful");
 			}
 
 		} else {

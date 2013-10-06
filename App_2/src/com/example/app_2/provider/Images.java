@@ -2,29 +2,38 @@ package com.example.app_2.provider;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
 import android.app.Activity;
+import android.content.ContentProviderOperation;
+import android.content.ContentProviderResult;
 import android.content.Context;
+import android.content.OperationApplicationException;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
+import android.os.RemoteException;
 import android.util.Log;
 import android.view.Display;
 import android.view.WindowManager;
+import android.net.Uri;
 
 import com.example.app_2.App_2;
 import com.example.app_2.R;
+import com.example.app_2.contentprovider.ImageContract;
 import com.example.app_2.models.ImageObject;
 import com.example.app_2.storage.Database;
 import com.example.app_2.storage.Storage;
 import com.example.app_2.utils.BitmapCalc;
 import com.examples.app_2.activities.ImageGridActivity;
-import com.examples.app_2.activities.ProgressActivity;
 
-public class Images {
+public class Images { // TODO nie mo¿e byæ static
 	public static List<ImageObject> images = new LinkedList<ImageObject>();  // list of ImageObject selected by category id
+	public static List<Uri> imageUris = new ArrayList<Uri>();
+	
 	public static long img_dir_last_read = Long.valueOf(Storage.readFromSharedPreferences(String.valueOf(0), "imgDirLastRead", "imgDirLastRead", App_2.getAppContext(), Context.MODE_PRIVATE));
 	public static long imgLastModified;
 	private static final String LOG_TAG = "Images";
@@ -50,11 +59,10 @@ public class Images {
 			}
 		}
 	
-	public static void populateImagePaths(){
-		images.clear();
-		Database db = Database.open();	
-		ImageObject rootCategory = db.getRootCategory();
-		Long rootCatId = rootCategory.getId();
+	public static Uri[] populateImagePaths(){
+		//images.clear();
+		imageUris.clear();
+		//Database db = Database.open();	
 		List<String> fileNames = new LinkedList<String>();
 		fileNames = Storage.getFilesNamesFromDir(Storage.getImagesDir());		// TODO info jak folder images jest pusty
 		
@@ -65,16 +73,49 @@ public class Images {
 		}
 		
 		ImageObject img_obj= null;
+		ArrayList<ContentProviderOperation> batchOps = new ArrayList<ContentProviderOperation>();
+		
 		for(String filename: fileNames){
-			img_obj= db.isImageAlreadyExist(filename);		// je¿eli tak to zwaracam do img_obj
-			if(img_obj == null){							// brak obiektu w bazie danych
-				img_obj = new ImageObject(filename);		// TODO zamieniæ na klucz generowany z MD5
-				img_obj.setParent_fk(rootCatId);
-				images.add(db.insertImage(img_obj));
+			//File f = new File(Storage.getImagesDir() + File.separator + filename);
+			
+			//img_obj= db.isImageAlreadyExist(filename);		// je¿eli tak to zwaracam do img_obj
+			if(img_obj == null){
+				batchOps.add(ContentProviderOperation.newInsert(ImageContract.CONTENT_URI)
+						.withValue(ImageContract.Columns.PATH, filename)
+						.withValue(ImageContract.Columns.PARENT, -1)
+						.build());
+			//	img_obj = new ImageObject(filename);		// TODO zamieniæ na klucz generowany z MD5
+			//	img_obj.setParent_fk(rootCatId);
+			//	images.add(db.insertImage(img_obj));
 			}else{
-				images.add(img_obj);
+				//batchOps.
+				//imageUris.add(img_obj);
 			}
 		}
+		
+		// Invoke the batch insertion
+		ContentProviderResult[] opResults = null;
+		try {
+			opResults = App_2.getAppContext().getContentResolver().applyBatch(ImageContract.AUTHORITY, batchOps);
+		} catch (RemoteException e) {
+										// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (OperationApplicationException e) {
+										// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		// Extract the Uris of the new records
+		if(opResults!=null){
+			Uri[] newUris = new Uri[opResults.length];
+			
+			for(int index=0; index < opResults.length; index++){
+				newUris[index] = opResults[index].uri;
+				imageUris.add(opResults[index].uri);
+			}
+			return newUris;
+		}
+		return null;
 
 		//imagesPaths = db.getAllImagePathByCategory(category);
 	}
@@ -133,26 +174,48 @@ public class Images {
 	}
 	
 	
-	public static String getImagePath(int number){
-		if(number<images.size()){
-			return Storage.getImagesDir() + File.separator + images.get(number).getImageName();
-		}else{
-			return null;
-		}
-
+	public static String getImageThumbsPath(String imageName){
+		String path =  Storage.getThumbsDir() + File.separator + imageName;
+		File f = new File(path);
+		if(f.exists())
+			return Storage.getThumbsDir() + File.separator + imageName;
+		else 
+			return getImageFullScreenThumbsPath(imageName);
+	}
+	public static String getImageFullScreenThumbsPath(String imageName){
+		String path =  Storage.getThumbsMaxDir() + File.separator + imageName;
+		File f = new File(path);
+		if(f.exists())
+			return path;
+		else
+			return getImagePath(imageName);
 	}
 	
+	public static String getImagePath(String imageName){
+		String path = Storage.getImagesDir() + File.separator + imageName;
+		File f = new File(path);
+		if(f.exists())
+			return path;
+		else
+			return null;
+		
+	}
+	
+	public static String getImagePath(int number){
+		if(number<images.size())
+			return Storage.getImagesDir() + File.separator + images.get(number).getImageName();
+		return null;
+	}
+		
 	public static String getImageThubms(int number){
-		if(number<images.size()){
+		if(number<images.size())
 			return Storage.getThumbsDir() + File.separator + images.get(number).getImageName();
-		}
 		return null;
 	}
 	
 	public static String getImageFullScreenThumbs(int number){
-		if(number<images.size()){
+		if(number<images.size())
 			return Storage.getThumbsMaxDir() + File.separator + images.get(number).getImageName();
-		}
 		return null;
 	}
 	
@@ -190,13 +253,13 @@ public class Images {
 				Database db = Database.open();	
 				images = db.getAllImages();
 				imgLastModified = Storage.getImagesDir().lastModified();
-				if(imgLastModified> img_dir_last_read){
+				if(imgLastModified> img_dir_last_read){																// katalog zosta³ zmodyfikowany
 					Log.w(LOG_TAG, "images in directory has changed:"+String.valueOf(img_dir_last_read)+"<"+String.valueOf(imgLastModified));
 				}
 				if(images.size()<=1 || Storage.getImagesDir().lastModified()> img_dir_last_read ){
 					Log.i(LOG_TAG, "images size2: " +images.size());
-					populateImagePaths();								 //wstawia wszystko do g³ównej kategorii
-					//images = db.getAllImages();
+					populateImagePaths();								 											//wstawia wszystko do g³ównej kategorii
+
 													// GENERUJ MINIATURKI
 					String path_toIMG, path_toTHUMB, path_toFullScreenTHUMB;
 					Bitmap bitmap =null;
@@ -258,10 +321,106 @@ public class Images {
 		}
 		
 	     protected void onProgressUpdate(Integer... progress) {
-	    	 ImageGridActivity.dialog.setProgress(progress[0]);
-	 		//ProgressActivity.mProgressStatus = progress[0];
-	 		
-	 		
+	    	 ImageGridActivity.dialog.setProgress(progress[0]);		
+	     }
+
+	     protected void onPostExecute(Void result) {
+	         executing_activity.removeDialog(ImageGridActivity.PLEASE_WAIT_DIALOG);
+	     }
+	}
+	
+	
+	public static class ProcessBitmapsTask extends AsyncTask<Void, Integer, Void>{
+		Activity executing_activity;
+		
+		public ProcessBitmapsTask(Activity activity){
+			this.executing_activity = activity;
+		}
+		
+	@Override
+		    protected void onPreExecute() {
+			executing_activity.showDialog(ImageGridActivity.PLEASE_WAIT_DIALOG);
+		    }
+		
+		@Override
+		protected Void doInBackground(Void... arg0) {
+			int count;
+			
+			// - przejrzeæ katalog
+			// - sprawdziæ czy wygenerowane miniaturki dla wpisów
+			Cursor cursor = executing_activity.getContentResolver().query(ImageContract.CONTENT_URI, null, null, null,null);
+			cursor.moveToFirst();
+			
+			imgLastModified = Storage.getImagesDir().lastModified();
+			if(imgLastModified> img_dir_last_read || cursor.getCount() == 0 ){																// katalog zosta³ zmodyfikowany
+				Log.w(LOG_TAG, "images in directory has changed:"+String.valueOf(img_dir_last_read)+"<"+String.valueOf(imgLastModified));
+				executing_activity.getContentResolver().delete(ImageContract.CONTENT_URI, null, null);
+				populateImagePaths();
+				
+				// GENERUJ MINIATURKI
+				String path_toIMG, path_toTHUMB, path_toFullScreenTHUMB;
+				Bitmap bitmap =null;
+				Cursor c = executing_activity.getContentResolver().query(ImageContract.CONTENT_URI, null, null, null,null);
+				c.moveToFirst();
+				//List<ImageObject> all_images =  db.getAllImages();
+				//int thumbWidth=ImageLoader.mWidth;
+				//int thumbHeight = ImageLoader.mHeight;
+				int thumbWidth, thumbHeight;
+				thumbWidth =App_2.getAppContext().getResources().getDimensionPixelSize(R.dimen.image_thumbnail_size);
+				thumbHeight= App_2.getAppContext().getResources().getDimensionPixelSize(R.dimen.image_thumbnail_size);
+				
+				//full screen thumbs
+				WindowManager wm = (WindowManager) App_2.getAppContext().getSystemService(Context.WINDOW_SERVICE);
+				Display display = wm.getDefaultDisplay();
+				int maxWidth = display.getWidth();
+				int maxHeight = display.getHeight();		
+				
+				Log.i(LOG_TAG, "thumbs will be w:"+thumbWidth+" h:"+thumbHeight);
+				Log.i(LOG_TAG, "max thumbs will be w:"+maxWidth+" h:"+maxHeight);
+				//count = all_images.size();
+				count = c.getCount();
+				
+				int i= 0;
+				//for(ImageObject img_o : all_images){
+				while(!c.isAfterLast()){
+					String imageName = c.getString(c.getColumnIndex(ImageContract.Columns.PATH));
+					
+					path_toIMG = Storage.getImagesDir() + File.separator + imageName;
+					path_toTHUMB = Storage.getThumbsDir() + File.separator + imageName;
+					path_toFullScreenTHUMB = Storage.getThumbsMaxDir() + File.separator + imageName;
+					
+					bitmap = BitmapCalc.decodeSampleBitmapFromFile(path_toIMG, maxWidth,maxHeight);
+					Log.w(LOG_TAG, bitmap.getHeight() + " " +bitmap.getWidth());
+					try {
+						FileOutputStream out = new FileOutputStream(path_toFullScreenTHUMB);
+						bitmap.compress(Bitmap.CompressFormat.JPEG, 100, out);
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+					
+					bitmap = BitmapCalc.decodeSampleBitmapFromFile(path_toFullScreenTHUMB, thumbWidth,thumbHeight);
+					try {
+						FileOutputStream out = new FileOutputStream(path_toTHUMB);
+						bitmap.compress(Bitmap.CompressFormat.JPEG, 100, out);
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+					i++;
+					publishProgress((int) ((i/ (float) count)*100));
+					//Escape early if cancel() is called
+					if(isCancelled()) break;
+					
+					c.moveToNext();
+				}
+				
+				img_dir_last_read = Storage.getImagesDir().lastModified();
+				Storage.saveToSharedPreferences("imgDirLastRead", Long.toString(img_dir_last_read), "imgDirLastRead", App_2.getAppContext(), Context.MODE_PRIVATE);
+			}		
+			return null;
+		}
+		
+	     protected void onProgressUpdate(Integer... progress) {
+	    	 ImageGridActivity.dialog.setProgress(progress[0]);		
 	     }
 
 	     protected void onPostExecute(Void result) {
