@@ -102,13 +102,15 @@ public class ImageDetailActivity extends Activity{
 			  List<String> list = new ArrayList<String>();
 			  
 			  String[] projection2 = {ImageContract.Columns._ID, ImageContract.Columns.CATEGORY};
-			  String selection = ImageContract.Columns.CATEGORY + "!=\"null\"";
-			  cursor = getContentResolver().query(uri, projection2, selection, null,null);
-			  while(!cursor.isAfterLast()){
-					categories_map.put(cursor.getString(1), cursor.getLong(0));
-					cursor.moveToNext();
+			  String selection = ImageContract.Columns.CATEGORY +" IS NOT NULL";
+			  //String[] selectionArgs = {" IS NOT NULL "};
+			  Cursor cursor2 = getContentResolver().query(ImageContract.CONTENT_URI, projection2, selection, null,null);
+			  cursor2.moveToFirst();
+			  while(!cursor2.isAfterLast()){
+					categories_map.put(cursor2.getString(1), cursor2.getLong(0));
+					cursor2.moveToNext();
 			  }
-			  cursor.close();
+			  cursor2.close();
 			  list.addAll(categories_map.keySet());
 			  list.add("Add new");
 			  ArrayAdapter<String> dataAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_dropdown_item, list);

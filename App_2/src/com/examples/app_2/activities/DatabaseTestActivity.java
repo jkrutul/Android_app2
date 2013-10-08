@@ -3,38 +3,42 @@ package com.examples.app_2.activities;
 import java.util.List;
 import java.util.Random;
 
+import android.annotation.TargetApi;
 import android.app.ListActivity;
+import android.database.Cursor;
+import android.os.Build;
 import android.os.Bundle;
+import android.support.v4.app.LoaderManager.LoaderCallbacks;
+import android.support.v4.content.Loader;
+import android.support.v4.widget.SimpleCursorAdapter;
 import android.view.View;
 import android.widget.ArrayAdapter;
 
-import com.example.app_2.App_2;
+
 import com.example.app_2.R;
+import com.example.app_2.contentprovider.ImageContract;
 import com.example.app_2.models.ImageObject;
-import com.example.app_2.storage.Database;
 
 
 
-public class DatabaseTestActivity extends ListActivity {
-	private Database mda;
+public class DatabaseTestActivity extends ListActivity implements	LoaderCallbacks<Cursor>{
+	Cursor c;
+	SimpleCursorAdapter sca;
 	
-	 @Override
+	 @TargetApi(Build.VERSION_CODES.HONEYCOMB)
+	@Override
 	  public void onCreate(Bundle savedInstanceState) {
 	    super.onCreate(savedInstanceState);
 	    setContentView(R.layout.activity_test_db);
-
-	    //mda = Database.getInstance(this.getApplicationContext());
-	    //mda = Database.getInstance(App_2.getAppContext());
-	    mda =Database.open();
-
-	    List<ImageObject> values = mda.getAllImages();
-
-	    // Use the SimpleCursorAdapter to show the
-	    // elements in a ListView
-	    ArrayAdapter<ImageObject> adapter = new ArrayAdapter<ImageObject>(this, android.R.layout.simple_list_item_1, values);
-	    setListAdapter(adapter);
+	    c= getContentResolver().query(ImageContract.CONTENT_URI, 	null, null, null, null);
+	    
+	    String[] from = {ImageContract.Columns.PATH};
+	    int [] to = {android.R.id.list};
+	    sca = new SimpleCursorAdapter(getApplicationContext(),android.R.layout.simple_list_item_1, c, from, to, 0 );
+	    //ArrayAdapter<ImageObject> adapter = new ArrayAdapter<ImageObject>(this, android.R.layout.simple_list_item_1, values);
+	    setListAdapter(sca);
 	  }
-
+/*
 	  // Will be called via the onClick attribute
 	  // of the buttons in main.xml
 	  public void onClick(View view) {
@@ -74,16 +78,22 @@ public class DatabaseTestActivity extends ListActivity {
 	    }
 	    adapter.notifyDataSetChanged();
 	  }
+*/
+	@Override
+	public Loader<Cursor> onCreateLoader(int arg0, Bundle arg1) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 
-	  @Override
-	  protected void onResume() {
-	    mda.open();
-	    super.onResume();
-	  }
+	@Override
+	public void onLoadFinished(Loader<Cursor> arg0, Cursor arg1) {
+		// TODO Auto-generated method stub
+		
+	}
 
-	  @Override
-	  protected void onPause() {
-	    mda.close();
-	    super.onPause();
-	  }
+	@Override
+	public void onLoaderReset(Loader<Cursor> arg0) {
+		// TODO Auto-generated method stub
+		
+	}
 }

@@ -16,6 +16,7 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.AdapterView.AdapterContextMenuInfo;
@@ -29,7 +30,7 @@ import com.example.app_2.utils.ImageLoader;
 
 
 //@TargetApi(Build.VERSION_CODES.HONEYCOMB)
-public class ImagesOverviewActivity extends android.support.v4.app.FragmentActivity implements	LoaderCallbacks<Cursor> {
+public class ImagesOverviewActivity extends android.support.v4.app.FragmentActivity implements	 AdapterView.OnItemClickListener, LoaderCallbacks<Cursor> {
 
 	private static final int ACTIVITY_CREATE = 0;
 	private static final int ACTIVITY_EDIT = 1;
@@ -49,6 +50,7 @@ public class ImagesOverviewActivity extends android.support.v4.app.FragmentActiv
 		il = new ImageLoader();
 		setContentView(R.layout.image_list);
 		lv = (ListView) findViewById(R.id.image_list_view);
+		lv.setOnItemClickListener(this);
 		//this.getListView().setDividerHeight(2);
 		fillData();
 		registerForContextMenu(lv);
@@ -103,7 +105,7 @@ public class ImagesOverviewActivity extends android.support.v4.app.FragmentActiv
 
 		startActivity(i);
 	}
-	*/
+*/
 
 	private void fillData() {
 		// Fields from the database (projection)
@@ -161,6 +163,15 @@ public class ImagesOverviewActivity extends android.support.v4.app.FragmentActiv
 	public void onLoaderReset(Loader<Cursor> loader) {
 		// data is not available anymore, delete reference
 		adapter.swapCursor(null);
+	}
+
+	@Override
+	public void onItemClick(AdapterView<?> parent, final  View thumbView, int position, long id) {
+		Intent i = new Intent(this, ImageDetailActivity.class);
+		Uri uri = Uri.parse(ImageContract.CONTENT_URI + "/" + id);
+		i.putExtra(ImageContract.CONTENT_ITEM_TYPE, uri);
+
+		startActivity(i);
 	}
 
 }

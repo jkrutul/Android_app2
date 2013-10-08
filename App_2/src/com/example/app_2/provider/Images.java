@@ -3,23 +3,27 @@ package com.example.app_2.provider;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.ListIterator;
 
 import android.app.Activity;
 import android.content.ContentProviderOperation;
 import android.content.ContentProviderResult;
+import android.content.ContentResolver;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.OperationApplicationException;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.RemoteException;
 import android.util.Log;
 import android.view.Display;
 import android.view.WindowManager;
-import android.net.Uri;
 
 import com.example.app_2.App_2;
 import com.example.app_2.R;
@@ -59,18 +63,25 @@ public class Images { // TODO nie mo¿e byæ static
 			}
 		}
 	
+	
+	public static List<String> getImagesFileNames(List<String> fileNames){
+		Iterator<String> li =  fileNames.iterator();
+		while(li.hasNext()){   										// sprawdŸ czy pliki s¹ obrazkami
+			if(!(isImgFile(Storage.getImagesDir() + File.separator + li.next()))){
+				li.remove();
+			}
+		}
+		return fileNames;
+		
+	}
+	
 	public static Uri[] populateImagePaths(){
 		//images.clear();
 		imageUris.clear();
 		//Database db = Database.open();	
 		List<String> fileNames = new LinkedList<String>();
-		fileNames = Storage.getFilesNamesFromDir(Storage.getImagesDir());		// TODO info jak folder images jest pusty
-		
-		for(String filename: fileNames){   										// sprawdŸ czy pliki s¹ obrazkami
-			if(!(isImgFile(Storage.getImagesDir() + File.separator + filename))){
-				fileNames.remove(filename);
-			}
-		}
+		//fileNames = getImagesFileNames(Storage.getFilesNamesFromDir(Storage.getThumbsMaxDir()));
+		fileNames = Storage.getFilesNamesFromDir(Storage.getThumbsMaxDir());
 		
 		ImageObject img_obj= null;
 		ArrayList<ContentProviderOperation> batchOps = new ArrayList<ContentProviderOperation>();
@@ -355,13 +366,18 @@ public class Images { // TODO nie mo¿e byæ static
 			if(imgLastModified> img_dir_last_read || cursor.getCount() == 0 ){																// katalog zosta³ zmodyfikowany
 				Log.w(LOG_TAG, "images in directory has changed:"+String.valueOf(img_dir_last_read)+"<"+String.valueOf(imgLastModified));
 				executing_activity.getContentResolver().delete(ImageContract.CONTENT_URI, null, null);
-				populateImagePaths();
+				
+				List<String> fileNames = getImagesFileNames(Storage.getFilesNamesFromDir(Storage.getImagesDir()));
+								
+				//ContentResolver contentRes= App_2.getAppContext().getContentResolver();
+				//ContentValues cv = new ContentValues();
+				//cv.put(ImageContract.Columns.PARENT, -1);
 				
 				// GENERUJ MINIATURKI
 				String path_toIMG, path_toTHUMB, path_toFullScreenTHUMB;
 				Bitmap bitmap =null;
-				Cursor c = executing_activity.getContentResolver().query(ImageContract.CONTENT_URI, null, null, null,null);
-				c.moveToFirst();
+				//Cursor c = executing_activity.getContentResolver().query(ImageContract.CONTENT_URI, null, null, null,null);
+				//c.moveToFirst();
 				//List<ImageObject> all_images =  db.getAllImages();
 				//int thumbWidth=ImageLoader.mWidth;
 				//int thumbHeight = ImageLoader.mHeight;
@@ -378,16 +394,17 @@ public class Images { // TODO nie mo¿e byæ static
 				Log.i(LOG_TAG, "thumbs will be w:"+thumbWidth+" h:"+thumbHeight);
 				Log.i(LOG_TAG, "max thumbs will be w:"+maxWidth+" h:"+maxHeight);
 				//count = all_images.size();
-				count = c.getCount();
-				
+				count = fileNames.size();
 				int i= 0;
-				//for(ImageObject img_o : all_images){
-				while(!c.isAfterLast()){
-					String imageName = c.getString(c.getColumnIndex(ImageContract.Columns.PATH));
-					
-					path_toIMG = Storage.getImagesDir() + File.separator + imageName;
-					path_toTHUMB = Storage.getThumbsDir() + File.separator + imageName;
-					path_toFullScreenTHUMB = Storage.getThumbsMaxDir() + File.separator + imageName;
+				
+				
+				File f;
+				for(String filename : fileNames){
+					publishProgress((int) ((i/ (float) count)*100));
+					path_toIMG = Storage.getImagesDir() + File.separator + filename;
+					f = new File(path_toIMG);
+					path_toTHUMB = Storage.getThumbsDir() + File.separator + filename;
+					path_toFullScreenTHUMB = Storage.getThumbsMaxDir() + File.separator + filename;
 					
 					bitmap = BitmapCalc.decodeSampleBitmapFromFile(path_toIMG, maxWidth,maxHeight);
 					Log.w(LOG_TAG, bitmap.getHeight() + " " +bitmap.getWidth());
@@ -405,16 +422,22 @@ public class Images { // TODO nie mo¿e byæ static
 					} catch (Exception e) {
 						e.printStackTrace();
 					}
+					
+					f.delete();
+					
 					i++;
-					publishProgress((int) ((i/ (float) count)*100));
+
+					//cv.put(ImageContract.Columns.PATH, filename);
+					//contentRes.insert(ImageContract.CONTENT_URI, cv);
+
 					//Escape early if cancel() is called
 					if(isCancelled()) break;
 					
-					c.moveToNext();
 				}
 				
 				img_dir_last_read = Storage.getImagesDir().lastModified();
 				Storage.saveToSharedPreferences("imgDirLastRead", Long.toString(img_dir_last_read), "imgDirLastRead", App_2.getAppContext(), Context.MODE_PRIVATE);
+				populateImagePaths();
 			}		
 			return null;
 		}

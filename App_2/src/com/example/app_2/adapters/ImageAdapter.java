@@ -45,7 +45,7 @@ public class ImageAdapter extends BaseAdapter {
             mActionBarHeight = TypedValue.complexToDimensionPixelSize(
                     tv.data, context.getResources().getDisplayMetrics());
         }
-        new ThumbsProcessTask(App_2.actvity).execute();
+        //new ThumbsProcessTask(App_2.actvity).executeOnExecutor(exec, params);
     }
     
     public ImageAdapter(Context context, int category_id, ImageLoader il){
@@ -150,7 +150,7 @@ public class ImageAdapter extends BaseAdapter {
 
 
         // Finally load the image asynchronously into the ImageView, this also takes care of
-        // setting a placeholder image while the background thread runs
+        // setting  placeholder image while the background thread runs
         
         
         // TODO 1

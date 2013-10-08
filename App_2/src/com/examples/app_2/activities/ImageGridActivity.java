@@ -92,7 +92,7 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_grid);
 
-        // ustawienie syntezatora mowy
+        // pobranie syntezatora mowy
 		Intent checkIntent = new Intent();
 		checkIntent.setAction(TextToSpeech.Engine.ACTION_CHECK_TTS_DATA);
 		startActivityForResult(checkIntent, MY_DATA_CHECK_CODE);
@@ -102,10 +102,6 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
         App_2.actvity= mInstance;
         mDrawerTitle = "Wybierz kategoriê";
 
-        
-        //Database db = Database.getInstance(getApplicationContext());
-        //db.open();
-					
         
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
         mDrawerToggle = new ActionBarDrawerToggle(
@@ -152,7 +148,7 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
         // Set the list's click listener
         mDrawerList.setOnItemClickListener(new DrawerItemClickListener());
         
- 
+        // za³adowanie do content_frame ImageGridFragment
         if (getSupportFragmentManager().findFragmentByTag(TAG) == null) {
             final FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
             ft.add(R.id.content_frame, new ImageGridFragment(), TAG);
@@ -171,7 +167,6 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
             dialog.setCancelable(false);
             dialog.setTitle("Obliczanie");
             dialog.setMessage("Proszê czekaæ....");
-            dialog.setCancelable(true);
             return dialog;
  
         default:
@@ -254,7 +249,15 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 		    mDrawerLayout.closeDrawer(mDrawerList);
 		}
     }
-
+    
+	@Override
+	public void onStop() {
+		if (tts != null) {
+			tts.stop();
+			tts.shutdown();
+		}
+		super.onStop();
+	}
 
 	@Override
 	public void onDestroy() {
@@ -282,7 +285,7 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 				result = tts.setLanguage(pol_loc);
 				}
 			else{
-				result=tts.setLanguage(Locale.ITALIAN);
+				result=tts.setLanguage(Locale.ENGLISH);
 			}
 				
 			if (result == TextToSpeech.LANG_MISSING_DATA

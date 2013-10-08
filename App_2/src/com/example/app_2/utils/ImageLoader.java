@@ -16,6 +16,8 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.support.v4.util.LruCache;
 import android.util.Log;
+import android.view.Display;
+import android.view.WindowManager;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 
@@ -34,6 +36,8 @@ public class ImageLoader {
 	private boolean mDiskCacheStarting = true;
 	private static final int DISK_CACHE_SIZE = 1024 * 1024 * 10; // 10MB
 	public static int  mWidth=100, mHeight=100;
+	int maxWidth;
+	int maxHeight;
 	
 	
 	
@@ -50,6 +54,11 @@ public class ImageLoader {
 	
 	public ImageLoader() {
 		context = App_2.getAppContext();
+		//full screen thumbs
+		WindowManager wm = (WindowManager) App_2.getAppContext().getSystemService(Context.WINDOW_SERVICE);
+		Display display = wm.getDefaultDisplay();
+		maxWidth = display.getWidth();
+		maxHeight = display.getHeight();		
 		mPlaceHolderBitmap = BitmapCalc.decodeSampleBitmapFromResources(App_2.getAppContext().getResources(), R.drawable.image_placeholder, 100, 100);
 		
 		/* INITIALIZE MEMORY CACHE */
@@ -157,14 +166,18 @@ public class ImageLoader {
 	        final String imageKey = String.valueOf(path);
 	        Bitmap bitmap = mMemoryCache.get(imageKey);
 	        if(bitmap ==null){	// Not found in disk cache
-	        	bitmap = BitmapCalc.decodeSampleBitmapFromFile(path, mWidth, mHeight);
-	        	//bitmap = BitmapFactory.decodeFile(path);
+	        	//bitmap = BitmapCalc.decodeSampleBitmapFromFile(path, mWidth, mHeight);
+	        	bitmap = BitmapFactory.decodeFile(path);
+	        	//if((maxHeight != -1 &&  maxWidth !=-1)&&(bitmap.getHeight()> maxHeight*1.5 || bitmap.getWidth()> maxWidth*1.5 )){
+		        //	bitmap = BitmapCalc.decodeSampleBitmapFromFile(path, maxWidth, maxHeight);
+		        //	}
 	        	if(bitmap == null)
 	        		return null;
-	        	Log.i(LOG_TAG,"decoded image h:"+bitmap.getHeight()+" w:"+bitmap.getWidth());
+	        	//Log.i(LOG_TAG,"decoded image h:"+bitmap.getHeight()+" w:"+bitmap.getWidth());
 	        	addBitmapToCache(imageKey,bitmap);
 	        }
-	        return BitmapCalc.getRoundedCornerBitmap(bitmap);
+	        //return BitmapCalc.getRoundedCornerBitmap(bitmap);
+	        return bitmap;
 	    }
 	    public void addBitmapToCache(String key, Bitmap bitmap) {
 	    	if(key !=null && bitmap != null){

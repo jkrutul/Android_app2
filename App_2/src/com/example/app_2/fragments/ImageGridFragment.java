@@ -1,5 +1,7 @@
 package com.example.app_2.fragments;
 
+import java.util.concurrent.Executor;
+
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.AnimatorSet;
@@ -11,6 +13,7 @@ import android.app.ProgressDialog;
 import android.database.Cursor;
 import android.graphics.Point;
 import android.graphics.Rect;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -32,10 +35,12 @@ import android.widget.AdapterView;
 import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.Toast;
+import com.example.app_2.views.RecyclingImageView;
 
 import com.example.app_2.App_2;
 import com.example.app_2.R;
 import com.example.app_2.adapters.ImageAdapter;
+import com.example.app_2.adapters.ImageCursorAdapter;
 import com.example.app_2.contentprovider.ImageContract;
 import com.example.app_2.models.ImageObject;
 import com.example.app_2.provider.Images;
@@ -49,7 +54,7 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
     private ImageView expandedImageView;
     private int mImageThumbSize;
     private int mImageThumbSpacing;
-    private SimpleCursorAdapter adapter;
+    private ImageCursorAdapter adapter;
     //private ImageAdapter mAdapter;
     //private ImageFetcher mImageFetcher;
     private ImageLoader imageLoader;
@@ -59,6 +64,7 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
     private GridView.LayoutParams mImageViewLayoutParams;
     private int mItemHeight = 0;
     private int mNumColumns = 0;
+	ImageView mImageView;
     	
     public ImageGridFragment(){
     	
@@ -67,12 +73,14 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
     @Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+
+		
 		mImageViewLayoutParams = new GridView.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
 		imageLoader = new ImageLoader();
 		if(App_2.actvity!=null){
 			expandedImageView = (ImageView) App_2.actvity.findViewById(R.id.expanded_image);
 		}
-		
+				
 		int category_id = -1;
 		Bundle bundle = this.getArguments();
 		if(bundle !=null)
@@ -97,10 +105,13 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
 		String[] from = new String[] { ImageContract.Columns._ID,
 				   ImageContract.Columns.PATH,
 				   ImageContract.Columns.PATH };
+		
 		int[] to = new int[] { 0,R.id.label, R.id.icon };
 				
 		getLoaderManager().initLoader(0, null, this);
-		new ProcessBitmapsTask(getActivity()).execute();
+		ProcessBitmapsTask pbt = new ProcessBitmapsTask(getActivity());
+		pbt.executeOnExecutor(AsyncTask.SERIAL_EXECUTOR);
+		
 		
 		Cursor c ;
 		if(category_fk == -1)
@@ -110,16 +121,10 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
 			String[] selectionArgs = new String[]{String.valueOf(category_fk)};
 			c = getActivity().getContentResolver().query(ImageContract.CONTENT_URI, from, selection, selectionArgs ,null);
 		}
-		if(c.getCount()<=0){
-		c.close();
-		}
-		
-		adapter = new SimpleCursorAdapter(getActivity(), R.layout.fragment_content, c, from,to, 0){
-			
-		};
-		
+
+		adapter = new ImageCursorAdapter(getActivity(), c, mImageViewLayoutParams, imageLoader);
+				/*
 		adapter.setViewBinder(new SimpleCursorAdapter.ViewBinder(){
-			/** Binds the Cursor column defined by the specified index to the specified view */
 			public boolean setViewValue(View view, Cursor cursor, int columnIndex){
 				if(view.getId() == R.id.icon){
 					 String path = Images.getImageThumbsPath(cursor.getString(cursor.getColumnIndex(ImageContract.Columns.PATH)));
@@ -129,6 +134,8 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
 				return false;
 			}
 		});
+		*/
+		
 		
 		//lv.setAdapter(adapter);
     }
@@ -139,8 +146,8 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
     public View onCreateView(LayoutInflater inflater, ViewGroup containter, Bundle sacedInstanceState){
     	final View v = inflater.inflate(R.layout.fragment_image_grid, containter,false);
 		final GridView mGridView = (GridView) v.findViewById(R.id.gridView);
-	        mGridView.setAdapter(adapter);
 	        mGridView.setOnItemClickListener(this);
+	        
 	        mGridView.setOnScrollListener(new AbsListView.OnScrollListener() {
 	            @Override
 	            public void onScrollStateChanged(AbsListView absListView, int scrollState) {
@@ -166,11 +173,9 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
 	                    @Override
 	                    public void onGlobalLayout() {
 	                        if (getNumColumns() == 0) {
-	                            final int numColumns = (int) Math.floor(
-	                                    mGridView.getWidth() / (mImageThumbSize + mImageThumbSpacing));
+	                            final int numColumns = (int) Math.floor(mGridView.getWidth() / (mImageThumbSize + mImageThumbSpacing));
 	                            if (numColumns > 0) {
-	                                final int columnWidth =
-	                                        (mGridView.getWidth() / numColumns) - mImageThumbSpacing;
+	                                final int columnWidth = (mGridView.getWidth() / numColumns) - mImageThumbSpacing;
 	                                setNumColumns(numColumns);
 	                                setItemHeight(columnWidth);
 	                                    Log.d(TAG, "onCreateView - numColumns set to " + numColumns);
@@ -178,6 +183,8 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
 	                        }
 	                    }
 	                });
+	        
+	        mGridView.setAdapter(adapter);
 
 	        return v;
 
@@ -194,8 +201,7 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
             return;
         }
         mItemHeight = height;
-        mImageViewLayoutParams =
-                new GridView.LayoutParams(LayoutParams.MATCH_PARENT, mItemHeight);
+        mImageViewLayoutParams = new GridView.LayoutParams(LayoutParams.MATCH_PARENT, mItemHeight);
         ImageLoader.setImageSize(height);
         //notifyDataSetChanged();
     }
@@ -230,8 +236,11 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
 	@TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
 	@Override
 	public void onItemClick(AdapterView<?> parent, final  View thumbView, int position, long id) {
-		ImageObject imgO = (ImageObject) adapter.getItem(position);							// TODO przejœcie do nowej kategorii
-		Toast.makeText(App_2.getAppContext(), "pos:"+position+"\n"+imgO, Toast.LENGTH_SHORT).show();
+		Cursor c = (Cursor) adapter.getItem(position);							// TODO przejœcie do nowej kategorii
+		String filename = c.getString(c.getColumnIndex(ImageContract.Columns.PATH));
+		
+		//c.getString(c)
+		//Toast.makeText(App_2.getAppContext(), "pos:"+position+"\n"+imgO, Toast.LENGTH_SHORT).show();
 		/*
 		intent = new Intent(this, ImageGridActivity.class);
 		startActivity(intent);
@@ -245,12 +254,12 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
 		//App_2.actvity.getActionBar().hide();
 	    // Load the high-resolution "zoomed-in" image.
 		if(expandedImageView!=null){
-			 String path = Images.getImageFullScreenThumbs(position);
-			 App_2.actvity.speakOut(Utils.cutExtention(Images.images.get(position).getImageName()));
+			 String path = Images.getImageFullScreenThumbsPath(filename);
 			 imageLoader.loadBitmap(path, expandedImageView);
+			 App_2.actvity.speakOut(Utils.cutExtention(filename));
 		}
 		
-		App_2.actvity.refreshDrawer(Images.images.get(position).getId());
+		//App_2.actvity.refreshDrawer(Images.images.get(position).getId());
 				
 
 		
