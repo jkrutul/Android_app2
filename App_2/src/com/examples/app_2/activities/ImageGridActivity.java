@@ -16,9 +16,11 @@
 
 package com.examples.app_2.activities;
 
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 import android.animation.Animator;
 import android.annotation.SuppressLint;
@@ -27,7 +29,7 @@ import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.res.Configuration;
-import android.os.AsyncTask;
+import android.database.Cursor;
 import android.os.Build;
 import android.os.Bundle;
 import android.speech.tts.TextToSpeech;
@@ -36,6 +38,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.widget.DrawerLayout;
+import android.support.v4.widget.SimpleCursorAdapter;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -43,15 +46,19 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.ImageView;
 import android.widget.ListView;
 
 import com.example.app_2.App_2;
 import com.example.app_2.R;
+import com.example.app_2.contentprovider.ImageContract;
 import com.example.app_2.fragments.ImageGridFragment;
 import com.example.app_2.models.ImageObject;
-import com.example.app_2.storage.Database;
 import com.example.app_2.provider.Images;
-import com.example.app_2.provider.Images.ThumbsProcessTask;
+import com.example.app_2.storage.Database;
+import com.example.app_2.utils.ImageLoader;
+import com.example.app_2.utils.Utils;
+import com.example.app_2.views.RecyclingImageView;
 
 /**
  * Simple FragmentActivity to hold the main {@link ImageGridFragment} and not much else.
@@ -65,20 +72,18 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
     private DrawerLayout mDrawerLayout;
     private ActionBarDrawerToggle mDrawerToggle;
     private static ListView mDrawerList;
-    private Animator mCurrentAnimator;
-    private int mShortAnimationDuration;
+
     public static ImageGridActivity mInstance;
+    private ImageView	expandedImageView;
+
     
-    private ImageObject rootCategory;
-    private List<ImageObject> allCategories;
-    private ImageObject parentCategory;
-    private List<ImageObject> subCategories;
-    private List<ImageObject> categoryLeafs;
+    private Map<String, Long> mCategoryMap;
     
-    private List<ImageObject> categoriesInDrawer;
+
     
     CharSequence mTitle;
     CharSequence mDrawerTitle;
+    ImageLoader il;
     
 	private static TextToSpeech tts;
 	public static final int MY_DATA_CHECK_CODE = 1;
@@ -91,62 +96,21 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_grid);
-
+		il = new ImageLoader();
+		mCategoryMap = new HashMap();
         // pobranie syntezatora mowy
 		Intent checkIntent = new Intent();
 		checkIntent.setAction(TextToSpeech.Engine.ACTION_CHECK_TTS_DATA);
 		startActivityForResult(checkIntent, MY_DATA_CHECK_CODE);
         
+		
+		
 		// ustawienie drawera
         mInstance = this;
         App_2.actvity= mInstance;
-        mDrawerTitle = "Wybierz kategoriê";
-
+        expandedImageView = (ImageView) findViewById(R.id.expanded_image);
         
-        mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
-        mDrawerToggle = new ActionBarDrawerToggle(
-	                this,                  /* host Activity */
-	                mDrawerLayout,         /* DrawerLayout object */
-	                R.drawable.ic_drawer,  /* nav drawer icon to replace 'Up' caret */
-	                R.string.drawer_open,  /* "open drawer" description */
-	                R.string.drawer_close  /* "close drawer" description */
-                ) {
-
-            /** Called when a drawer has settled in a completely closed state. */
-            public void onDrawerClosed(View view) {
-                getActionBar().setTitle(mTitle);
-            }
-
-            /** Called when a drawer has settled in a completely open state. */
-            public void onDrawerOpened(View drawerView) {
-				getActionBar().setTitle(mDrawerTitle);
-            }
-        };
-
-        // Set the drawer toggle as the DrawerListener
-        mDrawerLayout.setDrawerListener(mDrawerToggle);
-
-        getActionBar().setDisplayHomeAsUpEnabled(true);
-        getActionBar().setHomeButtonEnabled(true);
-    
-        
-        mDrawerList  = (ListView) findViewById(R.id.left_drawer);
-        
-        /*
-        rootCategory = db.getRootCategory();
-        if(rootCategory!=null){
-	        subCategories = db.getSubcategories(rootCategory.getId());
-	        
-	        for(ImageObject i: subCategories){
-	        	mCategoryTitles.add(i.getCategory());
-	        }
-        }
-        */
-        
-        // Set the adapter for the list view
-        mDrawerList.setAdapter(new ArrayAdapter<String>(this, R.layout.drawer_list_item, mCategoryTitles)); // TODO zmieniæ na adapter z obrazkiem
-        // Set the list's click listener
-        mDrawerList.setOnItemClickListener(new DrawerItemClickListener());
+        setDrawer();
         
         // za³adowanie do content_frame ImageGridFragment
         if (getSupportFragmentManager().findFragmentByTag(TAG) == null) {
@@ -229,9 +193,14 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 		}
 		
 		private void selectItem(int position){
+            expandedImageView.setVisibility(View.GONE);
+			
 			Fragment fragment = new ImageGridFragment();
 			Bundle args = new Bundle();
-			Long cat_id = subCategories.get(position).getId();
+			Long cat_id = mCategoryMap.get(mCategoryTitles.get(position));
+			Log.i("info", "parent " + Utils.getKeyByValue(mCategoryMap, cat_id));
+			
+			
 			args.putLong("CATEGORY_ID", cat_id);
 			fragment.setArguments(args);
 			
@@ -244,9 +213,10 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 			
 			 // Highlight the selected item, update the title, and close the drawer
 		    mDrawerList.setItemChecked(position, true);
-		    setTitle(subCategories.get(position).getCategory());
-		    mTitle = getTitle();
-		    mDrawerLayout.closeDrawer(mDrawerList);
+		    //setTitle(subCategories.get(position).getCategory());
+		    //mTitle = getTitle();
+		    //mDrawerLayout.closeDrawer(mDrawerList);
+		    mDrawerLayout.closeDrawers();
 		}
     }
     
@@ -321,6 +291,88 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 		tts.speak(text, TextToSpeech.QUEUE_FLUSH, null);
 	}
 
+	@SuppressLint("NewApi")
+	@TargetApi(Build.VERSION_CODES.HONEYCOMB)
+	private void setDrawer(){
+		mDrawerTitle = "Wybierz kategoriê";
+        mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
+        mDrawerToggle = new ActionBarDrawerToggle(
+	                this,                  /* host Activity */
+	                mDrawerLayout,         /* DrawerLayout object */
+	                R.drawable.ic_drawer,  /* nav drawer icon to replace 'Up' caret */
+	                R.string.drawer_open,  /* "open drawer" description */
+	                R.string.drawer_close  /* "close drawer" description */
+                ) {
+
+            /** Called when a drawer has settled in a completely closed state. */
+            public void onDrawerClosed(View view) {
+                getActionBar().setTitle(mTitle);
+            }
+
+            /** Called when a drawer has settled in a completely open state. */
+            public void onDrawerOpened(View drawerView) {
+				getActionBar().setTitle(mDrawerTitle);
+            }
+        };
+
+        // Set the drawer toggle as the DrawerListener
+        mDrawerLayout.setDrawerListener(mDrawerToggle);
+
+        getActionBar().setDisplayHomeAsUpEnabled(true);
+        getActionBar().setHomeButtonEnabled(true);
+
+        mDrawerList  = (ListView) findViewById(R.id.left_drawer);
+        String[] projection= {ImageContract.Columns._ID, ImageContract.Columns.PATH, ImageContract.Columns.CATEGORY};
+        String selection = ImageContract.Columns.CATEGORY + " IS NOT NULL AND ("+ImageContract.Columns.CATEGORY +" <> ?)";
+        String[] selectionArgs ={""};
+        Cursor c = getContentResolver().query(ImageContract.CONTENT_URI, projection, selection, selectionArgs, null);
+        c.moveToFirst();
+        while(!c.isAfterLast()){
+        	String category = c.getString(c.getColumnIndex(ImageContract.Columns.CATEGORY));
+        	Long id = c.getLong(c.getColumnIndex(ImageContract.Columns._ID));
+        	mCategoryMap.put(category, id);
+        	mCategoryTitles.add(category);
+        	c.moveToNext();
+        }
+        //c.close();
+        
+        /*
+        rootCategory = db.getRootCategory();
+        if(rootCategory!=null){
+	        subCategories = db.getSubcategories(rootCategory.getId());
+	        
+	        for(ImageObject i: subCategories){
+	        	mCategoryTitles.add(i.getCategory());
+	        }
+        }
+        */
+        
+		String[] from = new String[] { ImageContract.Columns._ID,
+				   ImageContract.Columns.PATH,
+				   ImageContract.Columns.CATEGORY};
+				// Fields on the UI to which we map
+		int[] to = new int[] { 0, R.id.icon, R.id.category };
+        SimpleCursorAdapter adapter = new SimpleCursorAdapter(getApplicationContext(), R.layout.image_row, c, from,to, 0);
+    	adapter.setViewBinder(new SimpleCursorAdapter.ViewBinder(){
+			   /** Binds the Cursor column defined by the specified index to the specified view */
+			   public boolean setViewValue(View view, Cursor cursor, int columnIndex){
+			       if(view.getId() == R.id.icon){
+						 String path = Images.getImageThumbsPath(cursor.getString(cursor.getColumnIndex(ImageContract.Columns.PATH)));
+						 il.loadBitmap(path, (ImageView) view);
+			           return true; //true because the data was bound to the view
+			       }
+			       return false;
+			   }
+			});
+
+        
+        // Set the adapter for the list view
+    	mDrawerList.setAdapter(adapter);
+        //mDrawerList.setAdapter(new ArrayAdapter<String>(this, R.layout.drawer_list_item, mCategoryTitles)); // TODO zmieniæ na adapter z obrazkiem
+        // Set the list's click listener
+        mDrawerList.setOnItemClickListener(new DrawerItemClickListener());
+	}
+	
 	public static void refreshDrawer(Long img_id){
 	     Database db = Database.getInstance(App_2.getAppContext());
 	     db.open();

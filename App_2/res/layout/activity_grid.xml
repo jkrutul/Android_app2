@@ -39,6 +39,9 @@
             android:choiceMode="singleChoice"
             android:divider="@android:color/transparent"
             android:dividerHeight="3dp" >
+            
+            
+            
         </ListView>
     </LinearLayout>
 

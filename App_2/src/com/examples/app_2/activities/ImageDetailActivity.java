@@ -15,6 +15,8 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -28,8 +30,9 @@ import com.example.app_2.contentprovider.ImageContract;
 import com.example.app_2.storage.Database;
 import com.example.app_2.storage.Storage;
 import com.example.app_2.utils.ImageLoader;
+import com.example.app_2.utils.Utils;
 
-public class ImageDetailActivity extends Activity{
+public class ImageDetailActivity extends Activity {
 	  private TextView mId;
 	  private EditText mCategory;
 	  private TextView mTitleText;
@@ -40,6 +43,7 @@ public class ImageDetailActivity extends Activity{
 	  
 	  private Map<String,Long> categories_map;
 	  private Spinner mSpinner;
+	  List<String> list = new ArrayList<String>();
 
 	  private Uri todoUri;
 
@@ -58,18 +62,59 @@ public class ImageDetailActivity extends Activity{
 	    mSpinner = (Spinner) findViewById(R.id.parent_spinner);
 	    Bundle extras = getIntent().getExtras();
 	    imgLoader = new ImageLoader();
-
+	    categories_map = new HashMap<String,Long>();
+	    addItemsOnSpinner();
 	    // Check from the saved Instance
 	    todoUri = (bundle == null) ? null : (Uri) bundle.getParcelable(ImageContract.CONTENT_ITEM_TYPE);
 
 	    // Or passed from the other activity
 	    if (extras != null) {
 	      todoUri = extras.getParcelable(ImageContract.CONTENT_ITEM_TYPE);
-	      categories_map = new HashMap<String,Long>();
+
 	      fillData(todoUri);
 	    }
-	  }
 
+	  }
+	  
+	  private void addItemsOnSpinner(){
+		  
+		  String[] projection2 = {ImageContract.Columns._ID, ImageContract.Columns.CATEGORY};
+		  String selection = ImageContract.Columns.CATEGORY +" IS NOT NULL";
+		  Cursor c = getContentResolver().query(ImageContract.CONTENT_URI, projection2, selection, null,null);
+		  c.moveToFirst();
+		  while(!c.isAfterLast()){
+				categories_map.put(c.getString(1), c.getLong(0));
+				c.moveToNext();
+		  }
+		  c.close();
+		  if(categories_map.containsKey("")){
+			  categories_map.remove("");
+			  categories_map.put("", Long.valueOf(-1));
+		  }
+		  list.addAll(categories_map.keySet());
+		  //list.add("Add new");
+		  
+		  ArrayAdapter<String> dataAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_dropdown_item, list);
+		  dataAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+		  mSpinner.setAdapter(dataAdapter);
+		  mSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+
+			@Override
+			public void onItemSelected(AdapterView<?> parent, View view, int pos, long id) {
+				Object item = parent.getItemAtPosition(pos);
+				
+			}
+
+			@Override
+			public void onNothingSelected(AdapterView<?> arg0) {
+				// TODO Auto-generated method stub
+				
+			}
+		});
+		  
+	  }
+	  
+	  
 	  private void fillData(Uri uri) {
 	    String[] projection = {ImageContract.Columns._ID,ImageContract.Columns.PATH, ImageContract.Columns.DESC, ImageContract.Columns.CATEGORY, ImageContract.Columns.PARENT};
 	    Cursor cursor = getContentResolver().query(uri, projection, null, null,null);
@@ -86,36 +131,26 @@ public class ImageDetailActivity extends Activity{
 	      }
 	      */
 	      	  String img_id = cursor.getString(cursor.getColumnIndex(ImageContract.Columns._ID));
+	      	  Long parent_fk = cursor.getLong(cursor.getColumnIndexOrThrow(ImageContract.Columns.PARENT));
+	      	  String category = cursor.getString(cursor.getColumnIndexOrThrow(ImageContract.Columns.CATEGORY));
 	      	  mId.setText(img_id);
-		      String category = cursor.getString(cursor.getColumnIndexOrThrow(ImageContract.Columns.CATEGORY));
+		     
 		      mCategory.setText(category);
-		      mParent.setText(cursor.getString(cursor.getColumnIndexOrThrow(ImageContract.Columns.PARENT)));
+		      mParent.setText(String.valueOf(parent_fk));
+		      if(categories_map.containsValue(Long.valueOf(mParent.getText().toString()))){
+		    	  String categoryName =   Utils.getKeyByValue(categories_map, parent_fk);
+		    	  mSpinner.setSelection(list.indexOf(categoryName));
+			      
+		      }else
+		    	  mSpinner.setSelection(list.indexOf(""));
+		      
 		      String imgName = cursor.getString(cursor.getColumnIndexOrThrow(ImageContract.Columns.PATH));
 		      mTitleText.setText(imgName);
 		      mDescText.setText(cursor.getString(cursor.getColumnIndexOrThrow(ImageContract.Columns.DESC)));
-	
+		      
 		      // Always close the cursor
 		      cursor.close();
-			  imgLoader.loadBitmap(Storage.getThumbsDir()+File.separator+imgName, mImage);
-			  
-			  // add items on spinner
-			  List<String> list = new ArrayList<String>();
-			  
-			  String[] projection2 = {ImageContract.Columns._ID, ImageContract.Columns.CATEGORY};
-			  String selection = ImageContract.Columns.CATEGORY +" IS NOT NULL";
-			  //String[] selectionArgs = {" IS NOT NULL "};
-			  Cursor cursor2 = getContentResolver().query(ImageContract.CONTENT_URI, projection2, selection, null,null);
-			  cursor2.moveToFirst();
-			  while(!cursor2.isAfterLast()){
-					categories_map.put(cursor2.getString(1), cursor2.getLong(0));
-					cursor2.moveToNext();
-			  }
-			  cursor2.close();
-			  list.addAll(categories_map.keySet());
-			  list.add("Add new");
-			  ArrayAdapter<String> dataAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_dropdown_item, list);
-			  dataAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-			  mSpinner.setAdapter(dataAdapter);
+			  imgLoader.loadBitmap(Storage.getThumbsMaxDir()+File.separator+imgName, mImage);			 
 	    }
 	  }
 
@@ -149,8 +184,9 @@ public class ImageDetailActivity extends Activity{
 	    String category = mCategory.getText().toString();
 	    String summary = mTitleText.getText().toString();
 	    String description = mDescText.getText().toString();
-	    String patent = mParent.getText().toString();
+	    String parent_fk = String.valueOf(categories_map.get(mSpinner.getSelectedItem().toString()));
 	    
+
 	    // Only save if either summary or description
 	    // is available
 
@@ -162,7 +198,7 @@ public class ImageDetailActivity extends Activity{
 	    values.put(ImageContract.Columns.CATEGORY, category);
 	    values.put(ImageContract.Columns.PATH, summary);
 	    values.put(ImageContract.Columns.DESC, description);
-	    values.put(ImageContract.Columns.PARENT, patent);
+	    values.put(ImageContract.Columns.PARENT, parent_fk);
 
 	    if (todoUri == null) {
 	      // New todo
@@ -177,4 +213,8 @@ public class ImageDetailActivity extends Activity{
 	    Toast.makeText(ImageDetailActivity.this, "Please maintain a summary",
 	        Toast.LENGTH_LONG).show();
 	  }
+	  
+	  
+
+
 }

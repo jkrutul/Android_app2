@@ -1,18 +1,15 @@
 package com.example.app_2.fragments;
 
-import java.util.concurrent.Executor;
-
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
-import android.app.Dialog;
-import android.app.ProgressDialog;
 import android.database.Cursor;
 import android.graphics.Point;
 import android.graphics.Rect;
+
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
@@ -20,29 +17,24 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
-import android.support.v4.widget.SimpleCursorAdapter;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.ViewTreeObserver;
 import android.view.ViewGroup.LayoutParams;
+import android.view.ViewTreeObserver;
 import android.view.animation.DecelerateInterpolator;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.GridView;
 import android.widget.ImageView;
-import android.widget.Toast;
-import com.example.app_2.views.RecyclingImageView;
 
 import com.example.app_2.App_2;
 import com.example.app_2.R;
-import com.example.app_2.adapters.ImageAdapter;
 import com.example.app_2.adapters.ImageCursorAdapter;
 import com.example.app_2.contentprovider.ImageContract;
-import com.example.app_2.models.ImageObject;
 import com.example.app_2.provider.Images;
 import com.example.app_2.provider.Images.ProcessBitmapsTask;
 import com.example.app_2.utils.ImageLoader;
@@ -80,66 +72,43 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
 		if(App_2.actvity!=null){
 			expandedImageView = (ImageView) App_2.actvity.findViewById(R.id.expanded_image);
 		}
-				
-		int category_id = -1;
-		Bundle bundle = this.getArguments();
-		if(bundle !=null)
-			category_id = (int) bundle.getLong("CATEGORY_ID", -1);
+		adapter = new ImageCursorAdapter(getActivity(), null, mImageViewLayoutParams, imageLoader);
+		getLoaderManager().initLoader(0, this.getArguments(), this);		
+		
 		
 		setHasOptionsMenu(true);
 		mImageThumbSize = getResources().getDimensionPixelSize(R.dimen.image_thumbnail_size);
         mImageThumbSpacing = getResources().getDimensionPixelSize(R.dimen.image_thumbnail_spacing);
-		fillData(category_id);
-        /*
-        if(category_id != -1){
-			mAdapter = new ImageAdapter(getActivity(), category_id,imageLoader);
-		}else
-		{
-			mAdapter = new ImageAdapter(getActivity(),imageLoader);
-		}
-		*/
-		
+		//fillData(category_id);	
 	}
     
-    private void fillData(int category_fk){
+    @SuppressLint("NewApi")
+	private void fillData(int category_fk){
 		String[] from = new String[] { ImageContract.Columns._ID,
 				   ImageContract.Columns.PATH,
 				   ImageContract.Columns.PATH };
 		
 		int[] to = new int[] { 0,R.id.label, R.id.icon };
 				
-		getLoaderManager().initLoader(0, null, this);
-		ProcessBitmapsTask pbt = new ProcessBitmapsTask(getActivity());
-		pbt.executeOnExecutor(AsyncTask.SERIAL_EXECUTOR);
+		//getLoaderManager().initLoader(0, null, this);
+		
+
 		
 		
 		Cursor c ;
-		if(category_fk == -1)
+		if(category_fk == -1){
+			ProcessBitmapsTask pbt = new ProcessBitmapsTask(getActivity());
+			pbt.executeOnExecutor(AsyncTask.SERIAL_EXECUTOR);
 			c = getActivity().getContentResolver().query(ImageContract.CONTENT_URI, from, null, null ,null);
+			}
 		else{
-			String selection = ImageContract.Columns.CATEGORY +" = ?";
+			String selection = ImageContract.Columns.PARENT +" = ?";
 			String[] selectionArgs = new String[]{String.valueOf(category_fk)};
 			c = getActivity().getContentResolver().query(ImageContract.CONTENT_URI, from, selection, selectionArgs ,null);
 		}
 
 		adapter = new ImageCursorAdapter(getActivity(), c, mImageViewLayoutParams, imageLoader);
-				/*
-		adapter.setViewBinder(new SimpleCursorAdapter.ViewBinder(){
-			public boolean setViewValue(View view, Cursor cursor, int columnIndex){
-				if(view.getId() == R.id.icon){
-					 String path = Images.getImageThumbsPath(cursor.getString(cursor.getColumnIndex(ImageContract.Columns.PATH)));
-					 imageLoader.loadBitmap(path, (ImageView) view);
-					 return true; //true because the data was bound to the view
-				}
-				return false;
-			}
-		});
-		*/
-		
-		
-		//lv.setAdapter(adapter);
     }
-    
     
     
     @Override
@@ -394,10 +363,37 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
     }
 
 	@Override
-	public Loader<Cursor> onCreateLoader(int arg0, Bundle arg1) {
-		String[] projection = { ImageContract.Columns._ID,	ImageContract.Columns.PATH };
-		CursorLoader cursorLoader = new CursorLoader(App_2.getAppContext(),ImageContract.CONTENT_URI, null, null, null, null);
+	public Loader<Cursor> onCreateLoader(int arg0, Bundle bundle) {
+		CursorLoader cursorLoader= null;
+		int category_fk = (bundle!= null) ? (int) bundle.getLong("CATEGORY_ID", -1)	: -1;
+		
+		String[] from = new String[] { ImageContract.Columns._ID, ImageContract.Columns.PATH, ImageContract.Columns.PATH };	
+		String selection = ImageContract.Columns.PARENT +" = ?";
+		String[] selectionArgs = new String[]{String.valueOf(category_fk)};
+
+		cursorLoader = new CursorLoader(App_2.getAppContext(),ImageContract.CONTENT_URI, from, selection, selectionArgs ,null);
 		return cursorLoader;
+		/*
+		Cursor c ;
+		if(category_fk == -1){
+			ProcessBitmapsTask pbt = new ProcessBitmapsTask(getActivity());
+			//pbt.executeOnExecutor(AsyncTask.SERIAL_EXECUTOR);
+			pbt.execute();
+			c = getActivity().getContentResolver().query(ImageContract.CONTENT_URI, from, null, null ,null);
+			
+		}else{
+
+			
+			c = getActivity().getContentResolver().query(ImageContract.CONTENT_URI, from, selection, selectionArgs ,null);
+		}
+
+		adapter = new ImageCursorAdapter(getActivity(), c, mImageViewLayoutParams, imageLoader);
+		
+
+		cursorLoader = new CursorLoader(App_2.getAppContext(),ImageContract.CONTENT_URI, from, selection, selectionArgs ,null);
+		
+		return cursorLoader;
+		*/
 	}
 
 	@Override

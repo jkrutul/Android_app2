@@ -20,8 +20,8 @@ import android.widget.AdapterView;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.AdapterView.AdapterContextMenuInfo;
+import android.widget.RelativeLayout;
 
-import com.example.app_2.App_2;
 import com.example.app_2.R;
 import com.example.app_2.contentprovider.ImageContract;
 
@@ -40,6 +40,7 @@ public class ImagesOverviewActivity extends android.support.v4.app.FragmentActiv
 
 	private SimpleCursorAdapter adapter;
 	private ListView lv;
+
 
 	
 	/** Called when the activity is first created. */
@@ -112,9 +113,11 @@ public class ImagesOverviewActivity extends android.support.v4.app.FragmentActiv
 		// Must include the _id column for the adapter to work
 		String[] from = new String[] { ImageContract.Columns._ID,
 									   ImageContract.Columns.PATH,
-									   ImageContract.Columns.PATH };
+									   ImageContract.Columns.PATH,
+									   ImageContract.Columns.CATEGORY,
+									   ImageContract.Columns.PARENT};
 		// Fields on the UI to which we map
-		int[] to = new int[] { 0,R.id.label, R.id.icon };
+		int[] to = new int[] { 0,R.id.label, R.id.icon, R.id.category, R.id.perent };
 		getSupportLoaderManager().initLoader(0, null, this);
 		
 		Cursor c = getContentResolver().query(ImageContract.CONTENT_URI, from, null, null ,null);
@@ -149,7 +152,7 @@ public class ImagesOverviewActivity extends android.support.v4.app.FragmentActiv
 	// Creates a new loader after the initLoader () call
 	@Override
 	public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-		String[] projection = { ImageContract.Columns._ID,	ImageContract.Columns.PATH };
+		String[] projection = { ImageContract.Columns._ID,	ImageContract.Columns.PATH, ImageContract.Columns.CATEGORY , ImageContract.Columns.PARENT};
 		CursorLoader cursorLoader = new CursorLoader(this,ImageContract.CONTENT_URI, projection, null, null, null);
 		return cursorLoader;
 	}
