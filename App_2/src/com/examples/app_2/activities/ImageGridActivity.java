@@ -22,14 +22,20 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-import android.animation.Animator;
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
+import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ProgressDialog;
+import android.content.DialogInterface;
+import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.database.Cursor;
+import android.database.MatrixCursor;
+import android.database.MergeCursor;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.speech.tts.TextToSpeech;
@@ -44,6 +50,7 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.Window;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
@@ -58,7 +65,6 @@ import com.example.app_2.provider.Images;
 import com.example.app_2.storage.Database;
 import com.example.app_2.utils.ImageLoader;
 import com.example.app_2.utils.Utils;
-import com.example.app_2.views.RecyclingImageView;
 
 /**
  * Simple FragmentActivity to hold the main {@link ImageGridFragment} and not much else.
@@ -76,14 +82,11 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
     public static ImageGridActivity mInstance;
     private ImageView	expandedImageView;
 
-    
     private Map<String, Long> mCategoryMap;
-    
-
-    
+  
     CharSequence mTitle;
     CharSequence mDrawerTitle;
-    ImageLoader il;
+    public static ImageLoader imageLoader;
     
 	private static TextToSpeech tts;
 	public static final int MY_DATA_CHECK_CODE = 1;
@@ -95,21 +98,22 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 	@Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        
+        getWindow().requestFeature(Window.FEATURE_ACTION_BAR_OVERLAY);
+        getActionBar().setBackgroundDrawable(new ColorDrawable(Color.parseColor("#330000ff")));
+        getActionBar().setStackedBackgroundDrawable(new ColorDrawable(Color.parseColor("#550000ff")));
         setContentView(R.layout.activity_grid);
-		il = new ImageLoader();
-		mCategoryMap = new HashMap();
+		mCategoryMap = new HashMap<String, Long>();
         // pobranie syntezatora mowy
 		Intent checkIntent = new Intent();
 		checkIntent.setAction(TextToSpeech.Engine.ACTION_CHECK_TTS_DATA);
 		startActivityForResult(checkIntent, MY_DATA_CHECK_CODE);
         
-		
-		
 		// ustawienie drawera
         mInstance = this;
         App_2.actvity= mInstance;
         expandedImageView = (ImageView) findViewById(R.id.expanded_image);
-        
+		imageLoader = new ImageLoader();	
         setDrawer();
         
         // za³adowanie do content_frame ImageGridFragment
@@ -123,11 +127,11 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
     
     @Override
     public Dialog onCreateDialog(int dialogId) {
- 
         switch (dialogId) {
         case PLEASE_WAIT_DIALOG:
             dialog = new ProgressDialog(this);
             dialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+     
             dialog.setCancelable(false);
             dialog.setTitle("Obliczanie");
             dialog.setMessage("Proszê czekaæ....");
@@ -136,7 +140,6 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
         default:
             break;
         }
- 
         return null;
     }
     
@@ -208,6 +211,7 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 			if(getSupportFragmentManager().findFragmentByTag(TAG)!=null){
 				final FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
 	            ft.replace(R.id.content_frame, fragment, TAG);
+	            ft.addToBackStack(null);
 	            ft.commit();				
 			}
 			
@@ -222,10 +226,6 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
     
 	@Override
 	public void onStop() {
-		if (tts != null) {
-			tts.stop();
-			tts.shutdown();
-		}
 		super.onStop();
 	}
 
@@ -241,20 +241,11 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 	@Override
 	public void onInit(int status) {
 		int result;
-		if (status == TextToSpeech.SUCCESS) {
-	        Locale[] AvalLoc = Locale.getAvailableLocales();
-
-	        for( Locale l: AvalLoc){
-	        	if(TextToSpeech.LANG_AVAILABLE ==tts.isLanguageAvailable(l))
-	        		Log.i("TTS",l.toString());
-	        }
-	        //Log.i("TTS","Available locales " + Arrays.toString(AvalLoc));
-	        
+		if (status == TextToSpeech.SUCCESS) {			
 			Locale pol_loc = new Locale("pl", "pl_PL");
 			if(TextToSpeech.LANG_AVAILABLE ==tts.isLanguageAvailable(Locale.ENGLISH)){
 				result = tts.setLanguage(pol_loc);
-				}
-			else{
+			}else{
 				result=tts.setLanguage(Locale.ENGLISH);
 			}
 				
@@ -265,13 +256,15 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 				//btnSpeak.setEnabled(true);
 				//speakOut("init successful");
 			}
-
 		} else {
 			Log.e("TTS", "Initialization Failed");
 		}
-
 	}
-
+	
+	public static void speakOut(String text) {
+		tts.speak(text, TextToSpeech.QUEUE_FLUSH, null);
+	}
+	
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		if (requestCode == MY_DATA_CHECK_CODE) {
 			if (resultCode == TextToSpeech.Engine.CHECK_VOICE_DATA_PASS) {
@@ -287,13 +280,12 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 		}
 	}
 	
-	public static void speakOut(String text) {
-		tts.speak(text, TextToSpeech.QUEUE_FLUSH, null);
-	}
+
 
 	@SuppressLint("NewApi")
 	@TargetApi(Build.VERSION_CODES.HONEYCOMB)
 	private void setDrawer(){
+	
 		mDrawerTitle = "Wybierz kategoriê";
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
         mDrawerToggle = new ActionBarDrawerToggle(
@@ -317,15 +309,21 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 
         // Set the drawer toggle as the DrawerListener
         mDrawerLayout.setDrawerListener(mDrawerToggle);
-
+        
         getActionBar().setDisplayHomeAsUpEnabled(true);
-        getActionBar().setHomeButtonEnabled(true);
 
         mDrawerList  = (ListView) findViewById(R.id.left_drawer);
         String[] projection= {ImageContract.Columns._ID, ImageContract.Columns.PATH, ImageContract.Columns.CATEGORY};
         String selection = ImageContract.Columns.CATEGORY + " IS NOT NULL AND ("+ImageContract.Columns.CATEGORY +" <> ?)";
         String[] selectionArgs ={""};
-        Cursor c = getContentResolver().query(ImageContract.CONTENT_URI, projection, selection, selectionArgs, null);
+        Cursor cursor = getContentResolver().query(ImageContract.CONTENT_URI, projection, selection, selectionArgs, null);
+        
+        MatrixCursor extras = new MatrixCursor(new String[] {ImageContract.Columns._ID, ImageContract.Columns.PATH, ImageContract.Columns.CATEGORY});
+        extras.addRow(new String[]{"-1","1.jpg", "HOME"});
+        Cursor[] cursors = {extras, cursor};
+
+        
+        Cursor c = new MergeCursor(cursors);
         c.moveToFirst();
         while(!c.isAfterLast()){
         	String category = c.getString(c.getColumnIndex(ImageContract.Columns.CATEGORY));
@@ -347,18 +345,19 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
         }
         */
         
-		String[] from = new String[] { ImageContract.Columns._ID,
+		String[] from = new String[] {  ImageContract.Columns._ID, 
 				   ImageContract.Columns.PATH,
 				   ImageContract.Columns.CATEGORY};
 				// Fields on the UI to which we map
-		int[] to = new int[] { 0, R.id.icon, R.id.category };
-        SimpleCursorAdapter adapter = new SimpleCursorAdapter(getApplicationContext(), R.layout.image_row, c, from,to, 0);
+		int[] to = new int[] { 0, R.id.category_image, R.id.category_name };
+		
+        SimpleCursorAdapter adapter = new SimpleCursorAdapter(getApplicationContext(), R.layout.drawer_row, c, from,to, 0);
     	adapter.setViewBinder(new SimpleCursorAdapter.ViewBinder(){
 			   /** Binds the Cursor column defined by the specified index to the specified view */
 			   public boolean setViewValue(View view, Cursor cursor, int columnIndex){
-			       if(view.getId() == R.id.icon){
+			       if(view.getId() == R.id.category_image){
 						 String path = Images.getImageThumbsPath(cursor.getString(cursor.getColumnIndex(ImageContract.Columns.PATH)));
-						 il.loadBitmap(path, (ImageView) view);
+						 imageLoader.loadBitmap(path, (ImageView) view);
 			           return true; //true because the data was bound to the view
 			       }
 			       return false;
@@ -368,7 +367,7 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
         
         // Set the adapter for the list view
     	mDrawerList.setAdapter(adapter);
-        //mDrawerList.setAdapter(new ArrayAdapter<String>(this, R.layout.drawer_list_item, mCategoryTitles)); // TODO zmieniæ na adapter z obrazkiem
+
         // Set the list's click listener
         mDrawerList.setOnItemClickListener(new DrawerItemClickListener());
 	}
@@ -388,5 +387,22 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
         }	
         // Set the adapter for the list view
         mDrawerList.setAdapter(new ArrayAdapter<String>(App_2.getAppContext(), R.layout.drawer_list_item, categoryTitles));
+	}
+	
+	@Override
+	public void onBackPressed() {
+		//super.onBackPressed();
+	    new AlertDialog.Builder(this)
+	        .setTitle("Really Exit?")
+	        .setMessage("Are you sure you want to exit?")
+	        .setNegativeButton(android.R.string.no, null)
+	        .setPositiveButton(android.R.string.yes, new OnClickListener() {
+
+				@Override
+				public void onClick(DialogInterface dialog, int which) {
+					ImageGridActivity.super.onBackPressed();
+					
+				}
+	        }).create().show();
 	}
 }

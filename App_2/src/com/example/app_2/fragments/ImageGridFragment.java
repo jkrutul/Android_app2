@@ -6,9 +6,14 @@ import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
+import android.content.Context;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Point;
 import android.graphics.Rect;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 
 import android.os.AsyncTask;
 import android.os.Build;
@@ -17,6 +22,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -37,18 +43,18 @@ import com.example.app_2.adapters.ImageCursorAdapter;
 import com.example.app_2.contentprovider.ImageContract;
 import com.example.app_2.provider.Images;
 import com.example.app_2.provider.Images.ProcessBitmapsTask;
+import com.example.app_2.storage.Storage;
+import com.example.app_2.utils.BitmapCalc;
 import com.example.app_2.utils.ImageLoader;
 import com.example.app_2.utils.Utils;
+import com.examples.app_2.activities.ImageGridActivity;
 
-//@TargetApi(Build.VERSION_CODES.HONEYCOMB)
 public class ImageGridFragment extends Fragment implements AdapterView.OnItemClickListener, LoaderCallbacks<Cursor>{
     private static final String TAG = "ImageGridFragment";
     private ImageView expandedImageView;
     private int mImageThumbSize;
     private int mImageThumbSpacing;
     private ImageCursorAdapter adapter;
-    //private ImageAdapter mAdapter;
-    //private ImageFetcher mImageFetcher;
     private ImageLoader imageLoader;
     private Animator mCurrentAnimator;
     private int mShortAnimationDuration;
@@ -59,56 +65,47 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
 	ImageView mImageView;
     	
     public ImageGridFragment(){
-    	
+
+		
     }
 
     @Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-
 		
-		mImageViewLayoutParams = new GridView.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
-		imageLoader = new ImageLoader();
+    	imageLoader = new ImageLoader();
+    	mImageViewLayoutParams = new GridView.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
+
 		if(App_2.actvity!=null){
 			expandedImageView = (ImageView) App_2.actvity.findViewById(R.id.expanded_image);
 		}
 		adapter = new ImageCursorAdapter(getActivity(), null, mImageViewLayoutParams, imageLoader);
-		getLoaderManager().initLoader(0, this.getArguments(), this);		
-		
+		getLoaderManager().restartLoader(0, this.getArguments(), this);
+		//getLoaderManager().initLoader(0, this.getArguments(), this);
 		
 		setHasOptionsMenu(true);
 		mImageThumbSize = getResources().getDimensionPixelSize(R.dimen.image_thumbnail_size);
-        mImageThumbSpacing = getResources().getDimensionPixelSize(R.dimen.image_thumbnail_spacing);
-		//fillData(category_id);	
+        mImageThumbSpacing = getResources().getDimensionPixelSize(R.dimen.image_thumbnail_spacing);	
 	}
-    
+    /*
     @SuppressLint("NewApi")
 	private void fillData(int category_fk){
 		String[] from = new String[] { ImageContract.Columns._ID,
 				   ImageContract.Columns.PATH,
-				   ImageContract.Columns.PATH };
-		
-		int[] to = new int[] { 0,R.id.label, R.id.icon };
-				
-		//getLoaderManager().initLoader(0, null, this);
-		
-
-		
-		
+				   ImageContract.Columns.DESC };		
 		Cursor c ;
 		if(category_fk == -1){
 			ProcessBitmapsTask pbt = new ProcessBitmapsTask(getActivity());
 			pbt.executeOnExecutor(AsyncTask.SERIAL_EXECUTOR);
 			c = getActivity().getContentResolver().query(ImageContract.CONTENT_URI, from, null, null ,null);
-			}
-		else{
+		}else{
 			String selection = ImageContract.Columns.PARENT +" = ?";
 			String[] selectionArgs = new String[]{String.valueOf(category_fk)};
 			c = getActivity().getContentResolver().query(ImageContract.CONTENT_URI, from, selection, selectionArgs ,null);
 		}
-
 		adapter = new ImageCursorAdapter(getActivity(), c, mImageViewLayoutParams, imageLoader);
     }
+    */
     
     
     @Override
@@ -172,7 +169,6 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
         mItemHeight = height;
         mImageViewLayoutParams = new GridView.LayoutParams(LayoutParams.MATCH_PARENT, mItemHeight);
         ImageLoader.setImageSize(height);
-        //notifyDataSetChanged();
     }
     
     public void setNumColumns(int numColumns) {
@@ -186,7 +182,6 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
     @Override
     public void onResume() {
         super.onResume();
-        //mAdapter.notifyDataSetChanged();
     }
 
     @Override
@@ -199,38 +194,35 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
     public void onDestroy() {
         super.onDestroy();
         
+        
     }
     
-	//@SuppressLint("NewApi")
+
 	@TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
 	@Override
 	public void onItemClick(AdapterView<?> parent, final  View thumbView, int position, long id) {
 		Cursor c = (Cursor) adapter.getItem(position);							// TODO przejœcie do nowej kategorii
 		String filename = c.getString(c.getColumnIndex(ImageContract.Columns.PATH));
-		
-		//c.getString(c)
-		//Toast.makeText(App_2.getAppContext(), "pos:"+position+"\n"+imgO, Toast.LENGTH_SHORT).show();
-		/*
-		intent = new Intent(this, ImageGridActivity.class);
-		startActivity(intent);
-		*/
-		
+		String description = c.getString(c.getColumnIndex(ImageContract.Columns.DESC));
+		c.close();
 		if (mCurrentAnimator != null) {
 	        mCurrentAnimator.cancel();
 	    }
 		
 		expandedImageView.bringToFront();
-		//App_2.actvity.getActionBar().hide();
 	    // Load the high-resolution "zoomed-in" image.
 		if(expandedImageView!=null){
 			 String path = Images.getImageFullScreenThumbsPath(filename);
-			 imageLoader.loadBitmap(path, expandedImageView);
-			 App_2.actvity.speakOut(Utils.cutExtention(filename));
+			 Bitmap b = BitmapFactory.decodeFile(path);
+			 Drawable verticalImage = new BitmapDrawable(getResources(), b);
+			 expandedImageView.setImageDrawable(verticalImage);
+			 //BitmapCalc.decodeSampleBitmapFromFile(filePath, reqWidth, reqHeight)
+			 //imageLoader.loadBitmap(path, expandedImageView);
+			 if(TextUtils.isEmpty(description))
+				 ImageGridActivity.speakOut(Utils.cutExtention(filename));
+			 else
+				 ImageGridActivity.speakOut(Utils.cutExtention(description));
 		}
-		
-		//App_2.actvity.refreshDrawer(Images.images.get(position).getId());
-				
-
 		
 	    final Rect startBounds = new Rect();
 	    final Rect finalBounds = new Rect();
@@ -336,7 +328,8 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
 	                public void onAnimationEnd(Animator animation) {
 	                    thumbView.setAlpha(1f);
 	                    expandedImageView.setVisibility(View.GONE);
-	                    expandedImageView.setImageResource(R.drawable.image_placeholder);
+	                    expandedImageView.getDrawable().setCallback(null);
+	                    //expandedImageView.setImageResource(R.drawable.empty_photo);
 	                    mCurrentAnimator = null;
 	                }
 
@@ -356,44 +349,30 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
 
 		
 	}
-	
+		
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         inflater.inflate(R.menu.main, menu);
     }
 
+	@TargetApi(Build.VERSION_CODES.HONEYCOMB)
 	@Override
 	public Loader<Cursor> onCreateLoader(int arg0, Bundle bundle) {
 		CursorLoader cursorLoader= null;
 		int category_fk = (bundle!= null) ? (int) bundle.getLong("CATEGORY_ID", -1)	: -1;
 		
-		String[] from = new String[] { ImageContract.Columns._ID, ImageContract.Columns.PATH, ImageContract.Columns.PATH };	
+		String[] from = new String[] { ImageContract.Columns._ID, ImageContract.Columns.PATH, ImageContract.Columns.DESC };	
 		String selection = ImageContract.Columns.PARENT +" = ?";
 		String[] selectionArgs = new String[]{String.valueOf(category_fk)};
+		//if(category_fk == -1){
+		//	Long imgLastModified = Storage.getImagesDir().lastModified();
+		//	Long img_dir_last_read = Long.valueOf(Storage.readFromSharedPreferences(String.valueOf(0), "imgDirLastRead", "imgDirLastRead", App_2.getAppContext(), Context.MODE_PRIVATE));
+		//	if(imgLastModified> img_dir_last_read)
+		//		new ProcessBitmapsTask(getActivity()).executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, null);
+		//}
 
 		cursorLoader = new CursorLoader(App_2.getAppContext(),ImageContract.CONTENT_URI, from, selection, selectionArgs ,null);
 		return cursorLoader;
-		/*
-		Cursor c ;
-		if(category_fk == -1){
-			ProcessBitmapsTask pbt = new ProcessBitmapsTask(getActivity());
-			//pbt.executeOnExecutor(AsyncTask.SERIAL_EXECUTOR);
-			pbt.execute();
-			c = getActivity().getContentResolver().query(ImageContract.CONTENT_URI, from, null, null ,null);
-			
-		}else{
-
-			
-			c = getActivity().getContentResolver().query(ImageContract.CONTENT_URI, from, selection, selectionArgs ,null);
-		}
-
-		adapter = new ImageCursorAdapter(getActivity(), c, mImageViewLayoutParams, imageLoader);
-		
-
-		cursorLoader = new CursorLoader(App_2.getAppContext(),ImageContract.CONTENT_URI, from, selection, selectionArgs ,null);
-		
-		return cursorLoader;
-		*/
 	}
 
 	@Override

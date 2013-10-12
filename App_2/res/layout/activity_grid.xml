@@ -10,13 +10,13 @@
         android:id="@+id/content_frame"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="#ffc28ece" >
+        android:background="#ff000000" >
 
         <ImageView
             android:id="@+id/expanded_image"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:background="#a0c28ece"
+            android:background="#a0000000"
             android:clickable="true"
             android:contentDescription="description_zoom_touch_close"
             android:visibility="invisible" />
@@ -29,7 +29,7 @@
         android:layout_height="match_parent"
         android:layout_gravity="start"
         android:orientation="vertical"
-        android:background="#a0c28ece" >
+        android:background="#ff000000" >
 
         <ListView
             android:id="@+id/left_drawer"

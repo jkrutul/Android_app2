@@ -359,11 +359,11 @@ public class Images { // TODO nie mo¿e byæ static
 			
 			// - przejrzeæ katalog
 			// - sprawdziæ czy wygenerowane miniaturki dla wpisów
-			Cursor cursor = executing_activity.getContentResolver().query(ImageContract.CONTENT_URI, null, null, null,null);
-			cursor.moveToFirst();
+			//Cursor cursor = executing_activity.getContentResolver().query(ImageContract.CONTENT_URI, null, null, null,null);
+			//cursor.moveToFirst();
 			
 			imgLastModified = Storage.getImagesDir().lastModified();
-			if(imgLastModified> img_dir_last_read || cursor.getCount() == 0 ){																// katalog zosta³ zmodyfikowany
+			if(imgLastModified> img_dir_last_read){																// katalog zosta³ zmodyfikowany
 				Log.w(LOG_TAG, "images in directory has changed:"+String.valueOf(img_dir_last_read)+"<"+String.valueOf(imgLastModified));
 				executing_activity.getContentResolver().delete(ImageContract.CONTENT_URI, null, null);
 				
@@ -438,7 +438,8 @@ public class Images { // TODO nie mo¿e byæ static
 				img_dir_last_read = Storage.getImagesDir().lastModified();
 				Storage.saveToSharedPreferences("imgDirLastRead", Long.toString(img_dir_last_read), "imgDirLastRead", App_2.getAppContext(), Context.MODE_PRIVATE);
 				populateImagePaths();
-			}		
+			}
+			//cursor.close();
 			return null;
 		}
 		

@@ -40,7 +40,7 @@
             android:name="com.examples.app_2.activities.ImageGridActivity"
             android:label="ImageGridActivity"
             android:parentActivityName="com.examples.app_2.activities.MainActivity">
-            <!--android:theme="@android:style/Theme.NoTitleBar.Fullscreen"   --> 
+            <!-- android:theme="@android:style/Theme.Wallpaper">  -->
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.examples.app_2.activities.MainActivity" />

@@ -5,6 +5,7 @@ import java.lang.ref.WeakReference;
 
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
+import android.app.Application;
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
@@ -24,11 +25,12 @@ import android.widget.ImageView;
 import com.example.app_2.App_2;
 import com.example.app_2.R;
 import com.example.app_2.storage.DiskLruImageCache;
+import com.example.app_2.storage.Storage;
 
 
 public class ImageLoader {
 	private static String LOG_TAG = "ImageLoader";
-	private Context context;
+	private static Context context;
 	private Bitmap mPlaceHolderBitmap;
 	
 	private DiskLruImageCache mDiskLruCache;
@@ -59,8 +61,7 @@ public class ImageLoader {
 		Display display = wm.getDefaultDisplay();
 		maxWidth = display.getWidth();
 		maxHeight = display.getHeight();		
-		mPlaceHolderBitmap = BitmapCalc.decodeSampleBitmapFromResources(App_2.getAppContext().getResources(), R.drawable.image_placeholder, 100, 100);
-		
+
 		/* INITIALIZE MEMORY CACHE */
 		mMemoryCache = new LruCache<String, Bitmap>(cacheSize) {
 		@TargetApi(Build.VERSION_CODES.HONEYCOMB_MR1)
@@ -112,7 +113,7 @@ public class ImageLoader {
 	public void loadBitmap(String path, ImageView imageView){
 		if(cancelPotentialWork(path, imageView)){
 			final BitmapWorkerTask task = new BitmapWorkerTask(imageView);
-			final AsyncDrawable asyncDrawable = new AsyncDrawable(context.getResources(), mPlaceHolderBitmap, task);
+			AsyncDrawable asyncDrawable = new AsyncDrawable(context.getResources(), App_2.mPlaceHolderBitmap, task);
 			imageView.setImageDrawable(asyncDrawable);
 			if(Utils.hasHoneycomb())
 				task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, path);
@@ -120,7 +121,7 @@ public class ImageLoader {
 				task.execute(path);
 		}
 	}
-	
+
 	
 	public static boolean cancelPotentialWork(String path, ImageView imageView) {
 	    final BitmapWorkerTask bitmapWorkerTask = getBitmapWorkerTask(imageView);
@@ -150,13 +151,15 @@ public class ImageLoader {
 		    return null;
 		}
 	
-	class BitmapWorkerTask extends AsyncTask<String, Void, Bitmap> {
+	public class BitmapWorkerTask extends AsyncTask<String, Void, Bitmap> {
 	    private final WeakReference<ImageView> imageViewReference;
 	    private String path = null;
-
+	    final BitmapFactory.Options options = new BitmapFactory.Options();
+	    
 	    public BitmapWorkerTask(ImageView imageView) {
 	        // Use a WeakReference to ensure the ImageView can be garbage collected
 	        imageViewReference = new WeakReference<ImageView>(imageView);
+    		options.inPurgeable = true;
 	    }
 
 	    // Decode image in background.
@@ -167,14 +170,16 @@ public class ImageLoader {
 	        Bitmap bitmap = mMemoryCache.get(imageKey);
 	        if(bitmap ==null){	// Not found in disk cache
 	        	//bitmap = BitmapCalc.decodeSampleBitmapFromFile(path, mWidth, mHeight);
-	        	bitmap = BitmapFactory.decodeFile(path);
+	    		bitmap = BitmapFactory.decodeFile(path, options);
+	        	//bitmap = BitmapFactory.decodeFile(path);
 	        	//if((maxHeight != -1 &&  maxWidth !=-1)&&(bitmap.getHeight()> maxHeight*1.5 || bitmap.getWidth()> maxWidth*1.5 )){
-		        //	bitmap = BitmapCalc.decodeSampleBitmapFromFile(path, maxWidth, maxHeight);
+		        	//bitmap = BitmapCalc.decodeSampleBitmapFromFile(path, maxWidth, maxHeight);
 		        //	}
 	        	if(bitmap == null)
 	        		return null;
 	        	//Log.i(LOG_TAG,"decoded image h:"+bitmap.getHeight()+" w:"+bitmap.getWidth());
-	        	addBitmapToCache(imageKey,bitmap);
+		        
+		        	addBitmapToCache(imageKey,bitmap);
 	        }
 	        //return BitmapCalc.getRoundedCornerBitmap(bitmap);
 	        return bitmap;
@@ -185,15 +190,6 @@ public class ImageLoader {
 		        if (getBitmapFromMemCache(key) == null) {
 		            mMemoryCache.put(key, bitmap);
 		        }
-	
-		        // Also add to disk cache
-		        /*
-		        synchronized (mDiskCacheLock) {
-		            if (mDiskLruCache != null && mDiskLruCache.getBitmap(key) == null) {
-		                mDiskLruCache.put(key, bitmap);
-		            }
-		        }
-		        */
 	        }
 	    }
 
@@ -229,6 +225,7 @@ public class ImageLoader {
 	        }
 	    }
 	}
+	
 	static class AsyncDrawable extends BitmapDrawable {
 	    private final WeakReference<BitmapWorkerTask> bitmapWorkerTaskReference;
 

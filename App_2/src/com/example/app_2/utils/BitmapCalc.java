@@ -77,11 +77,12 @@ public class BitmapCalc {
 		// First decode with inJustDecodeBounds = true to check dimensions
 		final BitmapFactory.Options options = new BitmapFactory.Options();
 		options.inJustDecodeBounds = true;
+
 		BitmapFactory.decodeFile(filePath, options);
 		
 		// Calculate in SampleSize
 		options.inSampleSize = calculateInSampleSize(options, reqWidth, reqHeight);
-		
+		options.inPurgeable = true;
 		// Decode bitmap with inSampleSize set
 		options.inJustDecodeBounds = false;
 		

@@ -6,14 +6,17 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemSelectedListener;
@@ -32,6 +35,7 @@ import com.example.app_2.storage.Storage;
 import com.example.app_2.utils.ImageLoader;
 import com.example.app_2.utils.Utils;
 
+@TargetApi(Build.VERSION_CODES.HONEYCOMB)
 public class ImageDetailActivity extends Activity {
 	  private TextView mId;
 	  private EditText mCategory;
@@ -77,40 +81,40 @@ public class ImageDetailActivity extends Activity {
 	  }
 	  
 	  private void addItemsOnSpinner(){
-		  
-		  String[] projection2 = {ImageContract.Columns._ID, ImageContract.Columns.CATEGORY};
+		  String[] projection = {ImageContract.Columns._ID, ImageContract.Columns.CATEGORY};
 		  String selection = ImageContract.Columns.CATEGORY +" IS NOT NULL";
-		  Cursor c = getContentResolver().query(ImageContract.CONTENT_URI, projection2, selection, null,null);
+		  Cursor c = getContentResolver().query(ImageContract.CONTENT_URI, projection, selection, null,null);
 		  c.moveToFirst();
 		  while(!c.isAfterLast()){
 				categories_map.put(c.getString(1), c.getLong(0));
 				c.moveToNext();
 		  }
 		  c.close();
-		  if(categories_map.containsKey("")){
-			  categories_map.remove("");
-			  categories_map.put("", Long.valueOf(-1));
-		  }
+
 		  list.addAll(categories_map.keySet());
-		  //list.add("Add new");
 		  
-		  ArrayAdapter<String> dataAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_dropdown_item, list);
-		  dataAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-		  mSpinner.setAdapter(dataAdapter);
-		  mSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-
-			@Override
-			public void onItemSelected(AdapterView<?> parent, View view, int pos, long id) {
-				Object item = parent.getItemAtPosition(pos);
-				
-			}
-
-			@Override
-			public void onNothingSelected(AdapterView<?> arg0) {
-				// TODO Auto-generated method stub
-				
-			}
-		});
+		  ArrayAdapter<String> spinnerDataAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_dropdown_item){
+			  @Override
+			  public View getView(int position, View converView, ViewGroup parent){
+				  View v = super.getView(position, converView, parent);
+				  if(position == getCount()){
+					  ((TextView)v.findViewById(android.R.id.text1)).setText("");
+			          ((TextView)v.findViewById(android.R.id.text1)).setHint(getItem(getCount())); //"Hint to be displayed"
+				  }
+				  return v;
+			  }
+			  
+			  @Override
+			  public int getCount(){
+				  return super.getCount()-1;
+			  }
+		  };
+		  
+		  spinnerDataAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+		  spinnerDataAdapter.addAll(list);
+		  spinnerDataAdapter.add("Wybierz kategoriê");
+		  mSpinner.setAdapter(spinnerDataAdapter);
+		  
 		  
 	  }
 	  
@@ -122,14 +126,6 @@ public class ImageDetailActivity extends Activity {
 	    	Log.i("imageDetail",String.valueOf(cursor.getCount()));
 	      cursor.moveToFirst();
 
-	      /*
-	      for (int i = 0; i < mCategory.getCount(); i++) {
-	        String s = (String) mCategory.getItemAtPosition(i);
-	        if (s.equalsIgnoreCase(category)) {
-	          mCategory.setSelection(i);
-	        }
-	      }
-	      */
 	      	  String img_id = cursor.getString(cursor.getColumnIndex(ImageContract.Columns._ID));
 	      	  Long parent_fk = cursor.getLong(cursor.getColumnIndexOrThrow(ImageContract.Columns.PARENT));
 	      	  String category = cursor.getString(cursor.getColumnIndexOrThrow(ImageContract.Columns.CATEGORY));
@@ -184,7 +180,13 @@ public class ImageDetailActivity extends Activity {
 	    String category = mCategory.getText().toString();
 	    String summary = mTitleText.getText().toString();
 	    String description = mDescText.getText().toString();
-	    String parent_fk = String.valueOf(categories_map.get(mSpinner.getSelectedItem().toString()));
+	    String parent_fk = String.valueOf(-1);
+	    
+	    if(mSpinner.getSelectedItemPosition()!=-1){
+	    	String key = mSpinner.getSelectedItem().toString();
+		    if(categories_map.containsKey(key))
+		    	parent_fk = String.valueOf(categories_map.get(key));
+	    }
 	    
 
 	    // Only save if either summary or description

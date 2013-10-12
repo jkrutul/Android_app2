@@ -56,6 +56,11 @@ public class ImagesOverviewActivity extends android.support.v4.app.FragmentActiv
 		fillData();
 		registerForContextMenu(lv);
 	}
+	
+	@Override
+	public void onDestroy(){
+		super.onDestroy();
+	}
 
 	// Create the menu based on the XML defintion
 	@Override
