@@ -104,14 +104,13 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
         getActionBar().setStackedBackgroundDrawable(new ColorDrawable(Color.parseColor("#550000ff")));
         setContentView(R.layout.activity_grid);
 		mCategoryMap = new HashMap<String, Long>();
+		
         // pobranie syntezatora mowy
 		Intent checkIntent = new Intent();
 		checkIntent.setAction(TextToSpeech.Engine.ACTION_CHECK_TTS_DATA);
 		startActivityForResult(checkIntent, MY_DATA_CHECK_CODE);
         
 		// ustawienie drawera
-        mInstance = this;
-        App_2.actvity= mInstance;
         expandedImageView = (ImageView) findViewById(R.id.expanded_image);
 		imageLoader = new ImageLoader();	
         setDrawer();
@@ -190,7 +189,6 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 
 		@Override
 		public void onItemClick(AdapterView parent, View view, int position, long id) {
-			//parent.getChildAt(position).get
 			selectItem(position);		
 			
 		}

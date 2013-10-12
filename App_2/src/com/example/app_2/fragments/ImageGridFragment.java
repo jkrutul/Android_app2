@@ -6,6 +6,7 @@ import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
+import android.app.Activity;
 import android.content.Context;
 import android.database.Cursor;
 import android.graphics.Bitmap;
@@ -65,9 +66,9 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
 	ImageView mImageView;
     	
     public ImageGridFragment(){
-
-		
     }
+    
+   
 
     @Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -76,9 +77,12 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
     	imageLoader = new ImageLoader();
     	mImageViewLayoutParams = new GridView.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
 
-		if(App_2.actvity!=null){
-			expandedImageView = (ImageView) App_2.actvity.findViewById(R.id.expanded_image);
-		}
+		//if(App_2.actvity!=null){ //TODO
+		//	expandedImageView = (ImageView) App_2.actvity.findViewById(R.id.expanded_image);
+		//}
+    	
+    	expandedImageView = (ImageView)getActivity().findViewById(R.id.expanded_image);
+    	
 		adapter = new ImageCursorAdapter(getActivity(), null, mImageViewLayoutParams, imageLoader);
 		getLoaderManager().restartLoader(0, this.getArguments(), this);
 		//getLoaderManager().initLoader(0, this.getArguments(), this);
@@ -204,7 +208,7 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
 		Cursor c = (Cursor) adapter.getItem(position);							// TODO przejœcie do nowej kategorii
 		String filename = c.getString(c.getColumnIndex(ImageContract.Columns.PATH));
 		String description = c.getString(c.getColumnIndex(ImageContract.Columns.DESC));
-		c.close();
+		//c.close();
 		if (mCurrentAnimator != null) {
 	        mCurrentAnimator.cancel();
 	    }
@@ -228,7 +232,7 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
 	    final Rect finalBounds = new Rect();
 	    final Point globalOffset = new Point();
 	    thumbView.getGlobalVisibleRect(startBounds);
-	    App_2.actvity.findViewById(R.id.content_frame)
+	    getActivity().findViewById(R.id.content_frame)
 	            .getGlobalVisibleRect(finalBounds, globalOffset);
 	    startBounds.offset(-globalOffset.x, -globalOffset.y);
 	    finalBounds.offset(-globalOffset.x, -globalOffset.y);

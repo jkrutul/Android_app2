@@ -10,7 +10,7 @@ import com.examples.app_2.activities.ImageGridActivity;
 
 public class App_2 extends Application{
 	private static Context context;
-	public static ImageGridActivity actvity;
+	//public static ImageGridActivity actvity;
 	public static Bitmap mPlaceHolderBitmap;
 	
 	public void onCreate(){

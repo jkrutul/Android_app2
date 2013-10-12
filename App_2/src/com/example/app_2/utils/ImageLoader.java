@@ -61,6 +61,7 @@ public class ImageLoader {
 		Display display = wm.getDefaultDisplay();
 		maxWidth = display.getWidth();
 		maxHeight = display.getHeight();		
+		 mPlaceHolderBitmap = BitmapCalc.decodeSampleBitmapFromResources(App_2.getAppContext().getResources(), R.drawable.empty_photo, 100, 100);
 
 		/* INITIALIZE MEMORY CACHE */
 		mMemoryCache = new LruCache<String, Bitmap>(cacheSize) {
@@ -113,7 +114,7 @@ public class ImageLoader {
 	public void loadBitmap(String path, ImageView imageView){
 		if(cancelPotentialWork(path, imageView)){
 			final BitmapWorkerTask task = new BitmapWorkerTask(imageView);
-			AsyncDrawable asyncDrawable = new AsyncDrawable(context.getResources(), App_2.mPlaceHolderBitmap, task);
+			AsyncDrawable asyncDrawable = new AsyncDrawable(context.getResources(), mPlaceHolderBitmap /*App_2.mPlaceHolderBitmap */, task);
 			imageView.setImageDrawable(asyncDrawable);
 			if(Utils.hasHoneycomb())
 				task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, path);
