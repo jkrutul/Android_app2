@@ -60,6 +60,11 @@ public class MainActivity extends Activity {
 				startActivity(intent);
 				break;
 				
+			case R.id.swipe_activity:
+				intent = new Intent(this, SwipeActivity.class);
+				startActivity(intent);
+				break;
+				
 			default:
 				intent = null;
 				break;

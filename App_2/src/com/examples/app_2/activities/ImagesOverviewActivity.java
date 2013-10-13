@@ -48,7 +48,7 @@ public class ImagesOverviewActivity extends android.support.v4.app.FragmentActiv
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		il = new ImageLoader();
+		il = new ImageLoader(getApplicationContext());
 		setContentView(R.layout.image_list);
 		lv = (ListView) findViewById(R.id.image_list_view);
 		lv.setOnItemClickListener(this);

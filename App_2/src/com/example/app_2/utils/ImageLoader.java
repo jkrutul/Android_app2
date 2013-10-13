@@ -30,14 +30,14 @@ import com.example.app_2.storage.Storage;
 
 public class ImageLoader {
 	private static String LOG_TAG = "ImageLoader";
-	private static Context context;
+	private Context context;
 	private Bitmap mPlaceHolderBitmap;
 	
-	private DiskLruImageCache mDiskLruCache;
-	private final Object mDiskCacheLock = new Object();
-	private boolean mDiskCacheStarting = true;
+	private static DiskLruImageCache mDiskLruCache;
+	private final static Object mDiskCacheLock = new Object();
+	private static boolean mDiskCacheStarting = true;
 	private static final int DISK_CACHE_SIZE = 1024 * 1024 * 10; // 10MB
-	public static int  mWidth=100, mHeight=100;
+	public int  mWidth=100, mHeight=100;
 	int maxWidth;
 	int maxHeight;
 	
@@ -52,16 +52,16 @@ public class ImageLoader {
 	// Use 1/8th of the available memory for this memory cache.
 	final int cacheSize = maxMemory / 8;
 
-	private LruCache<String, Bitmap> mMemoryCache;
+	private static LruCache<String, Bitmap> mMemoryCache;
 	
-	public ImageLoader() {
-		context = App_2.getAppContext();
+	public ImageLoader(Context context) {
+		//context = App_2.getAppContext();
 		//full screen thumbs
-		WindowManager wm = (WindowManager) App_2.getAppContext().getSystemService(Context.WINDOW_SERVICE);
+		WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
 		Display display = wm.getDefaultDisplay();
 		maxWidth = display.getWidth();
 		maxHeight = display.getHeight();		
-		 mPlaceHolderBitmap = BitmapCalc.decodeSampleBitmapFromResources(App_2.getAppContext().getResources(), R.drawable.empty_photo, 100, 100);
+		 mPlaceHolderBitmap = BitmapCalc.decodeSampleBitmapFromResources(context.getResources(), R.drawable.empty_photo, 100, 100);
 
 		/* INITIALIZE MEMORY CACHE */
 		mMemoryCache = new LruCache<String, Bitmap>(cacheSize) {
@@ -88,7 +88,7 @@ public class ImageLoader {
 
 	}
 
-	public Bitmap getBitmapFromMemCache(String key) {
+	public static Bitmap getBitmapFromMemCache(String key) {
 		if(key!=null){
 			return mMemoryCache.get(key);
 		}
@@ -111,10 +111,10 @@ public class ImageLoader {
 */
 
 	@SuppressLint("NewApi")
-	public void loadBitmap(String path, ImageView imageView){
+	public static void loadBitmap(String path, ImageView imageView){
 		if(cancelPotentialWork(path, imageView)){
-			final BitmapWorkerTask task = new BitmapWorkerTask(imageView);
-			AsyncDrawable asyncDrawable = new AsyncDrawable(context.getResources(), mPlaceHolderBitmap /*App_2.mPlaceHolderBitmap */, task);
+			BitmapWorkerTask task = new BitmapWorkerTask(imageView);
+			AsyncDrawable asyncDrawable = new AsyncDrawable(App_2.getAppContext().getResources(), App_2.mPlaceHolderBitmap, task);
 			imageView.setImageDrawable(asyncDrawable);
 			if(Utils.hasHoneycomb())
 				task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, path);
@@ -125,7 +125,7 @@ public class ImageLoader {
 
 	
 	public static boolean cancelPotentialWork(String path, ImageView imageView) {
-	    final BitmapWorkerTask bitmapWorkerTask = getBitmapWorkerTask(imageView);
+	     BitmapWorkerTask bitmapWorkerTask = getBitmapWorkerTask(imageView);
 
 	    if (bitmapWorkerTask != null) {
 	        final String bitmapPath = bitmapWorkerTask.path;
@@ -141,7 +141,7 @@ public class ImageLoader {
 	    return true;
 	}
 	
-	private static BitmapWorkerTask getBitmapWorkerTask(ImageView imageView) {
+	private static  BitmapWorkerTask getBitmapWorkerTask(ImageView imageView) {
 		   if (imageView != null) {
 		       final Drawable drawable = imageView.getDrawable();
 		       if (drawable instanceof AsyncDrawable) {
@@ -152,7 +152,7 @@ public class ImageLoader {
 		    return null;
 		}
 	
-	public class BitmapWorkerTask extends AsyncTask<String, Void, Bitmap> {
+	public static class BitmapWorkerTask extends AsyncTask<String, Void, Bitmap> {
 	    private final WeakReference<ImageView> imageViewReference;
 	    private String path = null;
 	    final BitmapFactory.Options options = new BitmapFactory.Options();
@@ -187,7 +187,6 @@ public class ImageLoader {
 	    }
 	    public void addBitmapToCache(String key, Bitmap bitmap) {
 	    	if(key !=null && bitmap != null){
-		        // Add to memory cache as before
 		        if (getBitmapFromMemCache(key) == null) {
 		            mMemoryCache.put(key, bitmap);
 		        }
@@ -227,7 +226,7 @@ public class ImageLoader {
 	    }
 	}
 	
-	static class AsyncDrawable extends BitmapDrawable {
+	 static class AsyncDrawable extends BitmapDrawable {
 	    private final WeakReference<BitmapWorkerTask> bitmapWorkerTaskReference;
 
 	    public AsyncDrawable(Resources res, Bitmap bitmap,BitmapWorkerTask bitmapWorkerTask) {
@@ -254,7 +253,7 @@ public class ImageLoader {
 	}
 	
 
-	public static void setImageSize(int height) {
+	public void setImageSize(int height) {
 		mWidth= height;
 		mHeight = height;		
 	}

@@ -17,12 +17,10 @@ import com.example.app_2.views.RecyclingImageView;
 public class ImageCursorAdapter extends CursorAdapter {
 	
 	GridView.LayoutParams params;
-	ImageLoader il;
 	
-    public ImageCursorAdapter(Context context, Cursor c, GridView.LayoutParams params, ImageLoader il ) {
+    public ImageCursorAdapter(Context context, Cursor c, GridView.LayoutParams params) {
         super(context, c, 0);
         this.params = params;
-        this.il = il;
     }
 
     @Override
@@ -32,7 +30,7 @@ public class ImageCursorAdapter extends CursorAdapter {
             RecyclingImageView image = (RecyclingImageView)view;
             image.setScaleType(ImageView.ScaleType.CENTER_CROP);
             //image.setLayoutParams(params);
-            il.loadBitmap(Images.getImageThumbsPath(path), (ImageView)view);
+            ImageLoader.loadBitmap(Images.getImageThumbsPath(path), (ImageView)view);
             //image.setImageDrawable(Drawable.createFromPath(path));
         }
 

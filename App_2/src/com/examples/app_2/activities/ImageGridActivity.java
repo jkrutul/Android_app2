@@ -52,17 +52,13 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
 
-import com.example.app_2.App_2;
 import com.example.app_2.R;
 import com.example.app_2.contentprovider.ImageContract;
 import com.example.app_2.fragments.ImageGridFragment;
-import com.example.app_2.models.ImageObject;
 import com.example.app_2.provider.Images;
-import com.example.app_2.storage.Database;
 import com.example.app_2.utils.ImageLoader;
 import com.example.app_2.utils.Utils;
 
@@ -77,18 +73,14 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
     private List<String> mCategoryTitles = new LinkedList<String>();
     private DrawerLayout mDrawerLayout;
     private ActionBarDrawerToggle mDrawerToggle;
-    private static ListView mDrawerList;
-
-    public static ImageGridActivity mInstance;
-    private ImageView	expandedImageView;
+    private  ListView mDrawerList;
 
     private Map<String, Long> mCategoryMap;
-  
+	public TextToSpeech tts;
     CharSequence mTitle;
     CharSequence mDrawerTitle;
-    public static ImageLoader imageLoader;
+    public ImageLoader imageLoader;
     
-	private static TextToSpeech tts;
 	public static final int MY_DATA_CHECK_CODE = 1;
     
     
@@ -99,9 +91,9 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         
-        getWindow().requestFeature(Window.FEATURE_ACTION_BAR_OVERLAY);
-        getActionBar().setBackgroundDrawable(new ColorDrawable(Color.parseColor("#330000ff")));
-        getActionBar().setStackedBackgroundDrawable(new ColorDrawable(Color.parseColor("#550000ff")));
+        //getWindow().requestFeature(Window.FEATURE_ACTION_BAR_OVERLAY);
+        //getActionBar().setBackgroundDrawable(new ColorDrawable(Color.parseColor("#330000ff")));
+        //getActionBar().setStackedBackgroundDrawable(new ColorDrawable(Color.parseColor("#550000ff")));
         setContentView(R.layout.activity_grid);
 		mCategoryMap = new HashMap<String, Long>();
 		
@@ -111,8 +103,8 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 		startActivityForResult(checkIntent, MY_DATA_CHECK_CODE);
         
 		// ustawienie drawera
-        expandedImageView = (ImageView) findViewById(R.id.expanded_image);
-		imageLoader = new ImageLoader();	
+        //expandedImageView = (ImageView) findViewById(R.id.expanded_image);
+		imageLoader = new ImageLoader(getApplicationContext());	
         setDrawer();
         
         // za³adowanie do content_frame ImageGridFragment
@@ -194,7 +186,7 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 		}
 		
 		private void selectItem(int position){
-            expandedImageView.setVisibility(View.GONE);
+            //expandedImageView.setVisibility(View.GONE);
 			
 			Fragment fragment = new ImageGridFragment();
 			Bundle args = new Bundle();
@@ -259,7 +251,7 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 		}
 	}
 	
-	public static void speakOut(String text) {
+	public void speakOut(String text) {
 		tts.speak(text, TextToSpeech.QUEUE_FLUSH, null);
 	}
 	
@@ -355,7 +347,7 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 			   public boolean setViewValue(View view, Cursor cursor, int columnIndex){
 			       if(view.getId() == R.id.category_image){
 						 String path = Images.getImageThumbsPath(cursor.getString(cursor.getColumnIndex(ImageContract.Columns.PATH)));
-						 imageLoader.loadBitmap(path, (ImageView) view);
+						 ImageLoader.loadBitmap(path, (ImageView) view);
 			           return true; //true because the data was bound to the view
 			       }
 			       return false;
@@ -370,23 +362,7 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
         mDrawerList.setOnItemClickListener(new DrawerItemClickListener());
 	}
 	
-	public static void refreshDrawer(Long img_id){
-	     Database db = Database.getInstance(App_2.getAppContext());
-	     db.open();
-		List<ImageObject> parentCategory = db.getParentCategory(img_id);
-		List<ImageObject> subcategories = db.getSubcategories(img_id);
-		List<String> categoryTitles = new LinkedList<String>();
-		
-        for(ImageObject i : parentCategory){
-        	categoryTitles.add(i.getCategory());			
-        }	
-        for(ImageObject i : subcategories){
-        	categoryTitles.add(i.getCategory());			
-        }	
-        // Set the adapter for the list view
-        mDrawerList.setAdapter(new ArrayAdapter<String>(App_2.getAppContext(), R.layout.drawer_list_item, categoryTitles));
-	}
-	
+
 	@Override
 	public void onBackPressed() {
 		//super.onBackPressed();

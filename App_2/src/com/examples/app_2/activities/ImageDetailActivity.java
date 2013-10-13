@@ -65,7 +65,7 @@ public class ImageDetailActivity extends Activity {
 	    mParent = (EditText) findViewById(R.id.edit_parent);
 	    mSpinner = (Spinner) findViewById(R.id.parent_spinner);
 	    Bundle extras = getIntent().getExtras();
-	    imgLoader = new ImageLoader();
+	    imgLoader = new ImageLoader(getApplicationContext());
 	    categories_map = new HashMap<String,Long>();
 	    addItemsOnSpinner();
 	    // Check from the saved Instance

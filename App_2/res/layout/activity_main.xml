@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="#ffc28ece" >
+    android:layout_height="match_parent">
 
-    <RelativeLayout
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:orientation="vertical"
         android:padding="16dp" >
 
         <Button
@@ -20,7 +20,6 @@
             android:id="@+id/db_test_activity"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_below="@id/grid_activity"
             android:onClick="onClick"
             android:text="Test DB" />
 
@@ -28,7 +27,6 @@
             android:id="@+id/client_activity"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_below="@id/db_test_activity"
             android:onClick="onClick"
             android:text="send message to computer" />
 
@@ -36,11 +34,15 @@
             android:id="@+id/image_overview_activity"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_below="@id/client_activity"
-            android:layout_alignParentBottom="true"
             android:onClick="onClick"
             android:text="image Overview" />
-
-    </RelativeLayout>
+        
+        <Button
+            android:id="@+id/swipe_activity"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="onClick"
+            android:text="swipe activity"/>
+    </LinearLayout>
 
 </ScrollView>

@@ -93,6 +93,14 @@
                 android:value="com.example.app_2.activities.MainActivity" />
         </activity>
         
+        <activity
+            android:name="com.examples.app_2.activities.SwipeActivity"
+            android:label="SwipeActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.example.app_2.activities.MainActivity" />
+        </activity>
+        
        <provider 
            android:name= "com.example.app_2.contentprovider.ImageContentProvider"
            android:authorities="com.example.app_2.contentprovider">
