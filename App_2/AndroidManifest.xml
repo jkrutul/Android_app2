@@ -101,6 +101,22 @@
                 android:value="com.example.app_2.activities.MainActivity" />
         </activity>
         
+        <activity
+            android:name="com.examples.app_2.activities.ImageEditActivity"
+            android:label="ImageEditActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.example.app_2.activities.MainActivity" />
+        </activity>
+        
+        <activity
+            android:name="com.examples.app_2.activities.ImageDetailsActivity"
+            android:label="ImageEditActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.example.app_2.activities.MainActivity" />
+        </activity>
+        
        <provider 
            android:name= "com.example.app_2.contentprovider.ImageContentProvider"
            android:authorities="com.example.app_2.contentprovider">

@@ -146,7 +146,7 @@ public class ImageDetailActivity extends Activity {
 		      
 		      // Always close the cursor
 		      cursor.close();
-			  imgLoader.loadBitmap(Storage.getThumbsMaxDir()+File.separator+imgName, mImage);			 
+			  ImageLoader.loadBitmap(Storage.getThumbsMaxDir()+File.separator+imgName, mImage);			 
 	    }
 	  }
 
@@ -216,6 +216,12 @@ public class ImageDetailActivity extends Activity {
 	        Toast.LENGTH_LONG).show();
 	  }
 	  
+		@Override
+		public void onBackPressed() {
+			this.finish();
+			overridePendingTransition(R.anim.right_slide_in, R.anim.right_slide_out);
+
+		}
 	  
 
 

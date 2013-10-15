@@ -35,7 +35,7 @@ public class ImagesOverviewActivity extends android.support.v4.app.FragmentActiv
 	private static final int ACTIVITY_CREATE = 0;
 	private static final int ACTIVITY_EDIT = 1;
 	private static final int DELETE_ID = Menu.FIRST + 1;
-	ImageLoader il;
+	//ImageLoader il;
 	private static final String TAG = "ImagesOveriewActivity";
 
 	private SimpleCursorAdapter adapter;
@@ -48,7 +48,7 @@ public class ImagesOverviewActivity extends android.support.v4.app.FragmentActiv
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		il = new ImageLoader(getApplicationContext());
+		new ImageLoader(getApplicationContext());
 		setContentView(R.layout.image_list);
 		lv = (ListView) findViewById(R.id.image_list_view);
 		lv.setOnItemClickListener(this);
@@ -137,7 +137,7 @@ public class ImagesOverviewActivity extends android.support.v4.app.FragmentActiv
 			   public boolean setViewValue(View view, Cursor cursor, int columnIndex){
 			       if(view.getId() == R.id.icon){
 						 String path = Images.getImageThumbsPath(cursor.getString(cursor.getColumnIndex(ImageContract.Columns.PATH)));
-						 il.loadBitmap(path, (ImageView) view);
+						 ImageLoader.loadBitmap(path, (ImageView) view);
 			           return true; //true because the data was bound to the view
 			       }
 			       return false;
@@ -180,6 +180,12 @@ public class ImagesOverviewActivity extends android.support.v4.app.FragmentActiv
 		i.putExtra(ImageContract.CONTENT_ITEM_TYPE, uri);
 
 		startActivity(i);
+		overridePendingTransition(R.anim.right_slide_in,R.anim.right_slide_out);
+	}
+	@Override
+	public void onBackPressed() {
+		this.finish();
+		overridePendingTransition(R.anim.right_slide_in, R.anim.right_slide_out);
 	}
 
 }

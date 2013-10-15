@@ -24,18 +24,13 @@ import java.util.Map;
 
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
-import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ProgressDialog;
-import android.content.DialogInterface;
-import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.database.Cursor;
 import android.database.MatrixCursor;
 import android.database.MergeCursor;
-import android.graphics.Color;
-import android.graphics.drawable.ColorDrawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.speech.tts.TextToSpeech;
@@ -50,7 +45,6 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.Window;
 import android.widget.AdapterView;
 import android.widget.ImageView;
 import android.widget.ListView;
@@ -366,6 +360,7 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 	@Override
 	public void onBackPressed() {
 		//super.onBackPressed();
+		/*
 	    new AlertDialog.Builder(this)
 	        .setTitle("Really Exit?")
 	        .setMessage("Are you sure you want to exit?")
@@ -374,9 +369,15 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 
 				@Override
 				public void onClick(DialogInterface dialog, int which) {
+					overridePendingTransition  (R.anim.right_slide_in, R.anim.right_slide_out);
 					ImageGridActivity.super.onBackPressed();
+					
 					
 				}
 	        }).create().show();
+	     */
+		this.finish();
+		overridePendingTransition(R.anim.right_slide_in, R.anim.right_slide_out);
+
 	}
 }

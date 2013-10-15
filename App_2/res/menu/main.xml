@@ -13,6 +13,13 @@
         android:actionProviderClass="android.widget.ShareActionProvider"/>
     
     <item
+        android:id="@+id/menu_refresh"
+        android:orderInCategory="100"
+        android:showAsAction="always"
+        android:icon="@drawable/navigation_refresh"
+        android:title="Refresh"/>
+    
+    <item
         android:id="@+id/clear_cache"
         android:icon="@android:drawable/ic_menu_delete"
         android:showAsAction="never"

@@ -43,6 +43,13 @@
             android:layout_height="wrap_content"
             android:onClick="onClick"
             android:text="swipe activity"/>
+        
+        <Button
+            android:id="@+id/edit_activity"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="onClick"
+            android:text="edit_activity"/>
     </LinearLayout>
 
 </ScrollView>

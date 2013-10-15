@@ -8,10 +8,12 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.GridView;
 import android.widget.ImageView;
+import android.widget.TextView;
 
 import com.example.app_2.contentprovider.ImageContract;
 import com.example.app_2.provider.Images;
 import com.example.app_2.utils.ImageLoader;
+import com.example.app_2.utils.Utils;
 import com.example.app_2.views.RecyclingImageView;
 
 public class ImageCursorAdapter extends CursorAdapter {
@@ -29,14 +31,16 @@ public class ImageCursorAdapter extends CursorAdapter {
             String path = cursor.getString(cursor.getColumnIndex(ImageContract.Columns.PATH));
             RecyclingImageView image = (RecyclingImageView)view;
             image.setScaleType(ImageView.ScaleType.CENTER_CROP);
-            //image.setLayoutParams(params);
+            image.setLayoutParams(params);
             ImageLoader.loadBitmap(Images.getImageThumbsPath(path), (ImageView)view);
+            
             //image.setImageDrawable(Drawable.createFromPath(path));
         }
 
     @Override
     public View newView(Context context, Cursor cursor, ViewGroup parent) {
-    	RecyclingImageView imageView = new RecyclingImageView(context);
+    	String textToDraw = Utils.cutExtention(cursor.getString(cursor.getColumnIndex(ImageContract.Columns.PATH)));
+    	RecyclingImageView imageView = new RecyclingImageView(context,textToDraw);
         imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
         //imageView.setLayoutParams(params);
        // bindView(v, context, cursor);

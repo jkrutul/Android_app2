@@ -11,6 +11,9 @@ import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.CompressFormat;
 import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
@@ -30,22 +33,18 @@ import com.example.app_2.storage.Storage;
 
 public class ImageLoader {
 	private static String LOG_TAG = "ImageLoader";
-	private Context context;
-	private Bitmap mPlaceHolderBitmap;
 	
 	private static DiskLruImageCache mDiskLruCache;
 	private final static Object mDiskCacheLock = new Object();
 	private static boolean mDiskCacheStarting = true;
 	private static final int DISK_CACHE_SIZE = 1024 * 1024 * 10; // 10MB
-	public int  mWidth=100, mHeight=100;
+	public static int  mWidth=100;
+
+	public static int mHeight=100;
 	int maxWidth;
 	int maxHeight;
+
 	
-	
-	
-	// Get max available VM memory, exceeding this amount will throw an
-	// OutOfMemory exception. Stored in kilobytes as LruCache takes an
-	// int in its constructor.
 	final int maxMemory = (int) (Runtime.getRuntime().maxMemory() / 1024);
 
 
@@ -61,7 +60,6 @@ public class ImageLoader {
 		Display display = wm.getDefaultDisplay();
 		maxWidth = display.getWidth();
 		maxHeight = display.getHeight();		
-		 mPlaceHolderBitmap = BitmapCalc.decodeSampleBitmapFromResources(context.getResources(), R.drawable.empty_photo, 100, 100);
 
 		/* INITIALIZE MEMORY CACHE */
 		mMemoryCache = new LruCache<String, Bitmap>(cacheSize) {
@@ -99,17 +97,6 @@ public class ImageLoader {
 
 	}
 	
-/*
-	public void loadBitmap(int resId, ImageView imageView) {
-	    if (cancelPotentialWork(resId, imageView)) {
-	        final BitmapWorkerTask task = new BitmapWorkerTask(imageView);
-	        final AsyncDrawable asyncDrawable =   new AsyncDrawable(context.getResources(), mPlaceHolderBitmap, task);
-	        imageView.setImageDrawable(asyncDrawable);
-	        task.execute(resId);
-	    }
-	}
-*/
-
 	@SuppressLint("NewApi")
 	public static void loadBitmap(String path, ImageView imageView){
 		if(cancelPotentialWork(path, imageView)){
@@ -172,8 +159,7 @@ public class ImageLoader {
 	        if(bitmap ==null){	// Not found in disk cache
 	        	//bitmap = BitmapCalc.decodeSampleBitmapFromFile(path, mWidth, mHeight);
 	    		bitmap = BitmapFactory.decodeFile(path, options);
-	        	//bitmap = BitmapFactory.decodeFile(path);
-	        	//if((maxHeight != -1 &&  maxWidth !=-1)&&(bitmap.getHeight()> maxHeight*1.5 || bitmap.getWidth()> maxWidth*1.5 )){
+	    		//if((maxHeight != -1 &&  maxWidth !=-1)&&(bitmap.getHeight()> maxHeight*1.5 || bitmap.getWidth()> maxWidth*1.5 )){
 		        	//bitmap = BitmapCalc.decodeSampleBitmapFromFile(path, maxWidth, maxHeight);
 		        //	}
 	        	if(bitmap == null)
@@ -253,7 +239,7 @@ public class ImageLoader {
 	}
 	
 
-	public void setImageSize(int height) {
+	public static void setImageSize(int height) {
 		mWidth= height;
 		mHeight = height;		
 	}
