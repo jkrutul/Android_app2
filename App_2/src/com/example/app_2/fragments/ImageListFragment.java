@@ -12,9 +12,8 @@ import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v4.widget.SimpleCursorAdapter;
-import android.view.LayoutInflater;
+import android.util.Log;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ImageView;
 import android.widget.ListView;
@@ -23,9 +22,7 @@ import com.example.app_2.R;
 import com.example.app_2.contentprovider.ImageContract;
 import com.example.app_2.provider.Images;
 import com.example.app_2.utils.ImageLoader;
-import com.examples.app_2.activities.ImageDetailActivity;
 import com.examples.app_2.activities.ImageDetailsActivity;
-import com.examples.app_2.activities.ImageGridActivity;
 
 public class ImageListFragment extends ListFragment implements
 		AdapterView.OnItemClickListener, LoaderCallbacks<Cursor> {
@@ -80,7 +77,7 @@ public class ImageListFragment extends ListFragment implements
 
 		if (savedInstanceState != null) {
 			// Restore last state for checked position.
-			mCurCheckPosition = savedInstanceState.getInt("COL_CATEGORY", -1);
+			mCurCheckPosition = savedInstanceState.getInt("curChoice", 0);
 		}
 
 		if (mDualPane) {
@@ -100,7 +97,8 @@ public class ImageListFragment extends ListFragment implements
 		
 	@Override
 	public void onListItemClick(ListView l, View v, int position, long id) {
-		showDetails(position, id);
+		l.setItemChecked(position, true);
+		showDetails(id);
 	}
 
 	/**
@@ -108,33 +106,36 @@ public class ImageListFragment extends ListFragment implements
 	 * displaying a fragment in-place in the current UI, or starting a whole new
 	 * activity in which it is displayed.
 	 */
-	void showDetails(int index, Long id) {
-		mCurCheckPosition = index;
-		Uri uri = Uri.parse(ImageContract.CONTENT_URI + "/" + id);
+	void showDetails( Long id) {
+		//mCurCheckPosition = index;
+		//Uri uri = Uri.parse(ImageContract.CONTENT_URI + "/" + id);
 		
 
 		if (mDualPane) {
 			// We can display everything in-place with fragments, so update
 			// the list to highlight the selected item and show the data.
-			getListView().setItemChecked(index, true);
+			//getListView().setItemChecked(index, true);
 
 			// Check what fragment is currently shown, replace if needed.
 			ImageDetailsFragment details = (ImageDetailsFragment) getFragmentManager().findFragmentById(R.id.details);
-			if (details == null || details.getShownIndex() != index) {
-				// Make new fragment to show this selection.
-				//details = ImageDetailsFragment.newInstance(index);
-				details = ImageDetailsFragment.newInstance(id);
-
-				// Execute a transaction, replacing any existing fragment
-				// with this one inside the frame.
-				FragmentTransaction ft = getFragmentManager().beginTransaction();
-				if (index == 0) {
-					ft.replace(R.id.details, details);
-				} else {
-					ft.replace(R.id.details, details);
-				}
-				ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
-				ft.commit();
+			
+			if (details == null || details.getShownId() != id) {
+					//Log.i("details",String.valueOf(details.getShownId()));
+					// Make new fragment to show this selection.
+					//details = ImageDetailsFragment.newInstance(index);
+					details = ImageDetailsFragment.newInstance(id);
+	
+					// Execute a transaction, replacing any existing fragment
+					// with this one inside the frame.
+					FragmentTransaction ft = getFragmentManager().beginTransaction();
+					//if (index == 0) {
+						ft.replace(R.id.details, details);
+					//} else {
+					//	ft.replace(R.id.details, details);
+					//}
+					ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
+					ft.commit();
+				
 			}
 
 		} else {
@@ -142,7 +143,7 @@ public class ImageListFragment extends ListFragment implements
 			// the dialog fragment with selected text.
 			Intent intent = new Intent();
 			intent.setClass(getActivity(), ImageDetailsActivity.class);
-			intent.putExtra("index", index);
+			intent.putExtra("row_id", id);
 			startActivity(intent);
 		}
 	}

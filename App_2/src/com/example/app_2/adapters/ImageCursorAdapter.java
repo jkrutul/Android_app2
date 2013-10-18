@@ -31,6 +31,11 @@ public class ImageCursorAdapter extends CursorAdapter {
             String path = cursor.getString(cursor.getColumnIndex(ImageContract.Columns.PATH));
             RecyclingImageView image = (RecyclingImageView)view;
             image.setScaleType(ImageView.ScaleType.CENTER_CROP);
+            //image.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
+            //image.setScaleType(ImageView.ScaleType.CENTER);
+            //image.setScaleType(ImageView.ScaleType.FIT_CENTER);
+            //image.setScaleType(ImageView.ScaleType.FIT_END);
+            //image.setScaleType(ImageView.ScaleType.FIT_START);
             image.setLayoutParams(params);
             ImageLoader.loadBitmap(Images.getImageThumbsPath(path), (ImageView)view);
             
@@ -41,7 +46,7 @@ public class ImageCursorAdapter extends CursorAdapter {
     public View newView(Context context, Cursor cursor, ViewGroup parent) {
     	String textToDraw = Utils.cutExtention(cursor.getString(cursor.getColumnIndex(ImageContract.Columns.PATH)));
     	RecyclingImageView imageView = new RecyclingImageView(context,textToDraw);
-        imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
+        //imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
         //imageView.setLayoutParams(params);
        // bindView(v, context, cursor);
         return imageView;

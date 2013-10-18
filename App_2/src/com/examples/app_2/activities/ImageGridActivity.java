@@ -305,8 +305,6 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
         MatrixCursor extras = new MatrixCursor(new String[] {ImageContract.Columns._ID, ImageContract.Columns.PATH, ImageContract.Columns.CATEGORY});
         extras.addRow(new String[]{"-1","1.jpg", "HOME"});
         Cursor[] cursors = {extras, cursor};
-
-        
         Cursor c = new MergeCursor(cursors);
         c.moveToFirst();
         while(!c.isAfterLast()){
@@ -329,7 +327,8 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
         }
         */
         
-		String[] from = new String[] {  ImageContract.Columns._ID, 
+		String[] from = new String[] {
+				   ImageContract.Columns._ID, 
 				   ImageContract.Columns.PATH,
 				   ImageContract.Columns.CATEGORY};
 				// Fields on the UI to which we map
@@ -356,7 +355,7 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
         mDrawerList.setOnItemClickListener(new DrawerItemClickListener());
 	}
 	
-
+	/*
 	@Override
 	public void onBackPressed() {
 		//super.onBackPressed();
@@ -375,9 +374,10 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 					
 				}
 	        }).create().show();
-	     */
+	     
 		this.finish();
 		overridePendingTransition(R.anim.right_slide_in, R.anim.right_slide_out);
 
 	}
+*/
 }

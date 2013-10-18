@@ -72,13 +72,12 @@ public class Images { // TODO nie mo¿e byæ static
 			}
 		}
 		return fileNames;
-		
 	}
 	
 	public static Uri[] populateImagePaths(){
 		//images.clear();
 		imageUris.clear();
-		//Database db = Database.open();	
+		Database.recreateDB();
 		List<String> fileNames = new LinkedList<String>();
 		//fileNames = getImagesFileNames(Storage.getFilesNamesFromDir(Storage.getThumbsMaxDir()));
 		fileNames = Storage.getFilesNamesFromDir(Storage.getThumbsMaxDir());
@@ -364,10 +363,12 @@ public class Images { // TODO nie mo¿e byæ static
 			
 			imgLastModified = Storage.getImagesDir().lastModified();
 			if(imgLastModified> img_dir_last_read){																// katalog zosta³ zmodyfikowany
+			//	if(true){
 				Log.w(LOG_TAG, "images in directory has changed:"+String.valueOf(img_dir_last_read)+"<"+String.valueOf(imgLastModified));
 				executing_activity.getContentResolver().delete(ImageContract.CONTENT_URI, null, null);
 				
-				List<String> fileNames = getImagesFileNames(Storage.getFilesNamesFromDir(Storage.getImagesDir()));
+				List<String> fileNames = getImagesFileNames(Storage.getChangedFilesFromDir(Storage.getImagesDir()));
+				//List<String> fileNames = getImagesFileNames(Storage.getFilesNamesFromDir(Storage.getImagesDir()));
 								
 				//ContentResolver contentRes= App_2.getAppContext().getContentResolver();
 				//ContentValues cv = new ContentValues();
@@ -423,7 +424,7 @@ public class Images { // TODO nie mo¿e byæ static
 						e.printStackTrace();
 					}
 					
-					f.delete();
+					//f.delete();
 					
 					i++;
 

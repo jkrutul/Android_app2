@@ -1,5 +1,5 @@
 package com.examples.app_2.activities;
-
+// DO USUNIÊCIA 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -9,13 +9,20 @@ import java.util.Map;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.ContentValues;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.database.Cursor;
+import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.provider.MediaStore;
+import android.provider.ContactsContract.CommonDataKinds.Phone;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.AdapterView;
@@ -27,6 +34,7 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.app_2.App_2;
 import com.example.app_2.R;
 import com.example.app_2.contentprovider.ImageContentProvider;
 import com.example.app_2.contentprovider.ImageContract;
@@ -36,7 +44,7 @@ import com.example.app_2.utils.ImageLoader;
 import com.example.app_2.utils.Utils;
 
 @TargetApi(Build.VERSION_CODES.HONEYCOMB)
-public class ImageDetailActivity extends Activity {
+public class ImageDetailActivity extends Activity implements View.OnClickListener{
 	  private TextView mId;
 	  private EditText mCategory;
 	  private TextView mTitleText;
@@ -44,7 +52,7 @@ public class ImageDetailActivity extends Activity {
 	  private EditText mParent;
 	  private ImageView mImage;
 	  private ImageLoader imgLoader;
-	  
+	 public static final int TAKE_PIC_REQUEST = 2;
 	  private Map<String,Long> categories_map;
 	  private Spinner mSpinner;
 	  List<String> list = new ArrayList<String>();
@@ -59,6 +67,9 @@ public class ImageDetailActivity extends Activity {
 	    setContentView(R.layout.image_edit);
 	    mId = (TextView) findViewById(R.id.img_id);
 	    mImage = (ImageView) findViewById(R.id.img);
+	    mImage.setClickable(true);
+	    mImage.setOnClickListener(this);
+	    
 	    mTitleText = (TextView) findViewById(R.id.edit_name);
 	    mCategory = (EditText) findViewById(R.id.edit_category);
 	    mDescText = (EditText) findViewById(R.id.edit_description);
@@ -79,6 +90,13 @@ public class ImageDetailActivity extends Activity {
 	    }
 
 	  }
+	  
+		private boolean verifyResolves(Intent intent) {
+			PackageManager packageManager = getPackageManager();
+			List<ResolveInfo> activities = packageManager.queryIntentActivities(
+					intent, PackageManager.PERMISSION_GRANTED);
+			return activities.size() > 0;
+		}
 	  
 	  private void addItemsOnSpinner(){
 		  String[] projection = {ImageContract.Columns._ID, ImageContract.Columns.CATEGORY};
@@ -117,6 +135,21 @@ public class ImageDetailActivity extends Activity {
 		  
 		  
 	  }
+	  
+      @Override
+      public void onClick(View v) {
+
+      		Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+      		if (verifyResolves(takePictureIntent)) {
+      			File f = Storage.createImageFile();
+      			String mCurrentPhotoPath = f.getAbsolutePath();
+      			Storage.saveToPreferences(mCurrentPhotoPath, "photoPath", this ,	MODE_PRIVATE);
+      			//Storage.saveToSharedPreferences("photoPath", mCurrentPhotoPath, "photoPath", App_2.getAppContext(), MODE_PRIVATE);
+      			Storage.galleryAddPic((Activity) this, mCurrentPhotoPath);
+      			takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(f));
+      			startActivityForResult(takePictureIntent, TAKE_PIC_REQUEST);
+      		}
+      }
 	  
 	  
 	  private void fillData(Uri uri) {
@@ -158,7 +191,7 @@ public class ImageDetailActivity extends Activity {
 	    outState.putParcelable(ImageContract.CONTENT_ITEM_TYPE, todoUri);
 	  }
 
-	  public void onClick(View view){
+	  public void onButtonClick(View view){
 			switch(view.getId()){
 				case R.id.submit_button:
 			        if (TextUtils.isEmpty(mTitleText.getText().toString())) {
@@ -220,7 +253,27 @@ public class ImageDetailActivity extends Activity {
 		public void onBackPressed() {
 			this.finish();
 			overridePendingTransition(R.anim.right_slide_in, R.anim.right_slide_out);
+		}
+		
+		@Override
+		protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+			if (resultCode == RESULT_OK) {
+				switch (requestCode) {
+				case TAKE_PIC_REQUEST:
+					Bundle extras = data.getExtras();
+					//Bitmap mImageBitmap = (Bitmap) extras.get("data");
+					String mCurrentPhotoPath = Storage.readFromPreferences(null, "photoPath", this, MODE_PRIVATE);
+					// TODO za³adowanie obrazka przeskalowanego
+					ImageLoader.loadBitmap(mCurrentPhotoPath, mImage);
+					//mImageView.setImageBitmap(BitmapCalc.decodeSampleBitmapFromFile(
+					//		mCurrentPhotoPath, 100, 100));
+					break;
 
+				default:
+					break;
+
+				}
+			}
 		}
 	  
 

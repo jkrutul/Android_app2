@@ -32,8 +32,7 @@
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:gravity="top"
-            android:hint="image name"
-            android:imeOptions="actionNext" />
+            android:hint="image name" />
 
         <EditText
             android:id="@+id/edit_description"
@@ -41,7 +40,7 @@
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:gravity="top"
-            android:hint="description"
+            android:hint="opis obrazka"
             android:imeOptions="actionNext" />
 
         <EditText
@@ -53,10 +52,25 @@
             android:hint="parent_fk"
             android:imeOptions="actionNext" />
         
+        <CheckBox
+            android:id="@+id/add_to_category"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="dodaj do kategori"
+            android:checked="false" />
+        
         <Spinner
+            android:visibility="gone"
     		android:id="@+id/parent_spinner"
    			android:layout_width="fill_parent"
     		android:layout_height="wrap_content" />
+        
+        <CheckBox
+            android:id="@+id/create_category"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="jest kategorią?"
+            android:checked="false" />
 
         <EditText
             android:id="@+id/edit_category"
@@ -64,15 +78,17 @@
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:gravity="top"
-            android:hint="enter category name"
-            android:imeOptions="actionNext" />
+            android:hint="podaj nazwę nowej kategorii"
+            android:imeOptions="actionNext"
+            android:visibility="invisible" />
 
         <Button
             android:id="@+id/submit_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:onClick="onClick"
-            android:text="confirm" />
+            android:onClick="onButtonClick"
+            android:text="Zapisz" />
+
     </LinearLayout>
 
 </ScrollView>

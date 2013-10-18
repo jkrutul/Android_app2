@@ -1,9 +1,11 @@
 package com.examples.app_2.activities;
 
+import android.content.Intent;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentTransaction;
+import android.view.View;
 
 import com.example.app_2.R;
 import com.example.app_2.fragments.ImageDetailsFragment;
@@ -30,6 +32,13 @@ public class ImageDetailsActivity extends FragmentActivity{
 	            ft.commit();		
 
         }
+    }
+    
+    public void onButtonClick(View view) {
+		switch (view.getId()) {
+		case R.id.submit_button:
+			break;		
+		}
     }
 
 }

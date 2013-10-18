@@ -11,6 +11,8 @@ public final class R {
     public static final class anim {
         public static final int right_slide_in=0x7f040000;
         public static final int right_slide_out=0x7f040001;
+        public static final int slide_in_right=0x7f040002;
+        public static final int slide_out_left=0x7f040003;
     }
     public static final class array {
         public static final int categories=0x7f050000;
@@ -32,29 +34,33 @@ public final class R {
     }
     public static final class drawable {
         public static final int action_search=0x7f020000;
-        public static final int drawer_shadow=0x7f020001;
-        public static final int empty_photo=0x7f020002;
-        public static final int ic_drawer=0x7f020003;
-        public static final int ic_launcher=0x7f020004;
-        public static final int navigation_refresh=0x7f020005;
+        public static final int content_new=0x7f020001;
+        public static final int drawer_shadow=0x7f020002;
+        public static final int empty_photo=0x7f020003;
+        public static final int ic_drawer=0x7f020004;
+        public static final int ic_launcher=0x7f020005;
+        public static final int navigation_refresh=0x7f020006;
+        public static final int twitter_bird3_square_webtreatsetc=0x7f020007;
     }
     public static final class id {
-        public static final int action_search=0x7f0a0027;
-        public static final int action_settings=0x7f0a0026;
+        public static final int action_search=0x7f0a0029;
+        public static final int action_settings=0x7f0a0028;
         public static final int add=0x7f0a0011;
-        public static final int category=0x7f0a0024;
+        public static final int add_to_category=0x7f0a001e;
+        public static final int category=0x7f0a0026;
         public static final int category_image=0x7f0a0016;
         public static final int category_name=0x7f0a0017;
-        public static final int clear_cache=0x7f0a002b;
+        public static final int clear_cache=0x7f0a002d;
         public static final int client_activity=0x7f0a000b;
         public static final int content_frame=0x7f0a0003;
+        public static final int create_category=0x7f0a0020;
         public static final int db_test_activity=0x7f0a000a;
         public static final int delete=0x7f0a0012;
         public static final int details=0x7f0a0008;
         public static final int drawer_layout=0x7f0a0002;
         public static final int drawer_view=0x7f0a0005;
         public static final int edit_activity=0x7f0a000e;
-        public static final int edit_category=0x7f0a001f;
+        public static final int edit_category=0x7f0a0021;
         public static final int edit_description=0x7f0a001c;
         public static final int edit_name=0x7f0a001b;
         public static final int edit_parent=0x7f0a001d;
@@ -63,24 +69,24 @@ public final class R {
         public static final int gridView=0x7f0a0018;
         public static final int grid_activity=0x7f0a0009;
         public static final int group=0x7f0a0010;
-        public static final int icon=0x7f0a0022;
-        public static final int image_list_view=0x7f0a0021;
+        public static final int icon=0x7f0a0024;
+        public static final int image_list_view=0x7f0a0023;
         public static final int image_overview_activity=0x7f0a000c;
         public static final int img=0x7f0a0019;
         public static final int img_id=0x7f0a001a;
         public static final int import_db=0x7f0a0015;
-        public static final int insert=0x7f0a0028;
-        public static final int label=0x7f0a0023;
+        public static final int insert=0x7f0a002a;
+        public static final int label=0x7f0a0025;
         public static final int left_drawer=0x7f0a0006;
-        public static final int menu_item_share=0x7f0a0029;
-        public static final int menu_refresh=0x7f0a002a;
+        public static final int menu_item_share=0x7f0a002b;
+        public static final int menu_refresh=0x7f0a002c;
         public static final int message=0x7f0a0000;
         public static final int pager=0x7f0a000f;
-        public static final int parent_spinner=0x7f0a001e;
-        public static final int perent=0x7f0a0025;
+        public static final int parent_spinner=0x7f0a001f;
+        public static final int perent=0x7f0a0027;
         public static final int recreateDB=0x7f0a0013;
         public static final int send_button=0x7f0a0001;
-        public static final int submit_button=0x7f0a0020;
+        public static final int submit_button=0x7f0a0022;
         public static final int swipe_activity=0x7f0a000d;
         public static final int titles=0x7f0a0007;
     }

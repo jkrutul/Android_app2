@@ -21,6 +21,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.os.Environment;
 import android.util.Log;
 
+import com.example.app_2.App_2;
 import com.example.app_2.contentprovider.ImageContract;
 import com.example.app_2.models.ImageObject;
 import com.example.app_2.utils.Utils;
@@ -60,7 +61,7 @@ public class Database {
 	");";
 	
 	    
-	public void recreateDB(){
+	public static void recreateDB(){
 		open();
 		String drop_table = "DROP TABLE IF EXISTS ";
 		db.execSQL(drop_table+ImageContract.TABLE_IMAGE);
@@ -86,7 +87,7 @@ public class Database {
 	
 	public static Database open() throws SQLException{
 		if(dbHelper==null)
-			getInstance(context);
+			getInstance(App_2.getAppContext());
 		
 				try{
 					db = dbHelper.getWritableDatabase();

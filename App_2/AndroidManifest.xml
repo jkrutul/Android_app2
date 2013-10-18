@@ -25,7 +25,8 @@
         android:allowBackup="true"
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
-        android:theme="@style/AppTheme" >
+        android:theme="@style/AppTheme"
+        android:windowSoftInputMode="stateHidden" >
         
         <activity
             android:name="com.examples.app_2.activities.MainActivity"
@@ -115,6 +116,14 @@
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.example.app_2.activities.MainActivity" />
+        </activity>
+        
+        <activity
+            android:name="com.examples.app_2.activities.AddNewImageActivity"
+            android:label="AddNewImageActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.example.app_2.activities.ImageEditActivity" />
         </activity>
         
        <provider 

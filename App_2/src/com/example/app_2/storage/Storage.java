@@ -1,16 +1,24 @@
 package com.example.app_2.storage;
 
 import java.io.File;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.Environment;
+import android.provider.MediaStore.Images;
 import android.util.Log;
 
+
 import com.example.app_2.App_2;
+import com.examples.app_2.activities.ImageDetailActivity;
 
 
 public class Storage {
@@ -35,6 +43,35 @@ public class Storage {
 			return new File(Environment.getExternalStorageDirectory().getPath()	+ cacheDir);
 		}
 	}
+	
+	public static File createImageFile() {
+
+		String JPEG_FILE_PREFIX = "img";
+		String JPEG_FILE_SUFIX = ".jpg";
+		// create a image file name
+		String timeStamp = new SimpleDateFormat("yyyyyMMdd_HHmmss")
+				.format(new Date());
+		String imageFileName = JPEG_FILE_PREFIX + timeStamp + "_";
+		try {
+			File image = File.createTempFile(imageFileName, JPEG_FILE_SUFIX,getImagesDir());
+			// mCurrentPhotoPath = image.getAbsolutePath();
+			return image;
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+	
+
+	public static void galleryAddPic(Activity a, String path) {
+		Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+		File f = new File(path);
+		Uri contentUri = Uri.fromFile(f);
+		mediaScanIntent.setData(contentUri);
+		a.sendBroadcast(mediaScanIntent);
+	}
+
+	
 	
 	public static File isfileExist(String filename, File path) {
 		File file = new File(path.getAbsoluteFile() + "/" + filename);
@@ -101,6 +138,17 @@ public class Storage {
 			fp.add(f.getName());
 		}
 		return fp;		
+	}
+	
+	public static List<String> getChangedFilesFromDir(File dir){
+		List<File> fl = getFilesListFromDir(dir);
+		List<String> cfl = new LinkedList<String>();
+		Long img_dir_last_read = Long.valueOf(Storage.readFromSharedPreferences(String.valueOf(0), "imgDirLastRead", "imgDirLastRead", App_2.getAppContext(), Context.MODE_PRIVATE));
+		for(File f:fl){
+			if(f.lastModified()>img_dir_last_read)
+				cfl.add(f.getName());
+		}
+		return cfl;
 	}
 	
 	/**

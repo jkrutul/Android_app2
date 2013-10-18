@@ -2,12 +2,16 @@ package com.examples.app_2.activities;
 
 import com.example.app_2.R;
 import com.example.app_2.fragments.ImageListFragment;
+import com.example.app_2.provider.Images;
 import com.example.app_2.storage.Storage;
 
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.ActionBar;
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
+import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
@@ -15,6 +19,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ShareActionProvider;
+import android.widget.Toast;
 
 public class MainActivity extends Activity {
 	private final static String LOG_TAG = "MainActivity";
@@ -47,13 +52,17 @@ public class MainActivity extends Activity {
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
 		case R.id.menu_refresh:
-			Intent intent = getIntent();
-			overridePendingTransition(0, 0);
-			intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
-			finish();
+			 new AlertDialog.Builder(this)
+		        .setTitle("Czy usun¹c informacje oraz relacje o obrazkach?")
+		        .setMessage("Obrazki zostan¹ dodane do g³ównej kategori")
+		        .setNegativeButton(android.R.string.no, null)
+		        .setPositiveButton(android.R.string.yes, new OnClickListener() {
 
-			overridePendingTransition(0, 0);
-			startActivity(intent);
+					@Override
+					public void onClick(DialogInterface dialog, int which) {
+						Images.populateImagePaths();
+					}
+		        }).create().show();
 		}
 		return true;
 	}
