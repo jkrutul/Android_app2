@@ -18,7 +18,6 @@ import android.util.Log;
 
 
 import com.example.app_2.App_2;
-import com.examples.app_2.activities.ImageDetailActivity;
 
 
 public class Storage {

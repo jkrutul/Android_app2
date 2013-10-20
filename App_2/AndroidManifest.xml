@@ -67,25 +67,7 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.example.app_2.activities.MainActivity" />
         </activity>
-        
-        <activity
-            android:name="com.examples.app_2.activities.ImagesOverviewActivity"
-            android:label="OverviewActivity"
-            android:parentActivityName="com.example.app_2.activities.MainActivity" >
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.example.app_2.activities.MainActivity" />
-        </activity>
-        
-        <activity
-            android:name="com.examples.app_2.activities.ImageDetailActivity"
-            android:label="ImageDetailActivity"
-            android:windowSoftInputMode="stateVisible|adjustResize" >
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.example.app_2.activities.MainActivity" />
-        </activity>
-        
+                
         <activity
             android:name="com.examples.app_2.activities.ProgressActivity"
             android:label="ProgressActivity">

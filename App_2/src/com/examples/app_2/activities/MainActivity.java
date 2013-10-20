@@ -88,13 +88,6 @@ public class MainActivity extends Activity {
 			startActivity(intent);
 			break;
 
-		case R.id.image_overview_activity:
-			intent = new Intent(this, ImagesOverviewActivity.class);
-			startActivity(intent);
-			overridePendingTransition(R.anim.right_slide_in,
-					R.anim.right_slide_out);
-			break;
-
 		case R.id.swipe_activity:
 			intent = new Intent(this, SwipeActivity.class);
 			startActivity(intent);
