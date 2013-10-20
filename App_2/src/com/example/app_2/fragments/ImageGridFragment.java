@@ -61,6 +61,7 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
     private int mItemHeight = 0;
     private int mNumColumns = 0;
     private static boolean loadExpandedImage= false;
+	private static final int LOADER_ID = 1;
 
     	
     public ImageGridFragment(){
@@ -83,7 +84,7 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
 			processBitmapsTask.executeOnExecutor(AsyncTask.SERIAL_EXECUTOR);
 		}
 		
-		getLoaderManager().restartLoader(0, this.getArguments(), this);
+		getLoaderManager().initLoader(LOADER_ID, this.getArguments(), this);
 		
 		setHasOptionsMenu(true);
 		mImageThumbSize = getResources().getDimensionPixelSize(R.dimen.image_thumbnail_size);

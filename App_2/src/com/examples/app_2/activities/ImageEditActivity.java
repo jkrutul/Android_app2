@@ -14,6 +14,7 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.Toast;
 
 public class ImageEditActivity extends FragmentActivity{
@@ -21,6 +22,7 @@ public class ImageEditActivity extends FragmentActivity{
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+	    getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
         setContentView(R.layout.activity_image_edit);
     }
     
@@ -44,7 +46,7 @@ public class ImageEditActivity extends FragmentActivity{
 		return super.onOptionsItemSelected(item);
 	}
 	
-	  public void onClick(View view){
+	  public void onButtonClick(View view){
 			switch(view.getId()){
 				case R.id.submit_button:
 			       // if (TextUtils.isEmpty(mTitleText.getText().toString())) {

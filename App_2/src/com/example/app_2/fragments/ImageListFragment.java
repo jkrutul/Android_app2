@@ -12,11 +12,15 @@ import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v4.widget.SimpleCursorAdapter;
-import android.util.Log;
+import android.view.ContextMenu;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
+import android.view.ContextMenu.ContextMenuInfo;
 import android.widget.AdapterView;
 import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.AdapterView.AdapterContextMenuInfo;
 
 import com.example.app_2.R;
 import com.example.app_2.contentprovider.ImageContract;
@@ -24,11 +28,13 @@ import com.example.app_2.provider.Images;
 import com.example.app_2.utils.ImageLoader;
 import com.examples.app_2.activities.ImageDetailsActivity;
 
-public class ImageListFragment extends ListFragment implements
-		AdapterView.OnItemClickListener, LoaderCallbacks<Cursor> {
+public class ImageListFragment extends ListFragment implements LoaderCallbacks<Cursor> {
 	SimpleCursorAdapter adapter;
 	boolean mDualPane;
 	int mCurCheckPosition = 0;
+	private static final int DELETE_ID = Menu.FIRST + 1;
+	private static final int LOADER_ID = 0;
+	private static final String TAG = "ImageListFragment";
 	
 	public ImageListFragment(){
 		
@@ -42,25 +48,16 @@ public class ImageListFragment extends ListFragment implements
 		String[] from = new String[] { ImageContract.Columns._ID,
 				ImageContract.Columns.PATH, ImageContract.Columns.PATH,
 				ImageContract.Columns.CATEGORY, ImageContract.Columns.PARENT };
-		// Fields on the UI to which we map
-		int[] to = new int[] { 0, R.id.label, R.id.icon, R.id.category,	R.id.perent };
-		getActivity().getSupportLoaderManager().initLoader(0, null, this);
+		int[] to = new int[] { 0, R.id.label, R.id.icon, R.id.category,	R.id.perent }; 		// Fields on the UI to which we map
 
-		Cursor c = getActivity().getContentResolver().query(
-				ImageContract.CONTENT_URI, from, null, null, null);
-		if (c.getCount() <= 0) {
-			c.close();
-		}
-
-		adapter = new SimpleCursorAdapter( getActivity().getApplicationContext(), R.layout.image_row, c, from, to, 0);
-
-		getLoaderManager().restartLoader(0, this.getArguments(), this);
+		adapter = new SimpleCursorAdapter( getActivity().getApplicationContext(), R.layout.image_row, null, from, to, 0);
+		
+		
+		
 		adapter.setViewBinder(new SimpleCursorAdapter.ViewBinder() {
-			public boolean setViewValue(View view, Cursor cursor,
-					int columnIndex) {
+			public boolean setViewValue(View view, Cursor cursor,int columnIndex) {
 				if (view.getId() == R.id.icon) {
-					String path = Images.getImageThumbsPath(cursor.getString(cursor
-							.getColumnIndex(ImageContract.Columns.PATH)));
+					String path = Images.getImageThumbsPath(cursor.getString(cursor.getColumnIndex(ImageContract.Columns.PATH)));
 					ImageLoader.loadBitmap(path, (ImageView) view);
 					return true; // true because the data was bound to the view
 				}
@@ -69,7 +66,9 @@ public class ImageListFragment extends ListFragment implements
 		});
 
 		setListAdapter(adapter);
-
+		getActivity().getSupportLoaderManager().initLoader(LOADER_ID, null, this);
+		registerForContextMenu(getListView());
+		
 		// Check to see if we have a frame in which to embed the details
 		// fragment directly in the containing UI.
 		View detailsFrame = getActivity().findViewById(R.id.details);
@@ -100,6 +99,26 @@ public class ImageListFragment extends ListFragment implements
 		l.setItemChecked(position, true);
 		showDetails(id);
 	}
+	
+	@Override
+	public void onCreateContextMenu(ContextMenu menu, View v,
+			ContextMenuInfo menuInfo) {
+		super.onCreateContextMenu(menu, v, menuInfo);
+		menu.add(0, DELETE_ID, 0, "usuñ");
+	}
+	
+	@Override
+	public boolean onContextItemSelected(MenuItem item) {
+		switch (item.getItemId()) {
+		case DELETE_ID:
+			AdapterContextMenuInfo info = (AdapterContextMenuInfo) item.getMenuInfo();
+			Uri uri = Uri.parse(ImageContract.CONTENT_URI + "/"	+ info.id);
+			getActivity().getContentResolver().delete(uri, null, null);
+			getLoaderManager().restartLoader(0, this.getArguments(), this);
+			return true;
+		}
+		return super.onContextItemSelected(item);
+	}
 
 	/**
 	 * Helper function to show the details of a selected item, either by
@@ -107,20 +126,14 @@ public class ImageListFragment extends ListFragment implements
 	 * activity in which it is displayed.
 	 */
 	void showDetails( Long id) {
-		//mCurCheckPosition = index;
-		//Uri uri = Uri.parse(ImageContract.CONTENT_URI + "/" + id);
-		
-
 		if (mDualPane) {
 			// We can display everything in-place with fragments, so update
 			// the list to highlight the selected item and show the data.
-			//getListView().setItemChecked(index, true);
 
 			// Check what fragment is currently shown, replace if needed.
 			ImageDetailsFragment details = (ImageDetailsFragment) getFragmentManager().findFragmentById(R.id.details);
 			
 			if (details == null || details.getShownId() != id) {
-					//Log.i("details",String.valueOf(details.getShownId()));
 					// Make new fragment to show this selection.
 					//details = ImageDetailsFragment.newInstance(index);
 					details = ImageDetailsFragment.newInstance(id);
@@ -128,19 +141,14 @@ public class ImageListFragment extends ListFragment implements
 					// Execute a transaction, replacing any existing fragment
 					// with this one inside the frame.
 					FragmentTransaction ft = getFragmentManager().beginTransaction();
-					//if (index == 0) {
-						ft.replace(R.id.details, details);
-					//} else {
-					//	ft.replace(R.id.details, details);
-					//}
+					ft.replace(R.id.details, details);
 					ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
 					ft.commit();
 				
 			}
 
 		} else {
-			// Otherwise we need to launch a new activity to display
-			// the dialog fragment with selected text.
+			// Otherwise we need to launch a new activity to display the dialog fragment with selected text.
 			Intent intent = new Intent();
 			intent.setClass(getActivity(), ImageDetailsActivity.class);
 			intent.putExtra("row_id", id);
@@ -148,39 +156,27 @@ public class ImageListFragment extends ListFragment implements
 		}
 	}
 
-	/*
-	@Override
-	public View onCreateView(LayoutInflater inflater, ViewGroup container,
-			Bundle savedInstanceState) {
-		super.onCreateView(inflater, container, savedInstanceState);
-		final View v = inflater.inflate(R.layout.image_list, container, false);
-		return v;
-	}
-*/
-	@TargetApi(Build.VERSION_CODES.HONEYCOMB)
 	@Override
 	public Loader<Cursor> onCreateLoader(int arg0, Bundle bundle) {
-		String[] projection = { ImageContract.Columns._ID,
-				ImageContract.Columns.PATH, ImageContract.Columns.CATEGORY,
-				ImageContract.Columns.PARENT };
+		String[] projection = { 
+				ImageContract.Columns._ID,
+				ImageContract.Columns.PATH,
+				ImageContract.Columns.CATEGORY,
+				ImageContract.Columns.PARENT
+				};
 		CursorLoader cursorLoader = new CursorLoader(getActivity(),
 				ImageContract.CONTENT_URI, projection, null, null, null);
 		return cursorLoader;
 	}
 
 	@Override
-	public void onLoadFinished(Loader<Cursor> arg0, Cursor data) {
-		adapter.swapCursor(data);
+	public void onLoadFinished(Loader<Cursor> loader, Cursor cursor)  {
+	     ((SimpleCursorAdapter) this.getListAdapter()).swapCursor(cursor);
 	}
 
 	@Override
 	public void onLoaderReset(Loader<Cursor> loader) {
-		adapter.swapCursor(null);
+		((SimpleCursorAdapter)this.getListAdapter()).swapCursor(null);
 	}
 
-	@Override
-	public void onItemClick(AdapterView<?> arg0, View arg1, int arg2, long arg3) {
-		// TODO Auto-generated method stub
-
-	}
 }
