@@ -26,7 +26,8 @@
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
         android:theme="@style/AppTheme"
-        android:windowSoftInputMode="stateHidden" >
+        android:windowSoftInputMode="stateHidden"
+        android:hardwareAccelerated="true" >
         
         <activity
             android:name="com.example.app_2.activities.MainActivity"
@@ -107,6 +108,15 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.example.app_2.activities.ImageEditActivity" />
         </activity>
+        
+        <activity
+            android:name="com.example.app_2.activities.AddImagesFromFolderActivity"
+            android:label="AddImagesFromFolderActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.example.app_2.activities.ImageEditActivity" />
+        </activity>
+        
         
        <provider 
            android:name= "com.example.app_2.contentprovider.ImageContentProvider"

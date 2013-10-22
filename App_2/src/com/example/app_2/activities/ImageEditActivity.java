@@ -37,9 +37,14 @@ public class ImageEditActivity extends FragmentActivity{
 	
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
+		Intent i;
 		switch (item.getItemId()) {
 		case R.id.insert:
-			Intent i = new Intent(this, AddNewImageActivity.class);
+			i = new Intent(this, AddNewImageActivity.class);
+			startActivity(i);
+			return true;
+		case R.id.add_folder:
+			i = new Intent(this, AddImagesFromFolderActivity.class);
 			startActivity(i);
 			return true;
 		}

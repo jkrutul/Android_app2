@@ -25,6 +25,7 @@ import android.view.WindowManager;
 
 import com.example.app_2.App_2;
 import com.example.app_2.R;
+import com.example.app_2.activities.AddImagesFromFolderActivity;
 import com.example.app_2.activities.ImageGridActivity;
 import com.example.app_2.contentprovider.ImageContract;
 import com.example.app_2.fragments.ImageDetailsFragment;
@@ -74,6 +75,32 @@ public class Images { // TODO nie mo¿e byæ static
 		}
 		return fileNames;
 	}
+	
+	public static void addImagesToDatabase(String path){
+		List<String> fileNames = new LinkedList<String>();
+		fileNames = getImagesFileNames(Storage.getFilesNamesFromDir(new File(path)));
+		
+		ArrayList<ContentProviderOperation> batchOps = new ArrayList<ContentProviderOperation>();
+		
+		for(String filename: fileNames){
+				batchOps.add(ContentProviderOperation.newInsert(ImageContract.CONTENT_URI)
+						.withValue(ImageContract.Columns.PATH, filename)
+						.withValue(ImageContract.Columns.PARENT, -1)
+						.build());
+		}
+		
+		try {
+			App_2.getAppContext().getContentResolver().applyBatch(ImageContract.AUTHORITY, batchOps);
+		} catch (RemoteException e) {
+										// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (OperationApplicationException e) {
+										// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+	}
+	
 	
 	public static Uri[] populateImagePaths(){
 		//images.clear();
@@ -341,7 +368,7 @@ public class Images { // TODO nie mo¿e byæ static
 	}
 	
 	
-	public static class ProcessBitmapsTask extends AsyncTask<Void, Integer, Void>{
+	public static class ProcessBitmapsTask extends AsyncTask<String, Integer, Void>{
 		Activity executing_activity;
 		
 		public ProcessBitmapsTask(Activity activity){
@@ -350,25 +377,29 @@ public class Images { // TODO nie mo¿e byæ static
 		
 	@Override
 		    protected void onPreExecute() {
-			executing_activity.showDialog(ImageGridActivity.PLEASE_WAIT_DIALOG);
+			if(executing_activity instanceof ImageGridActivity)
+				executing_activity.showDialog(ImageGridActivity.PLEASE_WAIT_DIALOG);
+			else
+				executing_activity.showDialog(AddImagesFromFolderActivity.PLEASE_WAIT_DIALOG);
 		    }
 		
 		@Override
-		protected Void doInBackground(Void... arg0) {
+		protected Void doInBackground(String... arg0) {
 			int count;
-			
+			String path = arg0[0];
 			// - przejrzeæ katalog
 			// - sprawdziæ czy wygenerowane miniaturki dla wpisów
 			//Cursor cursor = executing_activity.getContentResolver().query(ImageContract.CONTENT_URI, null, null, null,null);
 			//cursor.moveToFirst();
 			
 			imgLastModified = Storage.getImagesDir().lastModified();
-			if(imgLastModified> img_dir_last_read){																// katalog zosta³ zmodyfikowany
+			//if(imgLastModified> img_dir_last_read){																// katalog zosta³ zmodyfikowany
 			//	if(true){
 				Log.w(LOG_TAG, "images in directory has changed:"+String.valueOf(img_dir_last_read)+"<"+String.valueOf(imgLastModified));
-				executing_activity.getContentResolver().delete(ImageContract.CONTENT_URI, null, null);
+				//executing_activity.getContentResolver().delete(ImageContract.CONTENT_URI, null, null);
 				
-				List<String> fileNames = getImagesFileNames(Storage.getChangedFilesFromDir(Storage.getImagesDir()));
+				//List<String> fileNames = getImagesFileNames(Storage.getChangedFilesFromDir(Storage.getImagesDir()));
+				List<String> fileNames = getImagesFileNames(Storage.getFilesNamesFromDir(new File(path)));
 				//List<String> fileNames = getImagesFileNames(Storage.getFilesNamesFromDir(Storage.getImagesDir()));
 								
 				//ContentResolver contentRes= App_2.getAppContext().getContentResolver();
@@ -403,13 +434,13 @@ public class Images { // TODO nie mo¿e byæ static
 				//File f;
 				for(String filename : fileNames){
 					publishProgress((int) ((i/ (float) count)*100));
-					path_toIMG = Storage.getImagesDir() + File.separator + filename;
+					path_toIMG = path + File.separator + filename;
 					//f = new File(path_toIMG);
 					path_toTHUMB = Storage.getThumbsDir() + File.separator + filename;
 					path_toFullScreenTHUMB = Storage.getThumbsMaxDir() + File.separator + filename;
 					
-					bitmap = BitmapCalc.decodeSampleBitmapFromFile(path_toIMG, maxWidth,maxHeight);
-					Log.w(LOG_TAG, bitmap.getHeight() + " " +bitmap.getWidth());
+					bitmap = BitmapCalc.decodeSampleBitmapFromFile(path_toIMG, maxWidth,maxHeight); // mo¿e byæ null
+					//Log.w(LOG_TAG, bitmap.getHeight() + " " +bitmap.getWidth());
 					try {
 						FileOutputStream out = new FileOutputStream(path_toFullScreenTHUMB);
 						bitmap.compress(Bitmap.CompressFormat.JPEG, 100, out);
@@ -439,18 +470,27 @@ public class Images { // TODO nie mo¿e byæ static
 				
 				img_dir_last_read = Storage.getImagesDir().lastModified();
 				Storage.saveToSharedPreferences("imgDirLastRead", Long.toString(img_dir_last_read), "imgDirLastRead", App_2.getAppContext(), Context.MODE_PRIVATE);
-				populateImagePaths();
-			}
+				addImagesToDatabase(path);
+				//populateImagePaths();
+			
 			//cursor.close();
 			return null;
 		}
 		
 	     protected void onProgressUpdate(Integer... progress) {
-	    	 ImageGridActivity.dialog.setProgress(progress[0]);		
+				if(executing_activity instanceof ImageGridActivity)
+					ImageGridActivity.dialog.setProgress(progress[0]);		
+				else
+					AddImagesFromFolderActivity.dialog.setProgress(progress[0]);		
+			    
+	    	 
 	     }
 
 	     protected void onPostExecute(Void result) {
-	         executing_activity.removeDialog(ImageGridActivity.PLEASE_WAIT_DIALOG);
+	    	 if(executing_activity instanceof ImageGridActivity)
+	    		 executing_activity.removeDialog(ImageGridActivity.PLEASE_WAIT_DIALOG);
+	    	 else
+	    		 executing_activity.removeDialog(AddImagesFromFolderActivity.PLEASE_WAIT_DIALOG);
 	     }
 	}
 	

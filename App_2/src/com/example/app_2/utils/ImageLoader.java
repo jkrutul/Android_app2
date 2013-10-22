@@ -15,7 +15,9 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
+import android.graphics.drawable.TransitionDrawable;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.support.v4.util.LruCache;
@@ -98,10 +100,14 @@ public class ImageLoader {
 	}
 	
 	@SuppressLint("NewApi")
-	public static void loadBitmap(String path, ImageView imageView){
+	public static void loadBitmap(String path, ImageView imageView, boolean darkPlaceholder){
 		if(cancelPotentialWork(path, imageView)){
 			BitmapWorkerTask task = new BitmapWorkerTask(imageView);
-			AsyncDrawable asyncDrawable = new AsyncDrawable(App_2.getAppContext().getResources(), App_2.mPlaceHolderBitmap, task);
+			AsyncDrawable asyncDrawable;
+			if(darkPlaceholder)
+				asyncDrawable = new AsyncDrawable(App_2.getAppContext().getResources(), App_2.mDarkPlaceHolderBitmap, task);
+			else
+				asyncDrawable = new AsyncDrawable(App_2.getAppContext().getResources(), App_2.mPlaceHolderBitmap, task);
 			imageView.setImageDrawable(asyncDrawable);
 			if(Utils.hasHoneycomb())
 				task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, path);
@@ -193,6 +199,18 @@ public class ImageLoader {
 	        }
 	        return null;
 	    }
+	    
+	    private void setImageDrawable(ImageView imageView, Bitmap bitmap) {
+	    	BitmapDrawable bd  =new BitmapDrawable(App_2.getAppContext().getResources(), bitmap);
+            // Transition drawable with a transparent drawable and the final drawable
+            final TransitionDrawable td = new TransitionDrawable(new Drawable[] { new ColorDrawable(android.R.color.transparent),  bd});
+            // Set background to loading bitmap
+
+           // imageView.setBackgroundDrawable(new BitmapDrawable(mResources, mLoadingBitmap));
+
+            imageView.setImageDrawable(td);
+            td.startTransition(200);
+    }
 
 
 	    // Once complete, see if ImageView is still around and set bitmap.
@@ -206,11 +224,13 @@ public class ImageLoader {
 	            final ImageView imageView = imageViewReference.get();
 	            final BitmapWorkerTask bitmapWorkerTask = getBitmapWorkerTask(imageView);
 	            if (this == bitmapWorkerTask && imageView != null) {
-	                imageView.setImageBitmap(bitmap);
+	            	setImageDrawable(imageView, bitmap);
+	                //imageView.setImageBitmap(bitmap);
 	            }
 	        }
 	    }
 	}
+	
 	
 	 static class AsyncDrawable extends BitmapDrawable {
 	    private final WeakReference<BitmapWorkerTask> bitmapWorkerTaskReference;
@@ -224,7 +244,7 @@ public class ImageLoader {
 	        return bitmapWorkerTaskReference.get();
 	    }
 	}
-	
+
 	class InitDiskCacheTask extends AsyncTask<File, Void, Void> {
 	    @Override
 	    protected Void doInBackground(File... params) {

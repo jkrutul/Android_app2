@@ -37,7 +37,7 @@ public class ImageCursorAdapter extends CursorAdapter {
             //image.setScaleType(ImageView.ScaleType.FIT_END);
             //image.setScaleType(ImageView.ScaleType.FIT_START);
             image.setLayoutParams(params);
-            ImageLoader.loadBitmap(Images.getImageThumbsPath(path), (ImageView)view);
+            ImageLoader.loadBitmap(Images.getImageThumbsPath(path), (ImageView)view, true);
             
             //image.setImageDrawable(Drawable.createFromPath(path));
         }

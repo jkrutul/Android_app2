@@ -284,7 +284,7 @@ public class ImageDetailsFragment extends Fragment implements
 			// Always close the cursor
 			cursor.close();
 			ImageLoader.loadBitmap(Storage.getThumbsMaxDir() + File.separator
-					+ imgName, mImage);
+					+ imgName, mImage, false);
 		}
 	}
 

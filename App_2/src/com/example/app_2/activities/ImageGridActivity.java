@@ -340,7 +340,7 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 			   public boolean setViewValue(View view, Cursor cursor, int columnIndex){
 			       if(view.getId() == R.id.category_image){
 						 String path = Images.getImageThumbsPath(cursor.getString(cursor.getColumnIndex(ImageContract.Columns.PATH)));
-						 ImageLoader.loadBitmap(path, (ImageView) view);
+						 ImageLoader.loadBitmap(path, (ImageView) view, true);
 			           return true; //true because the data was bound to the view
 			       }
 			       return false;

@@ -166,9 +166,9 @@ public class AddNewImageActivity extends Activity implements OnClickListener {
 	private void showFields(){
 		mId.setVisibility(View.VISIBLE);
 		mTitleText.setVisibility(View.VISIBLE);
-		mCategory.setVisibility(View.VISIBLE);
+		//mCategory.setVisibility(View.VISIBLE);
 		mDescText.setVisibility(View.VISIBLE);
-		mParent.setVisibility(View.VISIBLE);
+		//mParent.setVisibility(View.VISIBLE);
 		mSpinner.setVisibility(View.VISIBLE);
 		mButton.setVisibility(View.VISIBLE);
 		mParentCheckBox.setVisibility(View.VISIBLE);

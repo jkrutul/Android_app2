@@ -13,12 +13,14 @@ public class App_2 extends Application{
 	private static Context context;
 	//public static ImageGridActivity actvity;
 	public static Bitmap mPlaceHolderBitmap;
+	public static Bitmap mDarkPlaceHolderBitmap;
 
 	
 	public void onCreate(){
 		super.onCreate();
 		App_2.context = getApplicationContext();
 		mPlaceHolderBitmap = BitmapCalc.decodeSampleBitmapFromResources(App_2.getAppContext().getResources(), R.drawable.empty_photo, 100, 100);
+		mDarkPlaceHolderBitmap = BitmapCalc.decodeSampleBitmapFromResources(App_2.getAppContext().getResources(), R.drawable.dark_empty, 100, 100);
 	}
 	
 	public static Context getAppContext(){

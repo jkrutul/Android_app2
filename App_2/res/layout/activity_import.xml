@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content" >
+
+    <RelativeLayout
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:padding="16dp" >
+
+        <LinearLayout
+            android:id="@+id/upper_layout"
+            android:layout_width="fill_parent"
+        	android:layout_height="fill_parent">
+
+            <EditText
+                android:id="@+id/path_to_folder"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="2"
+                android:hint="podaj ścieżkę do folderu" />
+
+            <Button
+                android:id="@+id/OpenFileChooser"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="match_parent"
+                android:layout_toRightOf="@id/path_to_folder"
+                android:onClick="showFileChooser"
+                android:text="Wybierz folder" />
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/import_button"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/upper_layout"
+            android:onClick="onImportClick"
+            android:text="importuj" />
+    </RelativeLayout>
+
+</ScrollView>

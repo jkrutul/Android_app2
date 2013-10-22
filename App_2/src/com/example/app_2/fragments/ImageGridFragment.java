@@ -79,10 +79,10 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
     	
 		Long imgLastModified = Storage.getImagesDir().lastModified();
 		Long img_dir_last_read = Long.valueOf(Storage.readFromSharedPreferences(String.valueOf(0), "imgDirLastRead", "imgDirLastRead", App_2.getAppContext(), Context.MODE_PRIVATE));
-		if(imgLastModified> img_dir_last_read) {
-			ProcessBitmapsTask processBitmapsTask = new ProcessBitmapsTask(getActivity());
-			processBitmapsTask.executeOnExecutor(AsyncTask.SERIAL_EXECUTOR);
-		}
+		//if(imgLastModified> img_dir_last_read) {
+		//	ProcessBitmapsTask processBitmapsTask = new ProcessBitmapsTask(getActivity());
+		//	processBitmapsTask.executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, Storage.getImagesDir().getAbsolutePath());
+		//}
 		
 		getLoaderManager().initLoader(LOADER_ID, this.getArguments(), this);
 		

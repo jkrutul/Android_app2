@@ -58,7 +58,7 @@ public class ImageListFragment extends ListFragment implements LoaderCallbacks<C
 			public boolean setViewValue(View view, Cursor cursor,int columnIndex) {
 				if (view.getId() == R.id.icon) {
 					String path = Images.getImageThumbsPath(cursor.getString(cursor.getColumnIndex(ImageContract.Columns.PATH)));
-					ImageLoader.loadBitmap(path, (ImageView) view);
+					ImageLoader.loadBitmap(path, (ImageView) view, false);
 					return true; // true because the data was bound to the view
 				}
 				return false;
