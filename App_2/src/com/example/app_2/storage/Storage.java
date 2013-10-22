@@ -26,7 +26,7 @@ public class Storage {
 	public static final String IMG_DIR = "images";				// pobrane obrazki
 	public static final String IMG_THUBS = "thumbs";    		// miniatury obrazków
 	public static final String IMG_THUMBS_MAX = "thumbs_max";	// miniatury obrazków które siê mieszcz¹ na ca³ym ekranie tablety/smartfona
-	
+	public static final String TEMP = "temp";
 	public static final int IO_BUFFER_SIZE = 8 * 1024;
 	
 	/**
@@ -53,7 +53,22 @@ public class Storage {
 		String imageFileName = JPEG_FILE_PREFIX + timeStamp + "_";
 		try {
 			File image = File.createTempFile(imageFileName, JPEG_FILE_SUFIX,getImagesDir());
-			// mCurrentPhotoPath = image.getAbsolutePath();
+			return image;
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+	
+	public static File createTempImageFile(){
+		String JPEG_FILE_PREFIX = "tmp";
+		String JPEG_FILE_SUFIX = ".jpg";
+		// create a image file name
+		String timeStamp = new SimpleDateFormat("yyyyyMMdd_HHmmss")
+				.format(new Date());
+		String imageFileName = JPEG_FILE_PREFIX + timeStamp + "_";
+		try {
+			File image = File.createTempFile(imageFileName, JPEG_FILE_SUFIX,getTempDir());
 			return image;
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -92,6 +107,8 @@ public class Storage {
 		return getsDir(IMG_DIR);
 		}
 	
+
+	
 	public static File getThumbsDir(){
 		return getsDir(IMG_THUBS);
 		}
@@ -100,6 +117,9 @@ public class Storage {
 		return getsDir(IMG_THUMBS_MAX);
 	}
 	
+	public static File getTempDir(){
+		return getsDir(TEMP);
+	}
 	public static File getsDir(String dir) {
 		File file = new File(getAppRootDir().getAbsolutePath() + File.separator	+ dir);
 		if(file.exists()){

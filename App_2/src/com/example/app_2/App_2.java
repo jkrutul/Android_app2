@@ -5,8 +5,8 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.speech.tts.TextToSpeech;
 
+import com.example.app_2.activities.ImageGridActivity;
 import com.example.app_2.utils.BitmapCalc;
-import com.examples.app_2.activities.ImageGridActivity;
 
 
 public class App_2 extends Application{

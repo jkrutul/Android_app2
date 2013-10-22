@@ -17,6 +17,7 @@
 package com.example.app_2.utils;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.security.MessageDigest;
@@ -28,7 +29,7 @@ import android.annotation.TargetApi;
 import android.os.Build;
 import android.os.StrictMode;
 
-import com.examples.app_2.activities.ImageGridActivity;
+import com.example.app_2.activities.ImageGridActivity;
 
 /**
  * Class containing some static utility methods.
@@ -93,6 +94,11 @@ public class Utils {
     public static String cutExtention(String filename){
     	String[] fn = filename.split("\\.");
     	return fn[0];
+    }
+    
+    public static String getFilenameFromPath(String path){
+    	File f = new File(path);
+    	return f.getName();
     }
     
     public static String hashKeyForDisk(String key) {

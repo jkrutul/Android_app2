@@ -12,11 +12,12 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.database.Cursor;
+import android.graphics.Bitmap;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.v4.app.Fragment;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -24,9 +25,8 @@ import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemSelectedListener;
-//import android.widget.ArrayAdapter;
-import android.support.v4.widget.*;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
@@ -34,11 +34,15 @@ import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.TextView;
 
+import com.example.app_2.App_2;
 import com.example.app_2.R;
 import com.example.app_2.contentprovider.ImageContract;
+import com.example.app_2.provider.Images.AddingImageTask;
 import com.example.app_2.storage.Storage;
+import com.example.app_2.utils.BitmapCalc;
 import com.example.app_2.utils.ImageLoader;
 import com.example.app_2.utils.Utils;
+//import android.widget.ArrayAdapter;
 
 public class ImageDetailsFragment extends Fragment implements
 		View.OnClickListener {
@@ -47,9 +51,13 @@ public class ImageDetailsFragment extends Fragment implements
 	private TextView mTitleText;
 	private EditText mDescText;
 	private EditText mParent;
-	private ImageView mImage;
+	private Button mButton;
+	public  ImageView mImage;
+	private static Bitmap bitmap;
 	private CheckBox mParentCheckBox;
 	private CheckBox mCreateCategoryCheckBox;
+	
+	private String newFileName;
 
 	private Map<String, Long> categories_map;
 	private Spinner mSpinner;
@@ -80,7 +88,7 @@ public class ImageDetailsFragment extends Fragment implements
 
 	public void onCreate(Bundle bundle) {
 		super.onCreate(bundle);
-
+		
 		// if(row_id == null)
 		row_id = (bundle == null) ? null : (Long) bundle.getLong("row_id");
 		if (row_id == null) {
@@ -107,11 +115,11 @@ public class ImageDetailsFragment extends Fragment implements
 			// the view hierarchy; it would just never be used.
 
 		}
-		final View view = inflater.inflate(R.layout.image_edit, container,
-				false);
+		final View view = inflater.inflate(R.layout.image_edit, container,false);
 		mId = (TextView) view.findViewById(R.id.img_id);
 		mImage = (ImageView) view.findViewById(R.id.img);
 		mImage.setOnClickListener(this);
+		mButton = (Button) view.findViewById(R.id.submit_button);
 		mTitleText = (TextView) view.findViewById(R.id.edit_name);
 		mCategory = (EditText) view.findViewById(R.id.edit_category);
 		mDescText = (EditText) view.findViewById(R.id.edit_description);
@@ -157,17 +165,26 @@ public class ImageDetailsFragment extends Fragment implements
 					@Override
 					public void onCheckedChanged(CompoundButton buttonView,
 							boolean isChecked) {
-						if (isChecked)
+						if (isChecked){
+							String image_description = mDescText.getText().toString();
+							mCategory.setText(image_description);
 							mCategory.setVisibility(View.VISIBLE);
+							}
 						else
 							mCategory.setVisibility(View.INVISIBLE);
 					}
 				});
 
 		addItemsOnSpinner();
-		if (row_id != null && row_id != 0)
+		if (row_id != null && row_id != 0){
 			fillData(row_id);
-		mImage.setClickable(true);
+			//mImage.setClickable(false);
+			}
+		else{
+			//mImage.setClickable(true);
+			if(bitmap!=null)
+				mImage.setImageBitmap(bitmap);
+		}
 		return view;
 
 	}
@@ -208,7 +225,20 @@ public class ImageDetailsFragment extends Fragment implements
 			spinnerDataAdapter.add(l);
 		mSpinner.setAdapter(spinnerDataAdapter);
 	}
-
+	
+	public void onButtonClick(View view){
+		saveState();
+		/*
+		if(bitmap!= null){									// mamy zdjêcie do zapisania w bazie danych
+			String path_toIMG = Storage.readFromPreferences(null, "photoPath", getActivity(), Activity.MODE_PRIVATE);
+			new AddingImageTask().execute(path_toIMG); // skalowanie obrazka, dodanie do 2 folderów
+			saveState();
+			bitmap=null;
+		}
+		*/
+		getActivity().finish();
+	}
+	
 	private void fillData(Long id) {
 		Uri uri = Uri.parse(ImageContract.CONTENT_URI + "/" + id);
 		String[] projection = { ImageContract.Columns._ID,
@@ -273,7 +303,7 @@ public class ImageDetailsFragment extends Fragment implements
 	@Override
 	public void onPause() {
 		super.onPause();
-		saveState();
+		//saveState();
 	}
 
 	private void saveState() {
@@ -299,16 +329,17 @@ public class ImageDetailsFragment extends Fragment implements
 
 		// TODO save if data changed or save button pressed
 
-		if (description.length() == 0) {
-			return;
-		}
+		//if (description.length() == 0) {
+		//	return;
+		//}
 
 		ContentValues values = new ContentValues();
 		values.put(ImageContract.Columns.CATEGORY, category);
 		values.put(ImageContract.Columns.DESC, description);
 		values.put(ImageContract.Columns.PARENT, parent_fk);
 
-		if (imageUri == null) {
+		if (row_id == null && this.newFileName!=null) {
+			values.put(ImageContract.Columns.PATH, this.newFileName);
 			imageUri = getActivity().getContentResolver().insert(
 					ImageContract.CONTENT_URI, values);
 		} else {
@@ -328,34 +359,15 @@ public class ImageDetailsFragment extends Fragment implements
 	public void onClick(View v) {
 		Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
   		if (verifyResolves(takePictureIntent)) {
-  			File f = Storage.createImageFile();
+  			File f = Storage.createTempImageFile(); 								// tworzy tymczasowy plik 
   			String mCurrentPhotoPath = f.getAbsolutePath();
   			Storage.saveToPreferences(mCurrentPhotoPath, "photoPath", getActivity() ,	Activity.MODE_PRIVATE);
-  			//Storage.saveToSharedPreferences("photoPath", mCurrentPhotoPath, "photoPath", App_2.getAppContext(), MODE_PRIVATE);
   			Storage.galleryAddPic(getActivity(), mCurrentPhotoPath);
   			takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(f));
   			startActivityForResult(takePictureIntent, TAKE_PIC_REQUEST);
   		}
 	}
-	@Override
-	public void onActivityResult(int requestCode, int resultCode, Intent data) {
-		if (resultCode == Activity.RESULT_OK) {
-			switch (requestCode) {
-			case TAKE_PIC_REQUEST:
-				Bundle extras = data.getExtras();
-				//Bitmap mImageBitmap = (Bitmap) extras.get("data");
-				String mCurrentPhotoPath = Storage.readFromPreferences(null, "photoPath", getActivity(), Activity.MODE_PRIVATE);
-				// TODO za³adowanie obrazka przeskalowanego
-				ImageLoader.loadBitmap(mCurrentPhotoPath, mImage);
-				//mImageView.setImageBitmap(BitmapCalc.decodeSampleBitmapFromFile(
-				//		mCurrentPhotoPath, 100, 100));
-				break;
+	
 
-			default:
-				break;
-
-			}
-		}
-	}
 
 }

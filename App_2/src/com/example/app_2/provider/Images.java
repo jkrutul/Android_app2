@@ -6,38 +6,39 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.ListIterator;
 
 import android.app.Activity;
 import android.content.ContentProviderOperation;
 import android.content.ContentProviderResult;
-import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.OperationApplicationException;
-import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.RemoteException;
+import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.Display;
 import android.view.WindowManager;
 
 import com.example.app_2.App_2;
 import com.example.app_2.R;
+import com.example.app_2.activities.ImageGridActivity;
 import com.example.app_2.contentprovider.ImageContract;
+import com.example.app_2.fragments.ImageDetailsFragment;
 import com.example.app_2.models.ImageObject;
 import com.example.app_2.storage.Database;
 import com.example.app_2.storage.Storage;
 import com.example.app_2.utils.BitmapCalc;
-import com.examples.app_2.activities.ImageGridActivity;
+import com.example.app_2.utils.ImageLoader;
+import com.example.app_2.utils.Utils;
 
 public class Images { // TODO nie mo¿e byæ static
 	public static List<ImageObject> images = new LinkedList<ImageObject>();  // list of ImageObject selected by category id
 	public static List<Uri> imageUris = new ArrayList<Uri>();
-	
+	public ImageLoader il = new ImageLoader(App_2.getAppContext());
 	public static long img_dir_last_read = Long.valueOf(Storage.readFromSharedPreferences(String.valueOf(0), "imgDirLastRead", "imgDirLastRead", App_2.getAppContext(), Context.MODE_PRIVATE));
 	public static long imgLastModified;
 	private static final String LOG_TAG = "Images";
@@ -399,11 +400,11 @@ public class Images { // TODO nie mo¿e byæ static
 				int i= 0;
 				
 				
-				File f;
+				//File f;
 				for(String filename : fileNames){
 					publishProgress((int) ((i/ (float) count)*100));
 					path_toIMG = Storage.getImagesDir() + File.separator + filename;
-					f = new File(path_toIMG);
+					//f = new File(path_toIMG);
 					path_toTHUMB = Storage.getThumbsDir() + File.separator + filename;
 					path_toFullScreenTHUMB = Storage.getThumbsMaxDir() + File.separator + filename;
 					
@@ -451,5 +452,55 @@ public class Images { // TODO nie mo¿e byæ static
 	     protected void onPostExecute(Void result) {
 	         executing_activity.removeDialog(ImageGridActivity.PLEASE_WAIT_DIALOG);
 	     }
+	}
+	
+	public static class AddingImageTask extends AsyncTask<String, Integer, Void>{
+		
+		@Override
+		protected Void doInBackground(String... params) {
+			String path_toIMG = params[0];
+			String filename = Utils.getFilenameFromPath(path_toIMG);
+				
+			// GENERUJ MINIATURKI
+			String path_toTHUMB, path_toFullScreenTHUMB;
+			Bitmap bitmap =null;
+
+			int thumbWidth, thumbHeight;
+			thumbWidth =App_2.getAppContext().getResources().getDimensionPixelSize(R.dimen.image_thumbnail_size);
+			thumbHeight= App_2.getAppContext().getResources().getDimensionPixelSize(R.dimen.image_thumbnail_size);
+			
+			//full screen thumbs
+			WindowManager wm = (WindowManager) App_2.getAppContext().getSystemService(Context.WINDOW_SERVICE);
+			Display display = wm.getDefaultDisplay();
+			int maxWidth = display.getWidth();
+			int maxHeight = display.getHeight();		
+			
+			Log.i(LOG_TAG, "thumbs will be w:"+thumbWidth+" h:"+thumbHeight);
+			Log.i(LOG_TAG, "max thumbs will be w:"+maxWidth+" h:"+maxHeight);
+			path_toTHUMB = Storage.getThumbsDir() + File.separator + filename;
+			path_toFullScreenTHUMB = Storage.getThumbsMaxDir() + File.separator + filename;
+				
+			bitmap = BitmapCalc.decodeSampleBitmapFromFile(path_toIMG, maxWidth,maxHeight);
+			Log.w(LOG_TAG, bitmap.getHeight() + " " +bitmap.getWidth());
+			try {
+				FileOutputStream out = new FileOutputStream(path_toFullScreenTHUMB);
+				bitmap.compress(Bitmap.CompressFormat.JPEG, 100, out);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+				
+			bitmap = BitmapCalc.decodeSampleBitmapFromFile(path_toFullScreenTHUMB, thumbWidth,thumbHeight);
+			try {
+				FileOutputStream out = new FileOutputStream(path_toTHUMB);
+				bitmap.compress(Bitmap.CompressFormat.JPEG, 100, out);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			
+		    File f = new File(path_toIMG);
+		    f.delete();
+
+			return null;		
+		}
 	}
 }

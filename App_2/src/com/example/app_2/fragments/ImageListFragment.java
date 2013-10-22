@@ -23,10 +23,10 @@ import android.widget.ListView;
 import android.widget.AdapterView.AdapterContextMenuInfo;
 
 import com.example.app_2.R;
+import com.example.app_2.activities.ImageDetailsActivity;
 import com.example.app_2.contentprovider.ImageContract;
 import com.example.app_2.provider.Images;
 import com.example.app_2.utils.ImageLoader;
-import com.examples.app_2.activities.ImageDetailsActivity;
 
 public class ImageListFragment extends ListFragment implements LoaderCallbacks<Cursor> {
 	SimpleCursorAdapter adapter;

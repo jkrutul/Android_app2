@@ -39,6 +39,7 @@ import android.widget.ImageView;
 
 import com.example.app_2.App_2;
 import com.example.app_2.R;
+import com.example.app_2.activities.ImageGridActivity;
 import com.example.app_2.adapters.ImageCursorAdapter;
 import com.example.app_2.contentprovider.ImageContract;
 import com.example.app_2.provider.Images;
@@ -46,7 +47,6 @@ import com.example.app_2.provider.Images.ProcessBitmapsTask;
 import com.example.app_2.storage.Storage;
 import com.example.app_2.utils.ImageLoader;
 import com.example.app_2.utils.Utils;
-import com.examples.app_2.activities.ImageGridActivity;
 
 
 public class ImageGridFragment extends Fragment implements AdapterView.OnItemClickListener, LoaderCallbacks<Cursor>{
