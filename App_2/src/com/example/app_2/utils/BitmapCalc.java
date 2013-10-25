@@ -37,7 +37,7 @@ public class BitmapCalc {
 				inSampleSize=2;			
 			}
 		}
-		Log.w(LOG_TAG, "outHeight: "+options.outHeight + " outWidth:"+options.outWidth +" rH"+ reqHeight +" rW"+ reqWidth +" inSample:" +inSampleSize);
+		//Log.w(LOG_TAG, "outHeight: "+options.outHeight + " outWidth:"+options.outWidth +" rH"+ reqHeight +" rW"+ reqWidth +" inSample:" +inSampleSize);
 		return inSampleSize;
 	}
 	

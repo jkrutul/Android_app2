@@ -51,6 +51,7 @@ import android.widget.ListView;
 
 import com.example.app_2.R;
 import com.example.app_2.contentprovider.ImageContract;
+import com.example.app_2.fragments.ExpressionListFragment;
 import com.example.app_2.fragments.ImageGridFragment;
 import com.example.app_2.provider.Images;
 import com.example.app_2.utils.ImageLoader;
@@ -61,6 +62,8 @@ import com.example.app_2.utils.Utils;
  */
 public class ImageGridActivity extends FragmentActivity implements TextToSpeech.OnInitListener{
     private static final String TAG = "ImageGridActivity";
+    private static final String GRID_FRAGMENT_TAG = "FragmentGrid";
+    private static final String EXPRESSION_FRAGMENT_TAG = "FragmentExpression";
     public static final int PLEASE_WAIT_DIALOG = 1;
     public static ProgressDialog dialog;
     
@@ -74,6 +77,7 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
     CharSequence mTitle;
     CharSequence mDrawerTitle;
     public ImageLoader imageLoader;
+    public ExpressionListFragment elf;
     
 	public static final int MY_DATA_CHECK_CODE = 1;
     
@@ -84,6 +88,7 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 	@Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+       
         
         //getWindow().requestFeature(Window.FEATURE_ACTION_BAR_OVERLAY);
         //getActionBar().setBackgroundDrawable(new ColorDrawable(Color.parseColor("#330000ff")));
@@ -102,11 +107,18 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
         setDrawer();
         
         // za³adowanie do content_frame ImageGridFragment
-        if (getSupportFragmentManager().findFragmentByTag(TAG) == null) {
+        if (getSupportFragmentManager().findFragmentByTag(GRID_FRAGMENT_TAG) == null) {
             final FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
-            ft.add(R.id.content_frame, new ImageGridFragment(), TAG);
+            ft.add(R.id.content_frame, new ImageGridFragment(), GRID_FRAGMENT_TAG);
             ft.commit();
         }
+        
+
+        	elf= new ExpressionListFragment();
+        	final FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+        	 ft.replace(R.id.horizontal_listview, elf);
+             ft.commit();
+        
 
     }
     
@@ -170,6 +182,15 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
         return super.onCreateOptionsMenu(menu);
     }
     
+    public void addImageToAdapter(String s){
+    	if(elf!=null){
+    		elf.addImageToAdapter(s);
+    	}
+    	else{
+    		elf = new ExpressionListFragment();
+    		elf.addImageToAdapter(s);
+    	}
+    }
 
     private class DrawerItemClickListener implements ListView.OnItemClickListener{
 
@@ -192,9 +213,9 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 			fragment.setArguments(args);
 			
 			//Insert the fragment by replacing an existing fragment
-			if(getSupportFragmentManager().findFragmentByTag(TAG)!=null){
+			if(getSupportFragmentManager().findFragmentByTag(GRID_FRAGMENT_TAG)!=null){
 				final FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
-	            ft.replace(R.id.content_frame, fragment, TAG);
+	            ft.replace(R.id.content_frame, fragment, GRID_FRAGMENT_TAG);
 	            ft.addToBackStack(null);
 	            ft.commit();				
 			}

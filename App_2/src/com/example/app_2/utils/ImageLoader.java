@@ -101,19 +101,19 @@ public class ImageLoader {
 	
 	@SuppressLint("NewApi")
 	public static void loadBitmap(String path, ImageView imageView, boolean darkPlaceholder){
-		if(cancelPotentialWork(path, imageView)){
+		//if(cancelPotentialWork(path, imageView)){
 			BitmapWorkerTask task = new BitmapWorkerTask(imageView);
 			AsyncDrawable asyncDrawable;
-			if(darkPlaceholder)
+			//if(darkPlaceholder)
 				asyncDrawable = new AsyncDrawable(App_2.getAppContext().getResources(), App_2.mDarkPlaceHolderBitmap, task);
-			else
-				asyncDrawable = new AsyncDrawable(App_2.getAppContext().getResources(), App_2.mPlaceHolderBitmap, task);
+			//else
+				//asyncDrawable = new AsyncDrawable(App_2.getAppContext().getResources(), App_2.mPlaceHolderBitmap, task);
 			imageView.setImageDrawable(asyncDrawable);
-			if(Utils.hasHoneycomb())
-				task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, path);
-			else			
+			//if(Utils.hasHoneycomb())
+				//task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, path);
+			//else			
 				task.execute(path);
-		}
+		//}
 	}
 
 	
@@ -159,21 +159,27 @@ public class ImageLoader {
 	    // Decode image in background.
 	    @Override
 	    protected Bitmap doInBackground(String... params) {
-	        path = params[0];	        
-	        final String imageKey = String.valueOf(path);
+	        path = params[0];
+	        if(path== null)
+	        	return null;
+	        final String imageKey = Utils.getFilenameFromPath(path);
 	        Bitmap bitmap = mMemoryCache.get(imageKey);
+	        Log.i(LOG_TAG,"image key: "+imageKey);
 	        if(bitmap ==null){	// Not found in disk cache
 	        	//bitmap = BitmapCalc.decodeSampleBitmapFromFile(path, mWidth, mHeight);
-	    		bitmap = BitmapFactory.decodeFile(path, options);
+	        	
+	    		//bitmap = BitmapFactory.decodeFile(path, options);
+	        	bitmap = BitmapFactory.decodeFile(path);
 	    		//if((maxHeight != -1 &&  maxWidth !=-1)&&(bitmap.getHeight()> maxHeight*1.5 || bitmap.getWidth()> maxWidth*1.5 )){
 		        	//bitmap = BitmapCalc.decodeSampleBitmapFromFile(path, maxWidth, maxHeight);
 		        //	}
 	        	if(bitmap == null)
 	        		return null;
-	        	//Log.i(LOG_TAG,"decoded image h:"+bitmap.getHeight()+" w:"+bitmap.getWidth());
+	        	//Log.i(LOG_TAG,bitmap.toString()+" decoded image h:"+bitmap.getHeight()+" w:"+bitmap.getWidth());
 		        
 		        	addBitmapToCache(imageKey,bitmap);
 	        }
+	        	//Log.i(LOG_TAG, bitmap.toString()+" read from cache");
 	        //return BitmapCalc.getRoundedCornerBitmap(bitmap);
 	        return bitmap;
 	    }

@@ -97,8 +97,16 @@ public class Utils {
     }
     
     public static String getFilenameFromPath(String path){
-    	File f = new File(path);
-    	return f.getName();
+    	String[] fn = path.split("\\/");
+    	if(fn.length>1)
+    		return fn[fn.length-1];
+    	else
+    		if(fn.length>0)
+    			return fn[0];
+    		else
+    			return null;
+    	//File f = new File(path);
+    	//return f.getName();
     }
     
     public static String hashKeyForDisk(String key) {

@@ -6,6 +6,7 @@ import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
+import android.app.Activity;
 import android.content.Context;
 import android.database.Cursor;
 import android.graphics.Bitmap;
@@ -14,7 +15,6 @@ import android.graphics.Point;
 import android.graphics.Rect;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
-import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -43,7 +43,6 @@ import com.example.app_2.activities.ImageGridActivity;
 import com.example.app_2.adapters.ImageCursorAdapter;
 import com.example.app_2.contentprovider.ImageContract;
 import com.example.app_2.provider.Images;
-import com.example.app_2.provider.Images.ProcessBitmapsTask;
 import com.example.app_2.storage.Storage;
 import com.example.app_2.utils.ImageLoader;
 import com.example.app_2.utils.Utils;
@@ -62,6 +61,7 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
     private int mNumColumns = 0;
     private static boolean loadExpandedImage= false;
 	private static final int LOADER_ID = 1;
+	private Activity executing_activity;
 
     	
     public ImageGridFragment(){
@@ -73,6 +73,7 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		executing_activity = getActivity();
 		
     	mImageViewLayoutParams = new GridView.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
     	adapter = new ImageCursorAdapter(getActivity(), null, mImageViewLayoutParams);
@@ -117,6 +118,7 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
     	final View v = inflater.inflate(R.layout.fragment_image_grid, container,false);
     	expandedImageView = (ImageView) getActivity().findViewById(R.id.expanded_image);
 		final GridView mGridView = (GridView) v.findViewById(R.id.gridView);
+        mGridView.setAdapter(adapter);
 	        mGridView.setOnItemClickListener(this);
 	        
 	        mGridView.setOnScrollListener(new AbsListView.OnScrollListener() {
@@ -151,8 +153,6 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
 	                        }
 	                    }
 	                });
-
-	        mGridView.setAdapter(adapter);
 
 	        return v;
 
@@ -210,6 +210,8 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
 		String description = c.getString(c.getColumnIndex(ImageContract.Columns.DESC));
 		String category = c.getString(c.getColumnIndex(ImageContract.Columns.CATEGORY));
 		
+		if(category == null || category.isEmpty())
+			((ImageGridActivity)getActivity()).addImageToAdapter(filename);
 		
 		//c.close();
 		if (mCurrentAnimator != null) {

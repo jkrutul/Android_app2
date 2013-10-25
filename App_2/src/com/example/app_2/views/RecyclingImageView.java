@@ -45,7 +45,7 @@ public class RecyclingImageView extends ImageView {
 
 	public RecyclingImageView(Context context) {
 		super(context);
-		//init();
+		init();
 	}
 	
 	public RecyclingImageView(Context context, String textToDraw) {

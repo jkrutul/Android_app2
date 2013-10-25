@@ -10,6 +10,7 @@ import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.example.app_2.R;
 import com.example.app_2.contentprovider.ImageContract;
 import com.example.app_2.provider.Images;
 import com.example.app_2.utils.ImageLoader;
@@ -22,7 +23,9 @@ public class ImageCursorAdapter extends CursorAdapter {
 	
     public ImageCursorAdapter(Context context, Cursor c, GridView.LayoutParams params) {
         super(context, c, 0);
-        this.params = params;
+        this.params = params;	
+        this.params.height = context.getResources().getDimensionPixelSize(R.dimen.image_thumbnail_size);
+        this.params.width = context.getResources().getDimensionPixelSize(R.dimen.image_thumbnail_size);
     }
 
     @Override
@@ -30,13 +33,16 @@ public class ImageCursorAdapter extends CursorAdapter {
             String pos = cursor.getString(cursor.getColumnIndex(ImageContract.Columns._ID));
             String path = cursor.getString(cursor.getColumnIndex(ImageContract.Columns.PATH));
             RecyclingImageView image = (RecyclingImageView)view;
-            image.setScaleType(ImageView.ScaleType.CENTER_CROP);
+            //image.setScaleType(ImageView.ScaleType.CENTER_CROP);
             //image.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
             //image.setScaleType(ImageView.ScaleType.CENTER);
             //image.setScaleType(ImageView.ScaleType.FIT_CENTER);
             //image.setScaleType(ImageView.ScaleType.FIT_END);
-            //image.setScaleType(ImageView.ScaleType.FIT_START);
+            //.setScaleType(ImageView.ScaleType.FIT_START);
+            //image.setScaleType(ImageView.ScaleType.FIT_XY);
+            //image.setScaleType(ImageView.ScaleType.MATRIX);
             image.setLayoutParams(params);
+            
             ImageLoader.loadBitmap(Images.getImageThumbsPath(path), (ImageView)view, true);
             
             //image.setImageDrawable(Drawable.createFromPath(path));
