@@ -10,12 +10,13 @@ import com.example.app_2.utils.ImageLoader;
 
 public class ExpressionListFragment extends Fragment{
 	
-	private ExpressionAdapter mAdapter= new ExpressionAdapter();
+	private ExpressionAdapter mAdapter;
 	
 
 	@Override
 	public void onActivityCreated(Bundle savedInstanceState) {
 		super.onActivityCreated(savedInstanceState);
+		mAdapter = new ExpressionAdapter(getActivity().getApplicationContext());
 		HorizontalListView listview = (HorizontalListView) getActivity().findViewById(R.id.horizontal_listview);
 		listview.setAdapter(mAdapter);
 		

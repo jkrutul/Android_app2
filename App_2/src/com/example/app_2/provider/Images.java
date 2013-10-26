@@ -449,6 +449,7 @@ public class Images { // TODO nie mo¿e byæ static
 					}
 					
 					bitmap = BitmapCalc.decodeSampleBitmapFromFile(path_toFullScreenTHUMB, thumbWidth,thumbHeight);
+					//bitmap = Bitmap.createScaledBitmap(bitmap, thumbWidth, thumbHeight, true);
 					try {
 						FileOutputStream out = new FileOutputStream(path_toTHUMB);
 						bitmap.compress(Bitmap.CompressFormat.JPEG, 100, out);

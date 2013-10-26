@@ -46,15 +46,15 @@ public final class R {
     }
     public static final class id {
         public static final int OpenFileChooser=0x7f0a000f;
-        public static final int action_search=0x7f0a0030;
-        public static final int action_settings=0x7f0a002f;
+        public static final int action_search=0x7f0a0032;
+        public static final int action_settings=0x7f0a0031;
         public static final int add=0x7f0a0018;
-        public static final int add_folder=0x7f0a0032;
+        public static final int add_folder=0x7f0a0034;
         public static final int add_to_category=0x7f0a0025;
-        public static final int category=0x7f0a002d;
+        public static final int category=0x7f0a002f;
         public static final int category_image=0x7f0a001d;
         public static final int category_name=0x7f0a001e;
-        public static final int clear_cache=0x7f0a0035;
+        public static final int clear_cache=0x7f0a0037;
         public static final int clear_ex_button=0x7f0a0005;
         public static final int client_activity=0x7f0a0013;
         public static final int content_frame=0x7f0a0007;
@@ -75,24 +75,26 @@ public final class R {
         public static final int grid_activity=0x7f0a0011;
         public static final int group=0x7f0a0017;
         public static final int horizontal_listview=0x7f0a0003;
-        public static final int icon=0x7f0a002b;
-        public static final int image_list_view=0x7f0a002a;
+        public static final int icon=0x7f0a002d;
+        public static final int image_desc=0x7f0a002b;
+        public static final int image_list_view=0x7f0a002c;
         public static final int img=0x7f0a0020;
         public static final int img_id=0x7f0a0021;
         public static final int import_button=0x7f0a0010;
         public static final int import_db=0x7f0a001c;
-        public static final int insert=0x7f0a0031;
-        public static final int label=0x7f0a002c;
+        public static final int insert=0x7f0a0033;
+        public static final int label=0x7f0a002e;
         public static final int left_drawer=0x7f0a000a;
-        public static final int menu_item_share=0x7f0a0033;
-        public static final int menu_refresh=0x7f0a0034;
+        public static final int menu_item_share=0x7f0a0035;
+        public static final int menu_refresh=0x7f0a0036;
         public static final int message=0x7f0a0000;
         public static final int pager=0x7f0a0016;
         public static final int parent_spinner=0x7f0a0026;
         public static final int path_to_folder=0x7f0a000e;
-        public static final int perent=0x7f0a002e;
+        public static final int perent=0x7f0a0030;
         public static final int play_button=0x7f0a0006;
         public static final int recreateDB=0x7f0a001a;
+        public static final int recycling_image=0x7f0a002a;
         public static final int rigth_button_space=0x7f0a0004;
         public static final int send_button=0x7f0a0001;
         public static final int submit_button=0x7f0a0029;
@@ -112,8 +114,9 @@ public final class R {
         public static final int drawer_row=0x7f030008;
         public static final int fragment_image_grid=0x7f030009;
         public static final int image_edit=0x7f03000a;
-        public static final int image_list=0x7f03000b;
-        public static final int image_row=0x7f03000c;
+        public static final int image_item=0x7f03000b;
+        public static final int image_list=0x7f03000c;
+        public static final int image_row=0x7f03000d;
     }
     public static final class menu {
         public static final int fgil=0x7f090000;

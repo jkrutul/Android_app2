@@ -5,9 +5,10 @@ import java.util.LinkedList;
 import java.util.List;
 
 import android.app.AlertDialog;
+import android.content.Context;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.View.OnClickListener;
+import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
 
@@ -18,6 +19,11 @@ import com.example.app_2.views.RecyclingImageView;
 
 public class ExpressionAdapter extends BaseAdapter {
 	private static List<String> dataObjects = new LinkedList<String>();
+	private Context context;
+	
+	public ExpressionAdapter(Context context){
+		this.context = context;
+	}
 	
 	
 	@Override
@@ -26,7 +32,7 @@ public class ExpressionAdapter extends BaseAdapter {
         // Now handle the main ImageView thumbnails
         ImageView imageView;
         if (convertView == null) { // if it's not recycled, instantiate and initialize
-            imageView = new RecyclingImageView(App_2.getAppContext(),"lala");
+            imageView = new RecyclingImageView(this.context);
             //imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
             //imageView.setLayoutParams(mImageViewLayoutParams);
         } else { // Otherwise re-use the converted view

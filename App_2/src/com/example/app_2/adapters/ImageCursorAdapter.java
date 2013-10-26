@@ -30,9 +30,11 @@ public class ImageCursorAdapter extends CursorAdapter {
 
     @Override
         public void bindView(View view, Context context, Cursor cursor) {
-            String pos = cursor.getString(cursor.getColumnIndex(ImageContract.Columns._ID));
+            //String pos = cursor.getString(cursor.getColumnIndex(ImageContract.Columns._ID));
             String path = cursor.getString(cursor.getColumnIndex(ImageContract.Columns.PATH));
+        	//String textToDraw = Utils.cutExtention(cursor.getString(cursor.getColumnIndex(ImageContract.Columns.PATH)));
             RecyclingImageView image = (RecyclingImageView)view;
+            image.setLayoutParams(params);
             //image.setScaleType(ImageView.ScaleType.CENTER_CROP);
             //image.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
             //image.setScaleType(ImageView.ScaleType.CENTER);
@@ -41,7 +43,7 @@ public class ImageCursorAdapter extends CursorAdapter {
             //.setScaleType(ImageView.ScaleType.FIT_START);
             //image.setScaleType(ImageView.ScaleType.FIT_XY);
             //image.setScaleType(ImageView.ScaleType.MATRIX);
-            image.setLayoutParams(params);
+
             
             ImageLoader.loadBitmap(Images.getImageThumbsPath(path), (ImageView)view, true);
             
@@ -50,8 +52,7 @@ public class ImageCursorAdapter extends CursorAdapter {
 
     @Override
     public View newView(Context context, Cursor cursor, ViewGroup parent) {
-    	String textToDraw = Utils.cutExtention(cursor.getString(cursor.getColumnIndex(ImageContract.Columns.PATH)));
-    	RecyclingImageView imageView = new RecyclingImageView(context,textToDraw);
+    	RecyclingImageView imageView = new RecyclingImageView(context);
         //imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
         //imageView.setLayoutParams(params);
        // bindView(v, context, cursor);

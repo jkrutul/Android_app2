@@ -7,7 +7,6 @@ import android.animation.ObjectAnimator;
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Activity;
-import android.content.Context;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -36,24 +35,23 @@ import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.GridView;
 import android.widget.ImageView;
+import android.widget.SimpleCursorAdapter;
 
-import com.example.app_2.App_2;
 import com.example.app_2.R;
 import com.example.app_2.activities.ImageGridActivity;
-import com.example.app_2.adapters.ImageCursorAdapter;
 import com.example.app_2.contentprovider.ImageContract;
 import com.example.app_2.provider.Images;
-import com.example.app_2.storage.Storage;
 import com.example.app_2.utils.ImageLoader;
 import com.example.app_2.utils.Utils;
 
-
+@SuppressLint("NewApi")
 public class ImageGridFragment extends Fragment implements AdapterView.OnItemClickListener, LoaderCallbacks<Cursor>{
     private static final String TAG = "ImageGridFragment";
     private ImageView expandedImageView;
     private int mImageThumbSize;
     private int mImageThumbSpacing;
-    private ImageCursorAdapter adapter;
+    //private ImageCursorAdapter adapter;
+    private SimpleCursorAdapter adapter;
     private Animator mCurrentAnimator;
     private int mShortAnimationDuration;
     private GridView.LayoutParams mImageViewLayoutParams;
@@ -62,6 +60,8 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
     private static boolean loadExpandedImage= false;
 	private static final int LOADER_ID = 1;
 	private Activity executing_activity;
+	
+
 
     	
     public ImageGridFragment(){
@@ -69,17 +69,39 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
     
    
 
-    @SuppressLint("NewApi")
+
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		executing_activity = getActivity();
 		
     	mImageViewLayoutParams = new GridView.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
-    	adapter = new ImageCursorAdapter(getActivity(), null, mImageViewLayoutParams);
+        mImageViewLayoutParams.height = getActivity().getResources().getDimensionPixelSize(R.dimen.image_thumbnail_size);
+        mImageViewLayoutParams.width = getActivity().getResources().getDimensionPixelSize(R.dimen.image_thumbnail_size);
     	
-		Long imgLastModified = Storage.getImagesDir().lastModified();
-		Long img_dir_last_read = Long.valueOf(Storage.readFromSharedPreferences(String.valueOf(0), "imgDirLastRead", "imgDirLastRead", App_2.getAppContext(), Context.MODE_PRIVATE));
+    	String[] from = new String[] {
+				   ImageContract.Columns._ID, 
+				   ImageContract.Columns.PATH,
+				   ImageContract.Columns.DESC};
+				// Fields on the UI to which we map
+		int[] to = new int[] { 0, R.id.recycling_image, R.id.image_desc };
+    	
+    	adapter = new SimpleCursorAdapter(getActivity().getApplicationContext(), R.layout.image_item, null, from, to, 0);
+    	adapter.setViewBinder(new SimpleCursorAdapter.ViewBinder(){
+			   public boolean setViewValue(View view, Cursor cursor, int columnIndex){
+			       if(view.getId() == R.id.recycling_image){
+			    	   
+						 String path = Images.getImageThumbsPath(cursor.getString(cursor.getColumnIndex(ImageContract.Columns.PATH)));
+						 ImageLoader.loadBitmap(path, (ImageView) view, true);
+			           return true; //true because the data was bound to the view
+			       }
+			       return false;
+			   }
+			});
+    	
+    	
+		//Long imgLastModified = Storage.getImagesDir().lastModified();
+		//Long img_dir_last_read = Long.valueOf(Storage.readFromSharedPreferences(String.valueOf(0), "imgDirLastRead", "imgDirLastRead", App_2.getAppContext(), Context.MODE_PRIVATE));
 		//if(imgLastModified> img_dir_last_read) {
 		//	ProcessBitmapsTask processBitmapsTask = new ProcessBitmapsTask(getActivity());
 		//	processBitmapsTask.executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, Storage.getImagesDir().getAbsolutePath());

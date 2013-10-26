@@ -164,12 +164,11 @@ public class ImageLoader {
 	        	return null;
 	        final String imageKey = Utils.getFilenameFromPath(path);
 	        Bitmap bitmap = mMemoryCache.get(imageKey);
-	        Log.i(LOG_TAG,"image key: "+imageKey);
 	        if(bitmap ==null){	// Not found in disk cache
 	        	//bitmap = BitmapCalc.decodeSampleBitmapFromFile(path, mWidth, mHeight);
 	        	
-	    		//bitmap = BitmapFactory.decodeFile(path, options);
-	        	bitmap = BitmapFactory.decodeFile(path);
+	    		bitmap = BitmapFactory.decodeFile(path, options);
+	        	//bitmap = BitmapFactory.decodeFile(path);
 	    		//if((maxHeight != -1 &&  maxWidth !=-1)&&(bitmap.getHeight()> maxHeight*1.5 || bitmap.getWidth()> maxWidth*1.5 )){
 		        	//bitmap = BitmapCalc.decodeSampleBitmapFromFile(path, maxWidth, maxHeight);
 		        //	}

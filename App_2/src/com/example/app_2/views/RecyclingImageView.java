@@ -16,6 +16,8 @@
 
 package com.example.app_2.views;
 
+import com.example.app_2.R;
+
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -23,6 +25,8 @@ import android.graphics.Paint;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.LayerDrawable;
 import android.util.AttributeSet;
+import android.view.ViewGroup.LayoutParams;
+import android.widget.GridView;
 import android.widget.ImageView;
 
 /**
@@ -32,29 +36,25 @@ import android.widget.ImageView;
 public class RecyclingImageView extends ImageView {
 	Paint mTextPaint;
 	String textToDraw;
+	int imgWidth = getMeasuredWidth();
+	int imgHeight = getMeasuredHeight();
 	
 	public RecyclingImageView(Context context, AttributeSet attributeSet, int defStyle) {
 		super(context, attributeSet, defStyle);
-		init();
+
 	}
 
 	public RecyclingImageView(Context context, AttributeSet attributeSet) {
 		super(context, attributeSet);
-		init();
+
 	}
 
 	public RecyclingImageView(Context context) {
 		super(context);
-		init();
+		
 	}
+
 	
-	public RecyclingImageView(Context context, String textToDraw) {
-		super(context);
-		this.textToDraw = textToDraw;
-		init();
-	}
-
-
 	/**
 	 * @see android.widget.ImageView#onDetachedFromWindow()
 	 */
@@ -95,22 +95,15 @@ public class RecyclingImageView extends ImageView {
 		}
 	}
 
-	private void init() {
-		mTextPaint = new Paint();
-		mTextPaint.setColor(Color.WHITE);
-		mTextPaint.setTextSize(25);
-		mTextPaint.setTextAlign(Paint.Align.LEFT);
-	}
 
 	@Override
 	protected void onDraw(Canvas canvas) {
 		super.onDraw(canvas);
-		int imgWidth = getMeasuredWidth();
-		int imgHeight = getMeasuredHeight();
-		float txtWidth = mTextPaint.measureText(textToDraw);
-		int x = Math.round(imgWidth / 2 - txtWidth / 2);
-		int y = imgHeight / 2 - 6;
-		canvas.drawText(textToDraw, x, y, mTextPaint);
+
+		//float txtWidth = mTextPaint.measureText(textToDraw);
+		//int x = Math.round(imgWidth / 2 - txtWidth / 2);
+		//int y = imgHeight / 2 - 6;
+		//canvas.drawText(textToDraw, x, y, mTextPaint);
 	}
 
 }
