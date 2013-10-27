@@ -6,6 +6,8 @@ import java.util.List;
 
 import android.app.AlertDialog;
 import android.content.Context;
+import android.os.Handler;
+import android.text.TextUtils;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
@@ -13,17 +15,22 @@ import android.widget.BaseAdapter;
 import android.widget.ImageView;
 
 import com.example.app_2.App_2;
+import com.example.app_2.activities.ImageGridActivity;
+import com.example.app_2.models.ImageObject;
 import com.example.app_2.storage.Storage;
 import com.example.app_2.utils.ImageLoader;
+import com.example.app_2.utils.Utils;
 import com.example.app_2.views.RecyclingImageView;
 
-public class ExpressionAdapter extends BaseAdapter {
-	private static List<String> dataObjects = new LinkedList<String>();
+public class ExpressionAdapter extends BaseAdapter{
+	private boolean doubleBackToExitPressedOnce = false;
+	public static List<ImageObject> dataObjects = new LinkedList<ImageObject>();
 	private Context context;
 	
 	public ExpressionAdapter(Context context){
 		this.context = context;
 	}
+	
 	
 	
 	@Override
@@ -41,16 +48,10 @@ public class ExpressionAdapter extends BaseAdapter {
 
         // Finally load the image asynchronously into the ImageView, this also takes care of
         // setting a placeholder image while the background thread runs
-        ImageLoader.loadBitmap(Storage.getThumbsDir()+File.separator+dataObjects.get(position), imageView, true);
+        ImageLoader.loadBitmap(Storage.getThumbsDir()+File.separator+dataObjects.get(position).getImageName(), imageView, true);
         imageView.setClickable(true);
-        imageView.setOnClickListener(new OnClickListener(){
-    		
-    		@Override
-    		public void onClick(View v) {
-    			dataObjects.remove(pos);
-    			notifyDataSetChanged();    			
-    		}
-    	});
+        
+        
         return imageView;
 		//return null;
 	}
@@ -71,8 +72,8 @@ public class ExpressionAdapter extends BaseAdapter {
 	}
 	
 	
-	public void addImageToAdapter(String path){
-		dataObjects.add(path);
+	public void addImageToAdapter(ImageObject image_object){
+		dataObjects.add(image_object);
 		notifyDataSetChanged();
 	}
 	
@@ -86,16 +87,6 @@ public class ExpressionAdapter extends BaseAdapter {
 		notifyDataSetChanged();
 	}
 	
-	
-	private OnClickListener mOnButtonClicked = new OnClickListener(){
-		
-		@Override
-		public void onClick(View v) {
-			AlertDialog.Builder builder = new AlertDialog.Builder(App_2.getAppContext());
-			builder.setMessage("hello from " + v);
-			builder.setPositiveButton("Cool", null);
-			builder.show();
-			
-		}
-	};
+
+
 }

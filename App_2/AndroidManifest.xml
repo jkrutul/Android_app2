@@ -117,6 +117,14 @@
                 android:value="com.example.app_2.activities.ImageEditActivity" />
         </activity>
         
+        <activity
+            android:name="com.example.app_2.activities.ParentMultiselectActivity"
+            android:label="ParentMultiselectActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.example.app_2.activities.ImageEditActivity" />
+        </activity>
+        
         
        <provider 
            android:name= "com.example.app_2.contentprovider.ImageContentProvider"

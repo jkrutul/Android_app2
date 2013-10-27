@@ -53,6 +53,7 @@ import com.example.app_2.R;
 import com.example.app_2.contentprovider.ImageContract;
 import com.example.app_2.fragments.ExpressionListFragment;
 import com.example.app_2.fragments.ImageGridFragment;
+import com.example.app_2.models.ImageObject;
 import com.example.app_2.provider.Images;
 import com.example.app_2.utils.ImageLoader;
 import com.example.app_2.utils.Utils;
@@ -121,7 +122,19 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
         
 
     }
-    
+    public void onButtonClick(View v){
+    	switch (v.getId()) {
+		case R.id.clear_ex_button:
+			elf.removeAllImages();
+			break;
+		case R.id.play_button:
+			elf.speakOutExpression();
+			break;
+
+		default:
+			break;
+		}
+    }
     @Override
     public Dialog onCreateDialog(int dialogId) {
         switch (dialogId) {
@@ -182,13 +195,13 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
         return super.onCreateOptionsMenu(menu);
     }
     
-    public void addImageToAdapter(String s){
+    public void addImageToAdapter(ImageObject image_object){
     	if(elf!=null){
-    		elf.addImageToAdapter(s);
+    		elf.addImageToAdapter(image_object);
     	}
     	else{
     		elf = new ExpressionListFragment();
-    		elf.addImageToAdapter(s);
+    		elf.addImageToAdapter(image_object);
     	}
     }
 

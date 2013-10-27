@@ -85,6 +85,7 @@ public class Images { // TODO nie mo¿e byæ static
 		for(String filename: fileNames){
 				batchOps.add(ContentProviderOperation.newInsert(ImageContract.CONTENT_URI)
 						.withValue(ImageContract.Columns.PATH, filename)
+						.withValue(ImageContract.Columns.DESC, Utils.cutExtention(filename))
 						.withValue(ImageContract.Columns.PARENT, -1)
 						.build());
 		}

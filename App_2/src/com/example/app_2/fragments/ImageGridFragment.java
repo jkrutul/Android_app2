@@ -40,6 +40,7 @@ import android.widget.SimpleCursorAdapter;
 import com.example.app_2.R;
 import com.example.app_2.activities.ImageGridActivity;
 import com.example.app_2.contentprovider.ImageContract;
+import com.example.app_2.models.ImageObject;
 import com.example.app_2.provider.Images;
 import com.example.app_2.utils.ImageLoader;
 import com.example.app_2.utils.Utils;
@@ -227,13 +228,15 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
 	@TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
 	@Override
 	public void onItemClick(AdapterView<?> parent, final  View thumbView, int position, long id) {
-		Cursor c = (Cursor) adapter.getItem(position);							// TODO przejœcie do nowej kategorii
-		String filename = c.getString(c.getColumnIndex(ImageContract.Columns.PATH));
-		String description = c.getString(c.getColumnIndex(ImageContract.Columns.DESC));
-		String category = c.getString(c.getColumnIndex(ImageContract.Columns.CATEGORY));
+		Cursor c = (Cursor) adapter.getItem(position);						
+		ImageObject img_object= new ImageObject();
+		img_object.setImageName(c.getString(c.getColumnIndex(ImageContract.Columns.PATH)));
+		img_object.setDescription( c.getString(c.getColumnIndex(ImageContract.Columns.DESC)));
+		img_object.setCategory(c.getString(c.getColumnIndex(ImageContract.Columns.CATEGORY)));
+	
 		
-		if(category == null || category.isEmpty())
-			((ImageGridActivity)getActivity()).addImageToAdapter(filename);
+		if(img_object.getCategory() == null || img_object.getCategory().isEmpty())
+			((ImageGridActivity)getActivity()).addImageToAdapter(img_object);
 		
 		//c.close();
 		if (mCurrentAnimator != null) {
@@ -244,7 +247,7 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
 		    // Load the high-resolution "zoomed-in" image.
 			if(expandedImageView!=null){
 				expandedImageView.bringToFront();
-				 String path = Images.getImageFullScreenThumbsPath(filename);
+				 String path = Images.getImageFullScreenThumbsPath(img_object.getImageName());
 				 Bitmap b = BitmapFactory.decodeFile(path);
 				 Drawable verticalImage = new BitmapDrawable(getResources(), b);
 				 expandedImageView.setImageDrawable(verticalImage);
@@ -380,18 +383,13 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
 		        }
 		    });
 		}
-		
-		
-		
-		
-		
-		
-		 if(TextUtils.isEmpty(description))
-			 ((ImageGridActivity) getActivity()).speakOut(Utils.cutExtention(filename));
+/*
+		 if(TextUtils.isEmpty(img_object.getDescription()))
+			 ((ImageGridActivity) getActivity()).speakOut(Utils.cutExtention(img_object.getImageName()));
 		 else
-			 ((ImageGridActivity) getActivity()).speakOut(Utils.cutExtention(description));
-		 
-		 if(category!=null){
+			 ((ImageGridActivity) getActivity()).speakOut(Utils.cutExtention(img_object.getDescription()));
+*/		 
+		 if(img_object.getCategory()!=null){
 			 // przejœcie do nastêpenej kategorii
 			 
 				Fragment fragment = new ImageGridFragment();
