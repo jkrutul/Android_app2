@@ -81,7 +81,7 @@ public class AddNewImageActivity extends Activity implements OnClickListener {
 		//imageUri = Uri.parse(ImageContract.CONTENT_URI + "/" + row_id);
 
 		
-		setContentView(R.layout.image_edit);
+		setContentView(R.layout.image_details);
 		// During initial setup, plug in the details fragment.
 
 		mId = (TextView) findViewById(R.id.img_id);

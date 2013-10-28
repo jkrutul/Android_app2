@@ -110,9 +110,9 @@ public class ImageLoader {
 				//asyncDrawable = new AsyncDrawable(App_2.getAppContext().getResources(), App_2.mPlaceHolderBitmap, task);
 			imageView.setImageDrawable(asyncDrawable);
 			//if(Utils.hasHoneycomb())
-				//task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, path);
+				task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, path);
 			//else			
-				task.execute(path);
+				//task.execute(path);
 		//}
 	}
 

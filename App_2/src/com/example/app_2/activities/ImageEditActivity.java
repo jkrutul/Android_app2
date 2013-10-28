@@ -50,14 +50,19 @@ public class ImageEditActivity extends FragmentActivity{
 		}
 		return super.onOptionsItemSelected(item);
 	}
-	
+
 	  public void onButtonClick(View view){
 			switch(view.getId()){
 				case R.id.submit_button:
+					ImageDetailsFragment idf = (ImageDetailsFragment) getSupportFragmentManager().findFragmentById(R.id.details);
+					boolean mDualPane = idf != null && idf.getView().getVisibility() == View.VISIBLE;
+					if(mDualPane){
+						idf.onButtonClick(view);
+					}
 			       // if (TextUtils.isEmpty(mTitleText.getText().toString())) {
 				          //makeToast();
 				     //   } else {
-				          setResult(RESULT_OK);
+				          
 				          Toast.makeText(this, "Zmiany zosta³y zapisane", Toast.LENGTH_SHORT).show();
 				          
 				          //finish();

@@ -59,6 +59,13 @@
             android:text="dodaj do kategori"
             android:checked="false" />
         
+        <Button
+            android:id="@+id/select_parents"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="onButtonClick"
+            android:text="Dodaj kilku kategorii" />
+        
         <Spinner
             android:visibility="gone"
     		android:id="@+id/parent_spinner"

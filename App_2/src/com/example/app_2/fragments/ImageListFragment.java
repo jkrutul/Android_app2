@@ -51,9 +51,6 @@ public class ImageListFragment extends ListFragment implements LoaderCallbacks<C
 		int[] to = new int[] { 0, R.id.label, R.id.icon, R.id.category,	R.id.perent }; 		// Fields on the UI to which we map
 
 		adapter = new SimpleCursorAdapter( getActivity().getApplicationContext(), R.layout.image_row, null, from, to, 0);
-		
-		
-		
 		adapter.setViewBinder(new SimpleCursorAdapter.ViewBinder() {
 			public boolean setViewValue(View view, Cursor cursor,int columnIndex) {
 				if (view.getId() == R.id.icon) {
@@ -132,16 +129,19 @@ public class ImageListFragment extends ListFragment implements LoaderCallbacks<C
 
 			// Check what fragment is currently shown, replace if needed.
 			ImageDetailsFragment details = (ImageDetailsFragment) getFragmentManager().findFragmentById(R.id.details);
+			ParentMultiselectFragment parents = (ParentMultiselectFragment) getFragmentManager().findFragmentById(R.id.parent_select);
 			
 			if (details == null || details.getShownId() != id) {
 					// Make new fragment to show this selection.
 					//details = ImageDetailsFragment.newInstance(index);
 					details = ImageDetailsFragment.newInstance(id);
-	
+					parents = ParentMultiselectFragment.newInstance(id);
 					// Execute a transaction, replacing any existing fragment
 					// with this one inside the frame.
 					FragmentTransaction ft = getFragmentManager().beginTransaction();
 					ft.replace(R.id.details, details);
+					ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
+					ft.replace(R.id.parent_select, parents);
 					ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
 					ft.commit();
 				

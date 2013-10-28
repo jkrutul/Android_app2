@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentTransaction;
 import android.view.View;
+import android.widget.Toast;
 
 import com.example.app_2.R;
 import com.example.app_2.fragments.ImageDetailsFragment;
@@ -41,10 +42,29 @@ public class ImageDetailsActivity extends FragmentActivity{
     
     public void onButtonClick(View view) {
 		switch (view.getId()) {
+		case R.id.select_parents:
+			Intent i = new Intent(this, ParentMultiselectActivity.class);
+			startActivityForResult(i, 1);
+			break;
+			
 		case R.id.submit_button:
 			details.onButtonClick(view);
-			break;		
+			break;	
 		}
     }
+    
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+
+    	  if (requestCode == 1) {
+
+    	     if(resultCode == RESULT_OK){      
+    	         String result=data.getStringExtra("result");  
+    	         Toast.makeText(this, result, Toast.LENGTH_LONG).show();
+    	     }
+    	     if (resultCode == RESULT_CANCELED) {    
+    	         //Write your code if there's no result
+    	     }
+    	  }
+    	}//onActivityResult
 
 }

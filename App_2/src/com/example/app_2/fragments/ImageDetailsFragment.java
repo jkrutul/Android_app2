@@ -36,6 +36,7 @@ import android.widget.TextView;
 
 import com.example.app_2.App_2;
 import com.example.app_2.R;
+import com.example.app_2.activities.ImageDetailsActivity;
 import com.example.app_2.contentprovider.ImageContract;
 import com.example.app_2.provider.Images.AddingImageTask;
 import com.example.app_2.storage.Storage;
@@ -44,8 +45,7 @@ import com.example.app_2.utils.ImageLoader;
 import com.example.app_2.utils.Utils;
 //import android.widget.ArrayAdapter;
 
-public class ImageDetailsFragment extends Fragment implements
-		View.OnClickListener {
+public class ImageDetailsFragment extends Fragment{
 	private TextView mId;
 	private EditText mCategory;
 	private TextView mTitleText;
@@ -56,7 +56,6 @@ public class ImageDetailsFragment extends Fragment implements
 	private static Bitmap bitmap;
 	private CheckBox mParentCheckBox;
 	private CheckBox mCreateCategoryCheckBox;
-	
 	private String newFileName;
 
 	private Map<String, Long> categories_map;
@@ -66,11 +65,15 @@ public class ImageDetailsFragment extends Fragment implements
 	private Uri imageUri;
 	private static Long row_id;
 	public static final int TAKE_PIC_REQUEST = 2;
+	private static Activity executing_activity;
+
 
 	/**
 	 * Create a new instance of DetailsFragment, initialized to show the text at
 	 * 'index'.
 	 */
+
+	
 
 	public static ImageDetailsFragment newInstance(Long id) {
 		ImageDetailsFragment f = new ImageDetailsFragment();
@@ -88,7 +91,7 @@ public class ImageDetailsFragment extends Fragment implements
 
 	public void onCreate(Bundle bundle) {
 		super.onCreate(bundle);
-		
+		executing_activity=getActivity();
 		// if(row_id == null)
 		row_id = (bundle == null) ? null : (Long) bundle.getLong("row_id");
 		if (row_id == null) {
@@ -101,10 +104,9 @@ public class ImageDetailsFragment extends Fragment implements
 	}
 
 	@Override
-	public View onCreateView(LayoutInflater inflater, ViewGroup container,
-			Bundle savedInstanceState) {
+	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 		super.onCreateView(inflater, container, savedInstanceState);
-		getActivity().getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
+		executing_activity.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
 		if (container == null) {
 			// We have different layouts, and in one of them this
 			// fragment's containing frame doesn't exist. The fragment
@@ -115,10 +117,10 @@ public class ImageDetailsFragment extends Fragment implements
 			// the view hierarchy; it would just never be used.
 
 		}
-		final View view = inflater.inflate(R.layout.image_edit, container,false);
+		final View view = inflater.inflate(R.layout.image_details, container,false);
 		mId = (TextView) view.findViewById(R.id.img_id);
 		mImage = (ImageView) view.findViewById(R.id.img);
-		mImage.setOnClickListener(this);
+		//mImage.setOnClickListener(this);
 		mButton = (Button) view.findViewById(R.id.submit_button);
 		mTitleText = (TextView) view.findViewById(R.id.edit_name);
 		mCategory = (EditText) view.findViewById(R.id.edit_category);
@@ -194,7 +196,7 @@ public class ImageDetailsFragment extends Fragment implements
 		String[] projection = { ImageContract.Columns._ID,
 				ImageContract.Columns.CATEGORY };
 		String selection = ImageContract.Columns.CATEGORY + " IS NOT NULL";
-		Cursor c = getActivity().getContentResolver().query(
+		Cursor c = executing_activity.getContentResolver().query(
 				ImageContract.CONTENT_URI, projection, selection, null, null);
 		c.moveToFirst();
 		while (!c.isAfterLast()) {
@@ -205,7 +207,7 @@ public class ImageDetailsFragment extends Fragment implements
 
 		list.addAll(categories_map.keySet());
 		ArrayAdapter<String> spinnerDataAdapter = new ArrayAdapter<String>(
-				getActivity(), android.R.layout.simple_spinner_dropdown_item) {
+				executing_activity, android.R.layout.simple_spinner_dropdown_item) {
 			@Override
 			public View getView(int position, View converView, ViewGroup parent) {
 				View v = super.getView(position, converView, parent);
@@ -230,13 +232,14 @@ public class ImageDetailsFragment extends Fragment implements
 		saveState();
 		/*
 		if(bitmap!= null){									// mamy zdjêcie do zapisania w bazie danych
-			String path_toIMG = Storage.readFromPreferences(null, "photoPath", getActivity(), Activity.MODE_PRIVATE);
+			String path_toIMG = Storage.readFromPreferences(null, "photoPath", executing_activity, Activity.MODE_PRIVATE);
 			new AddingImageTask().execute(path_toIMG); // skalowanie obrazka, dodanie do 2 folderów
 			saveState();
 			bitmap=null;
 		}
 		*/
-		getActivity().finish();
+		if(executing_activity instanceof ImageDetailsActivity)
+			executing_activity.finish();
 	}
 	
 	private void fillData(Long id) {
@@ -244,7 +247,7 @@ public class ImageDetailsFragment extends Fragment implements
 		String[] projection = { ImageContract.Columns._ID,
 				ImageContract.Columns.PATH, ImageContract.Columns.DESC,
 				ImageContract.Columns.CATEGORY, ImageContract.Columns.PARENT };
-		Cursor cursor = getActivity().getContentResolver().query(uri,
+		Cursor cursor = executing_activity.getContentResolver().query(uri,
 				projection, null, null, null);
 		if (cursor != null) {
 			Log.i("imageDetail", String.valueOf(cursor.getCount()));
@@ -340,34 +343,11 @@ public class ImageDetailsFragment extends Fragment implements
 
 		if (row_id == null && this.newFileName!=null) {
 			values.put(ImageContract.Columns.PATH, this.newFileName);
-			imageUri = getActivity().getContentResolver().insert(
+			imageUri = executing_activity.getContentResolver().insert(
 					ImageContract.CONTENT_URI, values);
 		} else {
-			getActivity().getContentResolver().update(imageUri, values, null,
+			executing_activity.getContentResolver().update(imageUri, values, null,
 					null);
 		}
 	}
-	
-	private boolean verifyResolves(Intent intent) {
-		PackageManager packageManager = getActivity().getPackageManager();
-		List<ResolveInfo> activities = packageManager.queryIntentActivities(
-				intent, PackageManager.PERMISSION_GRANTED);
-		return activities.size() > 0;
-	}
-	
-	@Override
-	public void onClick(View v) {
-		Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-  		if (verifyResolves(takePictureIntent)) {
-  			File f = Storage.createTempImageFile(); 								// tworzy tymczasowy plik 
-  			String mCurrentPhotoPath = f.getAbsolutePath();
-  			Storage.saveToPreferences(mCurrentPhotoPath, "photoPath", getActivity() ,	Activity.MODE_PRIVATE);
-  			Storage.galleryAddPic(getActivity(), mCurrentPhotoPath);
-  			takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(f));
-  			startActivityForResult(takePictureIntent, TAKE_PIC_REQUEST);
-  		}
-	}
-	
-
-
 }
