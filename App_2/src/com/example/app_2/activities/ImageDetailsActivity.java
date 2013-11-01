@@ -15,6 +15,8 @@ import com.example.app_2.fragments.ImageGridFragment;
 public class ImageDetailsActivity extends FragmentActivity{
 	private final static String TAG = "ImageDetailsActivity";
 	ImageDetailsFragment details;
+	Long row_id;
+	private static final int SELECT_PARENTS_REQUEST_CODE = 1;
 	
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -29,7 +31,9 @@ public class ImageDetailsActivity extends FragmentActivity{
 
         if (savedInstanceState == null) {
             // During initial setup, plug in the details fragment.
+        	row_id = getIntent().getExtras().getLong("row_id");
         	details = new ImageDetailsFragment();
+        	
             details.setArguments(getIntent().getExtras());
             
             if (getSupportFragmentManager().findFragmentByTag(TAG) == null) {
@@ -43,22 +47,31 @@ public class ImageDetailsActivity extends FragmentActivity{
     public void onButtonClick(View view) {
 		switch (view.getId()) {
 		case R.id.select_parents:
+
 			Intent i = new Intent(this, ParentMultiselectActivity.class);
-			startActivityForResult(i, 1);
+			i.putExtra("row_id", row_id);
+			startActivityForResult(i, SELECT_PARENTS_REQUEST_CODE);
 			break;
 			
 		case R.id.submit_button:
 			details.onButtonClick(view);
 			break;	
 		}
+		
     }
     
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 
-    	  if (requestCode == 1) {
+    	  if (requestCode == SELECT_PARENTS_REQUEST_CODE) {
 
-    	     if(resultCode == RESULT_OK){      
-    	         String result=data.getStringExtra("result");  
+    	     if(resultCode == RESULT_OK){  
+    	    	 long id[] =  data.getLongArrayExtra("result");
+    	    	 details.addParents(id);
+    	    	 String result = new String();
+    	    	 for(Long i: id){
+    	    		 result += " "+ i;
+    	    	 }
+    	         //String result=data.getStringExtra("result");  
     	         Toast.makeText(this, result, Toast.LENGTH_LONG).show();
     	     }
     	     if (resultCode == RESULT_CANCELED) {    

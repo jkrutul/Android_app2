@@ -56,17 +56,9 @@ public class ImageEditActivity extends FragmentActivity{
 				case R.id.submit_button:
 					ImageDetailsFragment idf = (ImageDetailsFragment) getSupportFragmentManager().findFragmentById(R.id.details);
 					boolean mDualPane = idf != null && idf.getView().getVisibility() == View.VISIBLE;
-					if(mDualPane){
+					if(mDualPane)
 						idf.onButtonClick(view);
-					}
-			       // if (TextUtils.isEmpty(mTitleText.getText().toString())) {
-				          //makeToast();
-				     //   } else {
-				          
-				          Toast.makeText(this, "Zmiany zosta³y zapisane", Toast.LENGTH_SHORT).show();
-				          
-				          //finish();
-				        			
+				    Toast.makeText(this, "Zmiany zosta³y zapisane", Toast.LENGTH_SHORT).show();				        			
 			}
 	  }
 

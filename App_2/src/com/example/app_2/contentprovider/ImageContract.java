@@ -24,8 +24,6 @@ public class ImageContract {
 		public static final String MODIFIED  = "last_modified";
 		public static final String LAST_USED = "last_used";
 		public static final String CATEGORY = "category";
-		public static final String PARENT = "parent_fk";
-		
 		public static final String DEFAULT_SORT_ORDER = _ID + " ASC";
 		
 	}

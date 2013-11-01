@@ -40,6 +40,8 @@ import android.widget.SimpleCursorAdapter;
 import com.example.app_2.R;
 import com.example.app_2.activities.ImageGridActivity;
 import com.example.app_2.contentprovider.ImageContract;
+import com.example.app_2.contentprovider.ImagesOfParentContract;
+import com.example.app_2.contentprovider.ParentContract;
 import com.example.app_2.models.ImageObject;
 import com.example.app_2.provider.Images;
 import com.example.app_2.utils.ImageLoader;
@@ -425,8 +427,8 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
 		CursorLoader cursorLoader= null;
 		int category_fk = (bundle!= null) ? (int) bundle.getLong("CATEGORY_ID", -1)	: -1;
 		
-		String[] from = new String[] { ImageContract.Columns._ID, ImageContract.Columns.PATH, ImageContract.Columns.DESC, ImageContract.Columns.CATEGORY};	
-		String selection = ImageContract.Columns.PARENT +" = ?";
+		String[] projection = new String[] { ImageContract.Columns._ID, ImageContract.Columns.PATH, ImageContract.Columns.DESC, ImageContract.Columns.CATEGORY};	
+		String selection = ParentContract.Columns.PARENT_FK +" = ?";
 		String[] selectionArgs = new String[]{String.valueOf(category_fk)};
 		/*if(category_fk == -1){
 			Long imgLastModified = Storage.getImagesDir().lastModified();
@@ -438,7 +440,7 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
 
 		}*/
 
-		cursorLoader = new CursorLoader(getActivity().getApplicationContext(),ImageContract.CONTENT_URI, from, selection, selectionArgs ,null);
+		cursorLoader = new CursorLoader(getActivity().getApplicationContext(),ImagesOfParentContract.CONTENT_URI, projection, selection, selectionArgs ,null);
 		return cursorLoader;
 	}
 

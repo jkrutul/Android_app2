@@ -47,8 +47,8 @@ public class ImageListFragment extends ListFragment implements LoaderCallbacks<C
 
 		String[] from = new String[] { ImageContract.Columns._ID,
 				ImageContract.Columns.PATH, ImageContract.Columns.PATH,
-				ImageContract.Columns.CATEGORY, ImageContract.Columns.PARENT };
-		int[] to = new int[] { 0, R.id.label, R.id.icon, R.id.category,	R.id.perent }; 		// Fields on the UI to which we map
+				ImageContract.Columns.CATEGORY};
+		int[] to = new int[] { 0, R.id.label, R.id.icon, R.id.category}; 		// Fields on the UI to which we map
 
 		adapter = new SimpleCursorAdapter( getActivity().getApplicationContext(), R.layout.image_row, null, from, to, 0);
 		adapter.setViewBinder(new SimpleCursorAdapter.ViewBinder() {
@@ -133,7 +133,6 @@ public class ImageListFragment extends ListFragment implements LoaderCallbacks<C
 			
 			if (details == null || details.getShownId() != id) {
 					// Make new fragment to show this selection.
-					//details = ImageDetailsFragment.newInstance(index);
 					details = ImageDetailsFragment.newInstance(id);
 					parents = ParentMultiselectFragment.newInstance(id);
 					// Execute a transaction, replacing any existing fragment
@@ -162,7 +161,7 @@ public class ImageListFragment extends ListFragment implements LoaderCallbacks<C
 				ImageContract.Columns._ID,
 				ImageContract.Columns.PATH,
 				ImageContract.Columns.CATEGORY,
-				ImageContract.Columns.PARENT
+				//ImageContract.Columns.PARENTS
 				};
 		CursorLoader cursorLoader = new CursorLoader(getActivity(),
 				ImageContract.CONTENT_URI, projection, null, null, null);

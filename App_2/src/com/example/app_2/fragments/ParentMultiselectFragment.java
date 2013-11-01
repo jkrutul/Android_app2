@@ -1,34 +1,30 @@
 package com.example.app_2.fragments;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
-import com.example.app_2.R;
-import com.example.app_2.activities.ImageDetailsActivity;
-import com.example.app_2.contentprovider.ImageContract;
-import com.example.app_2.provider.Images;
-import com.example.app_2.utils.ImageLoader;
-
-import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.v4.app.FragmentTransaction;
 import android.support.v4.app.ListFragment;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v4.widget.SimpleCursorAdapter;
-import android.util.SparseArray;
 import android.util.SparseBooleanArray;
-import android.view.ContextMenu;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
-import android.view.ContextMenu.ContextMenuInfo;
 import android.widget.CheckedTextView;
 import android.widget.ImageView;
 import android.widget.ListView;
-import android.widget.AdapterView.AdapterContextMenuInfo;
+
+import com.example.app_2.R;
+import com.example.app_2.contentprovider.ImageContract;
+import com.example.app_2.contentprovider.ParentContract;
+import com.example.app_2.contentprovider.ParentsOfImageContentProvider;
+import com.example.app_2.contentprovider.ParentsOfImageContract;
+import com.example.app_2.provider.Images;
+import com.example.app_2.utils.ImageLoader;
 
 public class ParentMultiselectFragment extends ListFragment implements LoaderCallbacks<Cursor>{
 	SimpleCursorAdapter adapter;
@@ -37,6 +33,7 @@ public class ParentMultiselectFragment extends ListFragment implements LoaderCal
 	public static Long row_id;
 	private static final int LOADER_ID = 32;
 	private static final String TAG = "ParentMultiselectFragment";
+	private Map<Long,Integer> positionMap;
 	
 	public ParentMultiselectFragment(){
 		
@@ -53,11 +50,12 @@ public class ParentMultiselectFragment extends ListFragment implements LoaderCal
 	public void onCreate(Bundle bundle){
 		super.onCreate(bundle);
 		
-		
-		row_id = (bundle ==null) ? null : (Long) bundle.getLong("row_id");
-		if(row_id == null){
+		row_id = (Long) getActivity().getIntent().getExtras().get("row_id");
+		//if(row_id == null)
+		//	row_id = (bundle ==null) ? null : (Long) bundle.getLong("row_id");
+		//if(row_id != null){
 			
-		}
+		//}
 	} 
 	@Override
 	public void onActivityCreated(Bundle savedInstanceState) {
@@ -82,6 +80,36 @@ public class ParentMultiselectFragment extends ListFragment implements LoaderCal
 
 		setListAdapter(adapter);
 		getActivity().getSupportLoaderManager().initLoader(LOADER_ID, null, this);
+		
+		Uri uri  = Uri.parse(ParentsOfImageContract.CONTENT_URI + "/" + row_id);
+		String[] projection2 = { "i."+ImageContract.Columns._ID};
+        String selection = ImageContract.Columns.CATEGORY + " IS NOT NULL AND ("+ImageContract.Columns.CATEGORY +" <> ?)";
+        String[] selectionArgs ={""};
+		Cursor cur = getActivity().getContentResolver().query(uri, projection2, selection, selectionArgs, null);
+		positionMap = new HashMap<Long, Integer>();
+		cur.moveToFirst();
+		for(int i = 0 ; !cur.isAfterLast(); i++){
+			positionMap.put(Long.valueOf(cur.getString(cur.getColumnIndex(ImageContract.Columns._ID))), i);
+			cur.moveToNext();
+		}
+		cur.close();
+
+		// zaznaczenie kategorii do których nale¿a³ wczeœniej obrazek
+		
+		Uri imageUri = Uri.parse(ParentsOfImageContract.CONTENT_URI + "/" + row_id);
+		String [] projection ={"p."+ParentContract.Columns.PARENT_FK};
+		Cursor c= getActivity().getContentResolver().query(imageUri, projection , null, null, null);
+		c.moveToFirst();
+		ListView lv = getListView();
+		while(!c.isAfterLast()){
+			String l = c.getString(c.getColumnIndex(ParentContract.Columns.PARENT_FK));
+			c.moveToNext();
+			Long lo = Long.valueOf(l);
+			int position = positionMap.get(lo);
+			 getListView().setItemChecked(position, true);
+			 //(positionMap.get(Long.valueOf(l)));;			
+		}
+		c.close();
 
 
 	}
@@ -98,8 +126,7 @@ public class ParentMultiselectFragment extends ListFragment implements LoaderCal
 		String[] projection = { 
 				ImageContract.Columns._ID,
 				ImageContract.Columns.PATH,
-				ImageContract.Columns.CATEGORY,
-				ImageContract.Columns.PARENT
+				ImageContract.Columns.CATEGORY
 				};
         String selection = ImageContract.Columns.CATEGORY + " IS NOT NULL AND ("+ImageContract.Columns.CATEGORY +" <> ?)";
         String[] selectionArgs ={""};
@@ -109,7 +136,7 @@ public class ParentMultiselectFragment extends ListFragment implements LoaderCal
 
 	@Override
 	public void onLoadFinished(Loader<Cursor> loader, Cursor cursor)  {
-	     ((SimpleCursorAdapter) this.getListAdapter()).swapCursor(cursor);
+		((SimpleCursorAdapter)this.getListAdapter()).swapCursor(cursor);
 	}
 
 	@Override
@@ -125,12 +152,11 @@ public class ParentMultiselectFragment extends ListFragment implements LoaderCal
 	}
 	
 	public  ArrayList<Long> getCheckedItemIds(){
-		//BiMap<String,Long> map = new BiMap
-        ArrayList<Long> selectedItems = new ArrayList<Long>();
+	    ArrayList<Long> selectedItems = new ArrayList<Long>();
         SparseBooleanArray checked = getListView().getCheckedItemPositions();
         for (int i = 0; i < checked.size(); i++) {
             int position = checked.keyAt(i);// Item position in adapter
-            if (checked.valueAt(i)) 		
+            if (checked.valueAt(i))
                 selectedItems.add(adapter.getItemId(position));
         }
         return selectedItems;

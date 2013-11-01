@@ -38,6 +38,8 @@ import com.example.app_2.App_2;
 import com.example.app_2.R;
 import com.example.app_2.activities.ImageDetailsActivity;
 import com.example.app_2.contentprovider.ImageContract;
+import com.example.app_2.contentprovider.ParentContract;
+import com.example.app_2.contentprovider.ParentsOfImageContract;
 import com.example.app_2.provider.Images.AddingImageTask;
 import com.example.app_2.storage.Storage;
 import com.example.app_2.utils.BitmapCalc;
@@ -51,10 +53,11 @@ public class ImageDetailsFragment extends Fragment{
 	private TextView mTitleText;
 	private EditText mDescText;
 	private EditText mParent;
+	private TextView mParents;
 	private Button mButton;
 	public  ImageView mImage;
 	private static Bitmap bitmap;
-	private CheckBox mParentCheckBox;
+	//private CheckBox mParentCheckBox;
 	private CheckBox mCreateCategoryCheckBox;
 	private String newFileName;
 
@@ -100,7 +103,6 @@ public class ImageDetailsFragment extends Fragment{
 		}
 
 		imageUri = Uri.parse(ImageContract.CONTENT_URI + "/" + row_id);
-
 	}
 
 	@Override
@@ -126,6 +128,9 @@ public class ImageDetailsFragment extends Fragment{
 		mCategory = (EditText) view.findViewById(R.id.edit_category);
 		mDescText = (EditText) view.findViewById(R.id.edit_description);
 		mParent = (EditText) view.findViewById(R.id.edit_parent);
+		mParents = (TextView) view.findViewById(R.id.parents);
+
+		/*
 		mSpinner = (Spinner) view.findViewById(R.id.parent_spinner);
 		mSpinner.setOnItemSelectedListener(new OnItemSelectedListener() {
 			@Override
@@ -142,7 +147,8 @@ public class ImageDetailsFragment extends Fragment{
 			}
 
 		});
-		mParentCheckBox = (CheckBox) view.findViewById(R.id.add_to_category);
+		
+		//mParentCheckBox = (CheckBox) view.findViewById(R.id.add_to_category);
 		mParentCheckBox
 				.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
 
@@ -158,7 +164,7 @@ public class ImageDetailsFragment extends Fragment{
 
 					}
 				});
-
+		 */
 		mCreateCategoryCheckBox = (CheckBox) view
 				.findViewById(R.id.create_category);
 		mCreateCategoryCheckBox
@@ -177,7 +183,23 @@ public class ImageDetailsFragment extends Fragment{
 					}
 				});
 
-		addItemsOnSpinner();
+		
+		
+		categories_map = new HashMap<String, Long>();
+		String[] projection = { ImageContract.Columns._ID,
+				ImageContract.Columns.CATEGORY };
+		String selection = ImageContract.Columns.CATEGORY + " IS NOT NULL";
+		Cursor c = executing_activity.getContentResolver().query(ImageContract.CONTENT_URI, projection, selection, null, null);
+		c.moveToFirst();
+		while (!c.isAfterLast()) {
+			categories_map.put(c.getString(1), c.getLong(0));
+			c.moveToNext();
+		}
+		c.close();
+		
+		
+
+		
 		if (row_id != null && row_id != 0){
 			fillData(row_id);
 			//mImage.setClickable(false);
@@ -191,6 +213,19 @@ public class ImageDetailsFragment extends Fragment{
 
 	}
 
+	private void setImageParents(Long id){
+		Uri imageParentsUri = Uri.parse(ParentsOfImageContract.CONTENT_URI+"/"+id);
+		String[] projection = { "i."+ImageContract.Columns._ID, "i."+ImageContract.Columns.CATEGORY };
+		Cursor c = executing_activity.getContentResolver().query(imageParentsUri, projection, null, null, null);
+		c.moveToFirst();
+		mParents.setText("");
+		while (!c.isAfterLast()) {
+			mParents.append((c.getString(1)+" "+ c.getLong(0))+"\n");
+			c.moveToNext();
+		}
+		c.close();
+	}
+	
 	private void addItemsOnSpinner() {
 		categories_map = new HashMap<String, Long>();
 		String[] projection = { ImageContract.Columns._ID,
@@ -228,16 +263,33 @@ public class ImageDetailsFragment extends Fragment{
 		mSpinner.setAdapter(spinnerDataAdapter);
 	}
 	
-	public void onButtonClick(View view){
-		saveState();
-		/*
-		if(bitmap!= null){									// mamy zdjêcie do zapisania w bazie danych
-			String path_toIMG = Storage.readFromPreferences(null, "photoPath", executing_activity, Activity.MODE_PRIVATE);
-			new AddingImageTask().execute(path_toIMG); // skalowanie obrazka, dodanie do 2 folderów
-			saveState();
-			bitmap=null;
+	public static void addParents(long[] ids){
+		if(row_id != null){
+			Uri parent = Uri.parse(ParentContract.CONTENT_URI+"/"+row_id);
+			//String[] projection = { ImageContract.Columns._ID, ImageContract.Columns.CATEGORY };
+			ContentValues cv = new ContentValues();
+			for(Long id : ids){
+				cv.put(ParentContract.Columns.IMAGE_FK, row_id);
+				cv.put(ParentContract.Columns.PARENT_FK, id);
+				executing_activity.getContentResolver().insert(ParentContract.CONTENT_URI, cv);
+			}
 		}
-		*/
+		
+	}
+	
+	
+	public void onButtonClick(View view){
+		switch (view.getId()) {
+		case R.id.submit_button:
+			saveState();
+			break;
+		case R.id.cancel_button:
+			break;
+		default:
+			break;
+		}
+
+
 		if(executing_activity instanceof ImageDetailsActivity)
 			executing_activity.finish();
 	}
@@ -246,22 +298,21 @@ public class ImageDetailsFragment extends Fragment{
 		Uri uri = Uri.parse(ImageContract.CONTENT_URI + "/" + id);
 		String[] projection = { ImageContract.Columns._ID,
 				ImageContract.Columns.PATH, ImageContract.Columns.DESC,
-				ImageContract.Columns.CATEGORY, ImageContract.Columns.PARENT };
-		Cursor cursor = executing_activity.getContentResolver().query(uri,
-				projection, null, null, null);
+				ImageContract.Columns.CATEGORY,/* ImageContract.Columns.PARENTS */ };
+		Cursor cursor = executing_activity.getContentResolver().query(uri,	projection, null, null, null);
 		if (cursor != null) {
-			Log.i("imageDetail", String.valueOf(cursor.getCount()));
 			cursor.moveToFirst();
 
 			String img_id = cursor.getString(cursor
 					.getColumnIndex(ImageContract.Columns._ID));
-			Long parent_fk = cursor.getLong(cursor
-					.getColumnIndexOrThrow(ImageContract.Columns.PARENT));
+			/*Long parent_fk = cursor.getLong(cursor
+					.getColumnIndexOrThrow(ImageContract.Columns.PARENTS));
+					*/
 			String category = cursor.getString(cursor
 					.getColumnIndexOrThrow(ImageContract.Columns.CATEGORY));
 
 			mId.setText(img_id);
-
+/*
 			if (parent_fk != Long.valueOf(-1)) {
 				if (categories_map.containsValue(parent_fk)) { // TODO
 					mParentCheckBox.setChecked(true);
@@ -270,7 +321,8 @@ public class ImageDetailsFragment extends Fragment{
 					mSpinner.setSelection(list.indexOf(categoryName));
 				}
 			}
-			mParent.setText(String.valueOf(parent_fk));
+			*/
+//			mParent.setText(String.valueOf(parent_fk));
 
 			if (category != null)
 				if (!category.equals("")) {
@@ -288,7 +340,10 @@ public class ImageDetailsFragment extends Fragment{
 			cursor.close();
 			ImageLoader.loadBitmap(Storage.getThumbsMaxDir() + File.separator
 					+ imgName, mImage, false);
+			
+			setImageParents(id);
 		}
+		
 	}
 
 	public void onSaveInstanceState(Bundle outState) {
@@ -319,7 +374,7 @@ public class ImageDetailsFragment extends Fragment{
 				category = null;
 			}
 		}
-
+		/*
 		if (mParentCheckBox.isChecked()) {
 			if (mSpinner.getSelectedItemPosition() != Spinner.INVALID_POSITION) {
 				String key = mSpinner.getSelectedItem().toString();
@@ -327,7 +382,7 @@ public class ImageDetailsFragment extends Fragment{
 					parent_fk = String.valueOf(categories_map.get(key));
 			}
 		}
-
+	*/
 		String description = mDescText.getText().toString();
 
 		// TODO save if data changed or save button pressed
@@ -339,7 +394,7 @@ public class ImageDetailsFragment extends Fragment{
 		ContentValues values = new ContentValues();
 		values.put(ImageContract.Columns.CATEGORY, category);
 		values.put(ImageContract.Columns.DESC, description);
-		values.put(ImageContract.Columns.PARENT, parent_fk);
+		//values.put(ImageContract.Columns.PARENTS, parent_fk);
 
 		if (row_id == null && this.newFileName!=null) {
 			values.put(ImageContract.Columns.PATH, this.newFileName);

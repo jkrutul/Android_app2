@@ -92,7 +92,7 @@ public class AddNewImageActivity extends Activity implements OnClickListener {
 		mCategory = (EditText) findViewById(R.id.edit_category);
 		mDescText = (EditText) findViewById(R.id.edit_description);
 		mParent = (EditText) findViewById(R.id.edit_parent);
-		mSpinner = (Spinner) findViewById(R.id.parent_spinner);
+		//mSpinner = (Spinner) findViewById(R.id.parent_spinner);
 		
 
 		
@@ -111,7 +111,7 @@ public class AddNewImageActivity extends Activity implements OnClickListener {
 			}
 
 		});
-		mParentCheckBox = (CheckBox) findViewById(R.id.add_to_category);
+		//mParentCheckBox = (CheckBox) findViewById(R.id.add_to_category);
 		mParentCheckBox
 				.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
 
@@ -346,7 +346,6 @@ public class AddNewImageActivity extends Activity implements OnClickListener {
 		ContentValues values = new ContentValues();
 		values.put(ImageContract.Columns.CATEGORY, category);
 		values.put(ImageContract.Columns.DESC, description);
-		values.put(ImageContract.Columns.PARENT, parent_fk);
 		values.put(ImageContract.Columns.PATH, this.newFileName);
 		
 		if (imageUri.getLastPathSegment().equals("null")){
@@ -372,7 +371,7 @@ public class AddNewImageActivity extends Activity implements OnClickListener {
 		//Uri uri = Uri.parse(ImageContract.CONTENT_URI + "/" + id);
 		String[] projection = { ImageContract.Columns._ID,
 				ImageContract.Columns.PATH, ImageContract.Columns.DESC,
-				ImageContract.Columns.CATEGORY, ImageContract.Columns.PARENT };
+				ImageContract.Columns.CATEGORY};
 		Cursor cursor = getContentResolver().query(uri,	projection, null, null, null);
 		cursor.moveToFirst();
 		if ( cursor.isAfterLast()) {
@@ -381,13 +380,13 @@ public class AddNewImageActivity extends Activity implements OnClickListener {
 
 			String img_id = cursor.getString(cursor
 					.getColumnIndex(ImageContract.Columns._ID));
-			Long parent_fk = cursor.getLong(cursor
-					.getColumnIndexOrThrow(ImageContract.Columns.PARENT));
+			//Long parent_fk = cursor.getLong(cursor
+			//		.getColumnIndexOrThrow(ImageContract.Columns.PARENTS));
 			String category = cursor.getString(cursor
 					.getColumnIndexOrThrow(ImageContract.Columns.CATEGORY));
 
 			mId.setText(img_id);
-
+			/*
 			if (parent_fk != Long.valueOf(-1)) {
 				if (categories_map.containsValue(parent_fk)) { // TODO
 					mParentCheckBox.setChecked(true);
@@ -397,7 +396,7 @@ public class AddNewImageActivity extends Activity implements OnClickListener {
 				}
 			}
 			mParent.setText(String.valueOf(parent_fk));
-
+			*/
 			if (category != null)
 				if (!category.equals("")) {
 					mCreateCategoryCheckBox.setChecked(true);

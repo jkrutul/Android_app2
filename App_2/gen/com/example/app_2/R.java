@@ -41,8 +41,9 @@ public final class R {
         public static final int empty_photo=0x7f020005;
         public static final int ic_drawer=0x7f020006;
         public static final int ic_launcher=0x7f020007;
-        public static final int navigation_refresh=0x7f020008;
-        public static final int twitter_bird3_square_webtreatsetc=0x7f020009;
+        public static final int image_border=0x7f020008;
+        public static final int navigation_refresh=0x7f020009;
+        public static final int twitter_bird3_square_webtreatsetc=0x7f02000a;
     }
     public static final class id {
         public static final int OpenFileChooser=0x7f0a0010;
@@ -50,7 +51,7 @@ public final class R {
         public static final int action_settings=0x7f0a0036;
         public static final int add=0x7f0a001c;
         public static final int add_folder=0x7f0a0039;
-        public static final int add_to_category=0x7f0a0029;
+        public static final int cancel_button=0x7f0a002d;
         public static final int category=0x7f0a0034;
         public static final int category_image=0x7f0a0021;
         public static final int category_name=0x7f0a0022;
@@ -58,14 +59,14 @@ public final class R {
         public static final int clear_ex_button=0x7f0a0005;
         public static final int client_activity=0x7f0a0014;
         public static final int content_frame=0x7f0a0007;
-        public static final int create_category=0x7f0a002c;
+        public static final int create_category=0x7f0a002b;
         public static final int db_test_activity=0x7f0a0013;
         public static final int delete=0x7f0a001d;
         public static final int details=0x7f0a000c;
         public static final int drawer_layout=0x7f0a0002;
         public static final int drawer_view=0x7f0a0009;
         public static final int edit_activity=0x7f0a0016;
-        public static final int edit_category=0x7f0a002d;
+        public static final int edit_category=0x7f0a002c;
         public static final int edit_description=0x7f0a0027;
         public static final int edit_name=0x7f0a0026;
         public static final int edit_parent=0x7f0a0028;
@@ -91,8 +92,8 @@ public final class R {
         public static final int pager=0x7f0a001a;
         public static final int parent_cancel_button=0x7f0a0018;
         public static final int parent_select=0x7f0a000d;
-        public static final int parent_spinner=0x7f0a002b;
         public static final int parent_submit_button=0x7f0a0019;
+        public static final int parents=0x7f0a0029;
         public static final int parents_list_fragment=0x7f0a0017;
         public static final int path_to_folder=0x7f0a000f;
         public static final int perent=0x7f0a0035;

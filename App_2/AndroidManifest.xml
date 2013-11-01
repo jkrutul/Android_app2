@@ -130,6 +130,19 @@
            android:name= "com.example.app_2.contentprovider.ImageContentProvider"
            android:authorities="com.example.app_2.contentprovider">
        </provider>
+       <provider 
+           android:name= "com.example.app_2.contentprovider.ParentContentProvider"
+           android:authorities="com.example.app_2.contentprovider.parent">
+       </provider>
+       <provider 
+           android:name= "com.example.app_2.contentprovider.ImagesOfParentContentProvider"
+           android:authorities="com.example.app_2.contentprovider.imagesofparent">
+       </provider>
+       
+       <provider 
+           android:name= "com.example.app_2.contentprovider.ParentsOfImageContentProvider"
+           android:authorities="com.example.app_2.contentprovider.parentsofimage">
+       </provider>
        
        <service
 		  android:name="com.example.app_2.services.ImageAddingService"

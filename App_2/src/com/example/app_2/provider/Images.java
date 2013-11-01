@@ -28,6 +28,7 @@ import com.example.app_2.R;
 import com.example.app_2.activities.AddImagesFromFolderActivity;
 import com.example.app_2.activities.ImageGridActivity;
 import com.example.app_2.contentprovider.ImageContract;
+import com.example.app_2.contentprovider.ParentContract;
 import com.example.app_2.fragments.ImageDetailsFragment;
 import com.example.app_2.models.ImageObject;
 import com.example.app_2.storage.Database;
@@ -44,7 +45,7 @@ public class Images { // TODO nie mo¿e byæ static
 	public static long imgLastModified;
 	private static final String LOG_TAG = "Images";
 
-	
+/*	
 	public static void readImagesFromDB(){ 				//TODO zmieniæ - u¿yteczne tylko do debugowania
 		Log.i(LOG_TAG, "images size: " +images.size());
 		if(images.size()<=0){
@@ -65,6 +66,7 @@ public class Images { // TODO nie mo¿e byæ static
 			}
 		}
 	
+*/
 	
 	public static List<String> getImagesFileNames(List<String> fileNames){
 		Iterator<String> li =  fileNames.iterator();
@@ -78,20 +80,21 @@ public class Images { // TODO nie mo¿e byæ static
 	
 	public static void addImagesToDatabase(String path){
 		List<String> fileNames = new LinkedList<String>();
+		ContentProviderResult[] opResults = null;
 		fileNames = getImagesFileNames(Storage.getFilesNamesFromDir(new File(path)));
 		
 		ArrayList<ContentProviderOperation> batchOps = new ArrayList<ContentProviderOperation>();
+		ArrayList<ContentProviderOperation> batchOps2 = new ArrayList<ContentProviderOperation>();
 		
 		for(String filename: fileNames){
 				batchOps.add(ContentProviderOperation.newInsert(ImageContract.CONTENT_URI)
 						.withValue(ImageContract.Columns.PATH, filename)
 						.withValue(ImageContract.Columns.DESC, Utils.cutExtention(filename))
-						.withValue(ImageContract.Columns.PARENT, -1)
 						.build());
 		}
 		
 		try {
-			App_2.getAppContext().getContentResolver().applyBatch(ImageContract.AUTHORITY, batchOps);
+			opResults = App_2.getAppContext().getContentResolver().applyBatch(ImageContract.AUTHORITY, batchOps);
 		} catch (RemoteException e) {
 										// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -99,6 +102,30 @@ public class Images { // TODO nie mo¿e byæ static
 										// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		
+		
+		// dodanie obrazków do g³ównego drzewa
+		Uri[] imageUris = null;
+		if(opResults!=null){
+			imageUris = new Uri[opResults.length];
+			for(int index=0; index < opResults.length; index++)
+				imageUris[index] = opResults[index].uri;
+		}
+		
+		for(Uri image : imageUris){															// dodanie do g³ównego drzewa TODO zmieniæ na dodawanie do dowolnego drzewa
+			batchOps.add(ContentProviderOperation.newInsert(ParentContract.CONTENT_URI)
+					.withValue(ParentContract.Columns.IMAGE_FK, image.getLastPathSegment())
+					.withValue(ParentContract.Columns.PARENT_FK, -1)
+					.build());
+		}
+		try {
+			opResults = App_2.getAppContext().getContentResolver().applyBatch(ParentContract.AUTHORITY, batchOps2);
+		} catch (RemoteException e) {
+			e.printStackTrace();
+		} catch (OperationApplicationException e) {
+			e.printStackTrace();
+		}
+		
 		
 	}
 	
@@ -121,7 +148,6 @@ public class Images { // TODO nie mo¿e byæ static
 			if(img_obj == null){
 				batchOps.add(ContentProviderOperation.newInsert(ImageContract.CONTENT_URI)
 						.withValue(ImageContract.Columns.PATH, filename)
-						.withValue(ImageContract.Columns.PARENT, -1)
 						.build());
 			//	img_obj = new ImageObject(filename);		// TODO zamieniæ na klucz generowany z MD5
 			//	img_obj.setParent_fk(rootCatId);
@@ -162,7 +188,7 @@ public class Images { // TODO nie mo¿e byæ static
 	public static void populateImagePaths(int category_fk){
 		images.clear();
 		Database db = Database.open();	
-		images = db.getAllImagesByCategory(category_fk);
+//		images = db.getAllImagesByCategory(category_fk);
 	}
 	
 	public static void generateThumbs(){
@@ -270,105 +296,6 @@ public class Images { // TODO nie mo¿e byæ static
 		}
 	}
 	
-	public static class ThumbsProcessTask extends AsyncTask<Void, Integer, Void>{
-		Activity executing_activity;
-		
-		public ThumbsProcessTask(Activity activity){
-			this.executing_activity = activity;
-		}
-		
-	@Override
-		    protected void onPreExecute() {
-			executing_activity.showDialog(ImageGridActivity.PLEASE_WAIT_DIALOG);
-		    }
-		
-		@Override
-		protected Void doInBackground(Void... arg0) {
-			int count;
-
-			
-			Log.i(LOG_TAG, "images size: " +images.size());
-			if(images.size()<=0){
-				Database db = Database.open();	
-				images = db.getAllImages();
-				imgLastModified = Storage.getImagesDir().lastModified();
-				if(imgLastModified> img_dir_last_read){																// katalog zosta³ zmodyfikowany
-					Log.w(LOG_TAG, "images in directory has changed:"+String.valueOf(img_dir_last_read)+"<"+String.valueOf(imgLastModified));
-				}
-				if(images.size()<=1 || Storage.getImagesDir().lastModified()> img_dir_last_read ){
-					Log.i(LOG_TAG, "images size2: " +images.size());
-					populateImagePaths();								 											//wstawia wszystko do g³ównej kategorii
-
-													// GENERUJ MINIATURKI
-					String path_toIMG, path_toTHUMB, path_toFullScreenTHUMB;
-					Bitmap bitmap =null;
-					List<ImageObject> all_images =  db.getAllImages();
-					//int thumbWidth=ImageLoader.mWidth;
-					//int thumbHeight = ImageLoader.mHeight;
-					int thumbWidth, thumbHeight;
-					thumbWidth =App_2.getAppContext().getResources().getDimensionPixelSize(R.dimen.image_thumbnail_size);
-					thumbHeight= App_2.getAppContext().getResources().getDimensionPixelSize(R.dimen.image_thumbnail_size);
-					
-					//full screen thumbs
-					WindowManager wm = (WindowManager) App_2.getAppContext().getSystemService(Context.WINDOW_SERVICE);
-					Display display = wm.getDefaultDisplay();
-					int maxWidth = display.getWidth();
-					int maxHeight = display.getHeight();		
-
-					Log.i(LOG_TAG, "thumbs will be w:"+thumbWidth+" h:"+thumbHeight);
-					Log.i(LOG_TAG, "max thumbs will be w:"+maxWidth+" h:"+maxHeight);
-					count = all_images.size();
-					
-					int i= 0;
-					for(ImageObject img_o : all_images){
-						path_toIMG = Storage.getImagesDir() + File.separator + img_o.getImageName();
-						path_toTHUMB = Storage.getThumbsDir() + File.separator + img_o.getImageName();
-						path_toFullScreenTHUMB = Storage.getThumbsMaxDir() + File.separator + img_o.getImageName();
-						
-			        	bitmap = BitmapCalc.decodeSampleBitmapFromFile(path_toIMG, maxWidth,maxHeight);
-			        	Log.w(LOG_TAG, bitmap.getHeight() + " " +bitmap.getWidth());
-			        	try {
-			        	       FileOutputStream out = new FileOutputStream(path_toFullScreenTHUMB);
-			        	       bitmap.compress(Bitmap.CompressFormat.JPEG, 100, out);
-			        	} catch (Exception e) {
-			        	       e.printStackTrace();
-			        	}
-			        	
-			        	bitmap = BitmapCalc.decodeSampleBitmapFromFile(path_toFullScreenTHUMB, thumbWidth,thumbHeight);
-			        	try {
-			        	       FileOutputStream out = new FileOutputStream(path_toTHUMB);
-			        	       bitmap.compress(Bitmap.CompressFormat.JPEG, 100, out);
-			        	} catch (Exception e) {
-			        	       e.printStackTrace();
-			        	}
-			        	i++;
-			        	publishProgress((int) ((i/ (float) count)*100));
-			        	//Escape early if cancel() is called
-			        	if(isCancelled()) break;
-			        	
-
-					}
-					
-					img_dir_last_read = Storage.getImagesDir().lastModified();
-					Storage.saveToSharedPreferences("imgDirLastRead", Long.toString(img_dir_last_read), "imgDirLastRead", App_2.getAppContext(), Context.MODE_PRIVATE);
-					}
-				}
-
-
-			
-			return null;
-		}
-		
-	     protected void onProgressUpdate(Integer... progress) {
-	    	 ImageGridActivity.dialog.setProgress(progress[0]);		
-	     }
-
-	     protected void onPostExecute(Void result) {
-	         executing_activity.removeDialog(ImageGridActivity.PLEASE_WAIT_DIALOG);
-	     }
-	}
-	
-	
 	public static class ProcessBitmapsTask extends AsyncTask<String, Integer, Void>{
 		Activity executing_activity;
 		
@@ -405,7 +332,7 @@ public class Images { // TODO nie mo¿e byæ static
 								
 				//ContentResolver contentRes= App_2.getAppContext().getContentResolver();
 				//ContentValues cv = new ContentValues();
-				//cv.put(ImageContract.Columns.PARENT, -1);
+				//cv.put(ImageContract.Columns.PARENTS, -1);
 				
 				// GENERUJ MINIATURKI
 				String path_toIMG, path_toTHUMB, path_toFullScreenTHUMB;

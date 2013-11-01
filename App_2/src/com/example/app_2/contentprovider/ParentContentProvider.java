@@ -3,6 +3,8 @@ package com.example.app_2.contentprovider;
 import java.util.Arrays;
 import java.util.HashSet;
 
+import com.example.app_2.storage.Database.myDbHelper;
+
 import android.content.ContentProvider;
 import android.content.ContentUris;
 import android.content.ContentValues;
@@ -13,27 +15,21 @@ import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
 import android.text.TextUtils;
 
-import com.example.app_2.storage.Database.myDbHelper;
-
-public class ImageContentProvider extends ContentProvider{
-	
-	//private Database dbAdapter;
+public class ParentContentProvider extends ContentProvider{
 	
 	private myDbHelper mOpenHelper;
 	private static final String DBNAME = "myDatabase.db";
-	private SQLiteDatabase db;
 	
 	  // Used for the UriMacher
-	  private static final int IMAGE = 10;
-	  private static final int IMAGE_ID = 20;
+	  private static final int PARENT = 30;
+	  private static final int PARENT_ID = 40; 
 	  
 	private static final UriMatcher sURIMatcher = new UriMatcher(UriMatcher.NO_MATCH);
 	static{
-		sURIMatcher.addURI(ImageContract.AUTHORITY, ImageContract.BASE_PATH, IMAGE);
-		sURIMatcher.addURI(ImageContract.AUTHORITY, ImageContract.BASE_PATH + "/#", IMAGE_ID);
+		sURIMatcher.addURI(ParentContract.AUTHORITY, ParentContract.BASE_PATH, PARENT);
+		sURIMatcher.addURI(ParentContract.AUTHORITY, ParentContract.BASE_PATH + "/#", PARENT_ID);
 	}
-	
-	
+
 	@Override
 	public int delete(Uri uri, String selection, String[] selectionArgs) {
 		SQLiteDatabase db = mOpenHelper.getWritableDatabase();
@@ -41,11 +37,12 @@ public class ImageContentProvider extends ContentProvider{
 		String id = uri.getLastPathSegment();
 		String whereClause;
 		switch(sURIMatcher.match(uri)){
-		case IMAGE:
-			rowsDeleted = db.delete(ImageContract.TABLE_IMAGE, selection, selectionArgs);
+		case PARENT:
+			rowsDeleted = db.delete(ParentContract.TABLE_PARENT, selection, selectionArgs);
 			break;
-		case IMAGE_ID:
-			whereClause = ImageContract.Columns._ID + "="+id+(!TextUtils.isEmpty(selection) ? " AND ("+selection+')' : "");
+		case PARENT_ID:
+			whereClause = ParentContract.Columns._ID + "="+id+ (!TextUtils.isEmpty(selection) ? " AND ("+selection+')' : "");
+			break;
 		default:
 		    throw new IllegalArgumentException("Unknown URI: " + uri);
 		}
@@ -57,7 +54,6 @@ public class ImageContentProvider extends ContentProvider{
 
 	@Override
 	public String getType(Uri uri) {
-		//String ret =getContext().getContentResolver().getType(System.CONTENT_URI);
 		return null;
 	}
 
@@ -67,16 +63,14 @@ public class ImageContentProvider extends ContentProvider{
 		SQLiteDatabase db = mOpenHelper.getWritableDatabase();
 		long rowID = 0;
 		switch(sURIMatcher.match(uri)){
-		case IMAGE:
-			rowID = db.insert(ImageContract.TABLE_IMAGE, null, values);
-			db.insert(ParentContract.TABLE_PARENT, null, values);
+		case PARENT:
+			rowID = db.insert(ParentContract.TABLE_PARENT, null, values);
 			break;
 		default:
 			throw new IllegalArgumentException("Uknown URI:" + uri);
 		}
-		
 		if(rowID > 0){
-			result = ContentUris.withAppendedId(ImageContract.CONTENT_URI, rowID);
+			result = ContentUris.withAppendedId(ParentContract.CONTENT_URI, rowID);
 			getContext().getContentResolver().notifyChange(result, null);
 		}
 		return result;
@@ -84,25 +78,22 @@ public class ImageContentProvider extends ContentProvider{
 
 	@Override
 	public boolean onCreate() {
-		//dbAdapter = Database.getInstance(getContext());
-		//Database.open();
 		mOpenHelper = new myDbHelper(getContext(), DBNAME, null, 1);
 		return (mOpenHelper == null) ? false : true;
 	}
 
 	@Override
-	public Cursor query(Uri uri, String[] projection, String selection,	String[] selectionArgs, String sortOrder) {
+	public Cursor query(Uri uri, String[] projection, String selection,
+			String[] selectionArgs, String sortOrder) {
 		SQLiteQueryBuilder queryBuilder = new SQLiteQueryBuilder();
-		
 		//checkColumns(projection);
-		queryBuilder.setTables(ImageContract.TABLE_IMAGE);
+		queryBuilder.setTables(ParentContract.TABLE_PARENT);
 		
 		switch(sURIMatcher.match(uri)){
-		case IMAGE:
+		case PARENT:
 			break;
-		case IMAGE_ID:
-			queryBuilder.appendWhere(ImageContract.Columns._ID + "=" + uri.getLastPathSegment());
-			break;
+		case PARENT_ID:
+			queryBuilder.appendWhere(ParentContract.Columns._ID + "=" + uri.getLastPathSegment());
 		default:
 		    throw new IllegalArgumentException("Unknown URI: " + uri);
 		}
@@ -115,21 +106,20 @@ public class ImageContentProvider extends ContentProvider{
 	}
 
 	@Override
-	public int update(Uri uri, ContentValues values, String selection,
-			String[] selectionArgs) {
+	public int update(Uri uri, ContentValues values, String selection, String[] selectionArgs) {
 		SQLiteDatabase db = mOpenHelper.getWritableDatabase();
 		int rowsUpdated = 0;
 		String id = uri.getLastPathSegment();
 		String whereClause;
 		switch(sURIMatcher.match(uri)){
-		case IMAGE:
-			rowsUpdated = db.update(ImageContract.TABLE_IMAGE, values,selection, selectionArgs);
+		case PARENT:
+			rowsUpdated = db.update(ParentContract.TABLE_PARENT, values,selection, selectionArgs);
 			break;
-		case IMAGE_ID:
+		case PARENT_ID:
 			whereClause = ImageContract.Columns._ID + "="+ id +
 					(!TextUtils.isEmpty(selection) ? "AND ("+ selection +')':"");
 			
-			rowsUpdated = db.update(ImageContract.TABLE_IMAGE, values, whereClause, selectionArgs);
+			rowsUpdated = db.update(ParentContract.TABLE_PARENT, values, whereClause, selectionArgs);
 			break;
 		default:
 		    throw new IllegalArgumentException("Unknown URI: " + uri);
@@ -142,7 +132,7 @@ public class ImageContentProvider extends ContentProvider{
 	
 	private void checkColumns(String[] projection){
 		if(projection !=null){
-			String[] available = {ImageContract.Columns._ID, ImageContract.Columns.PATH, ImageContract.Columns.AUDIO_PATH, ImageContract.Columns.DESC, ImageContract.Columns.CATEGORY};
+			String[] available = {ParentContract.Columns._ID, ParentContract.Columns.IMAGE_FK, ParentContract.Columns.PARENT_FK};
 			HashSet<String> requestedColumns = new HashSet<String>(Arrays.asList(projection));
 			HashSet<String> avaliableColumns = new HashSet<String>(Arrays.asList(available));
 			if((avaliableColumns.contains(requestedColumns))==false){

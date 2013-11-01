@@ -4,12 +4,11 @@
     android:layout_height="match_parent"
     android:orientation="vertical" >
 
-    <fragment
+    <FrameLayout
         android:id="@+id/parents_list_fragment"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"
-        class="com.example.app_2.fragments.ParentMultiselectFragment" />
+        android:layout_weight="1"/>
 
     <LinearLayout
         android:layout_width="match_parent"
