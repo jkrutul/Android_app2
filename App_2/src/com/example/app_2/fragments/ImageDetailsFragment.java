@@ -265,13 +265,26 @@ public class ImageDetailsFragment extends Fragment{
 	
 	public static void addParents(long[] ids){
 		if(row_id != null){
-			Uri parent = Uri.parse(ParentContract.CONTENT_URI+"/"+row_id);
-			//String[] projection = { ImageContract.Columns._ID, ImageContract.Columns.CATEGORY };
+			Long alreadyHaveParensIds[];
+			List<Long> alreadyBindParentsIds = new ArrayList<Long>();
+			Uri imageParentsUri = Uri.parse(ParentsOfImageContract.CONTENT_URI+"/"+row_id);
+			String[] projection = { "i."+ImageContract.Columns._ID};
+			Cursor c = executing_activity.getContentResolver().query(imageParentsUri, projection, null, null, null);
+			c.moveToFirst();
+
+			while(!c.isAfterLast()){
+				alreadyBindParentsIds.add(c.getLong(0));
+				c.moveToNext();
+			}
+			
 			ContentValues cv = new ContentValues();
 			for(Long id : ids){
-				cv.put(ParentContract.Columns.IMAGE_FK, row_id);
-				cv.put(ParentContract.Columns.PARENT_FK, id);
-				executing_activity.getContentResolver().insert(ParentContract.CONTENT_URI, cv);
+				if(!alreadyBindParentsIds.contains(id)){
+					cv.put(ParentContract.Columns.IMAGE_FK, row_id);
+					cv.put(ParentContract.Columns.PARENT_FK, id);
+					executing_activity.getContentResolver().insert(ParentContract.CONTENT_URI, cv);
+				}
+
 			}
 		}
 		

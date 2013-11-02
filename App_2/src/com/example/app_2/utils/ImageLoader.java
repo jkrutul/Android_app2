@@ -179,8 +179,8 @@ public class ImageLoader {
 		        	addBitmapToCache(imageKey,bitmap);
 	        }
 	        	//Log.i(LOG_TAG, bitmap.toString()+" read from cache");
-	        //return BitmapCalc.getRoundedCornerBitmap(bitmap);
-	        return bitmap;
+	        return BitmapCalc.getRoundedCornerBitmap(bitmap);
+	        //return bitmap;
 	    }
 	    public void addBitmapToCache(String key, Bitmap bitmap) {
 	    	if(key !=null && bitmap != null){

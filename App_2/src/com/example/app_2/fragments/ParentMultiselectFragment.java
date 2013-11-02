@@ -33,7 +33,7 @@ public class ParentMultiselectFragment extends ListFragment implements LoaderCal
 	public static Long row_id;
 	private static final int LOADER_ID = 32;
 	private static final String TAG = "ParentMultiselectFragment";
-	private Map<Long,Integer> positionMap;
+	private Map<Long,Integer> posMapOfAllItems;
 	
 	public ParentMultiselectFragment(){
 		
@@ -48,14 +48,8 @@ public class ParentMultiselectFragment extends ListFragment implements LoaderCal
 	}
 
 	public void onCreate(Bundle bundle){
-		super.onCreate(bundle);
-		
+		super.onCreate(bundle);	
 		row_id = (Long) getActivity().getIntent().getExtras().get("row_id");
-		//if(row_id == null)
-		//	row_id = (bundle ==null) ? null : (Long) bundle.getLong("row_id");
-		//if(row_id != null){
-			
-		//}
 	} 
 	@Override
 	public void onActivityCreated(Bundle savedInstanceState) {
@@ -64,9 +58,15 @@ public class ParentMultiselectFragment extends ListFragment implements LoaderCal
 
 		String[] from = new String[] { ImageContract.Columns._ID,ImageContract.Columns.CATEGORY};
 		int[] to = new int[] { 0, android.R.id.text1}; 		// Fields on the UI to which we map
-
-		adapter = new SimpleCursorAdapter( getActivity().getApplicationContext(), android.R.layout.simple_list_item_multiple_choice, null, from, to, 0);
-        getListView().setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
+		String[] projection3 = { 
+				ImageContract.Columns._ID,
+				ImageContract.Columns.PATH,
+				ImageContract.Columns.CATEGORY
+				};
+        String selection2 = ImageContract.Columns.CATEGORY + " IS NOT NULL AND ("+ImageContract.Columns.CATEGORY +" <> ?)";
+        String[] selectionArgs2 ={""};
+		Cursor cursor2 = getActivity().getContentResolver().query(ImageContract.CONTENT_URI, projection3, selection2, selectionArgs2, null);
+		adapter = new SimpleCursorAdapter( getActivity().getApplicationContext(), android.R.layout.simple_list_item_multiple_choice, cursor2, from, to, 0);
 		adapter.setViewBinder(new SimpleCursorAdapter.ViewBinder() {
 			public boolean setViewValue(View view, Cursor cursor,int columnIndex) {
 				if (view.getId() == R.id.icon) {
@@ -77,25 +77,19 @@ public class ParentMultiselectFragment extends ListFragment implements LoaderCal
 				return false;
 			}
 		});
-
 		setListAdapter(adapter);
+		this.getListView().setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
 		getActivity().getSupportLoaderManager().initLoader(LOADER_ID, null, this);
-		
-		Uri uri  = Uri.parse(ParentsOfImageContract.CONTENT_URI + "/" + row_id);
-		String[] projection2 = { "i."+ImageContract.Columns._ID};
-        String selection = ImageContract.Columns.CATEGORY + " IS NOT NULL AND ("+ImageContract.Columns.CATEGORY +" <> ?)";
-        String[] selectionArgs ={""};
-		Cursor cur = getActivity().getContentResolver().query(uri, projection2, selection, selectionArgs, null);
-		positionMap = new HashMap<Long, Integer>();
-		cur.moveToFirst();
-		for(int i = 0 ; !cur.isAfterLast(); i++){
-			positionMap.put(Long.valueOf(cur.getString(cur.getColumnIndex(ImageContract.Columns._ID))), i);
-			cur.moveToNext();
-		}
-		cur.close();
 
-		// zaznaczenie kategorii do których nale¿a³ wczeœniej obrazek
+
+		//wype³nienie - posMapOfAllItems id i pozycj¹ kategorii w liœcie
+		posMapOfAllItems = new HashMap<Long, Integer>();
+		SimpleCursorAdapter sca = (SimpleCursorAdapter) this.getListView().getAdapter();
+		for(int i=0; i<sca.getCount(); i++)
+			posMapOfAllItems.put(sca.getItemId(i), i);
+
 		
+		// zaznaczenie kategorii do których nale¿a³ wczeœniej obrazek
 		Uri imageUri = Uri.parse(ParentsOfImageContract.CONTENT_URI + "/" + row_id);
 		String [] projection ={"p."+ParentContract.Columns.PARENT_FK};
 		Cursor c= getActivity().getContentResolver().query(imageUri, projection , null, null, null);
@@ -105,12 +99,12 @@ public class ParentMultiselectFragment extends ListFragment implements LoaderCal
 			String l = c.getString(c.getColumnIndex(ParentContract.Columns.PARENT_FK));
 			c.moveToNext();
 			Long lo = Long.valueOf(l);
-			int position = positionMap.get(lo);
-			 getListView().setItemChecked(position, true);
-			 //(positionMap.get(Long.valueOf(l)));;			
+			if(posMapOfAllItems.containsKey(lo)){
+				int position = posMapOfAllItems.get(lo);
+				lv.setItemChecked(position, true);
+			}
 		}
 		c.close();
-
 
 	}
 

@@ -68,13 +68,16 @@ public class Database {
 			"FOREIGN KEY("+ParentContract.Columns.IMAGE_FK+") REFERENCES "+ ImageContract.TABLE_IMAGE+"("+ImageContract.Columns._ID+") " +
 	");";
 	
-	
-	    
+	private static final String CREATE_UNIQUE_INDEX_ON_PARENT = "CREATE UNIQUE INDEX "+
+			"parent_idx ON "+ParentContract.TABLE_PARENT+"("+ParentContract.Columns._ID+","+ParentContract.Columns.IMAGE_FK+","+ParentContract.Columns.PARENT_FK+");";
+		    
 	public static void recreateDB(){
 		open();
 		String drop_table = "DROP TABLE IF EXISTS ";
-		db.execSQL(drop_table+ImageContract.TABLE_IMAGE);
+		
 		db.execSQL(drop_table+ParentContract.TABLE_PARENT);
+		db.execSQL(drop_table+ImageContract.TABLE_IMAGE);
+		db.execSQL("drop index if exists parent_idx");
 		dbHelper.onCreate(db);
 	}
 	
@@ -445,6 +448,14 @@ public class Database {
 	//----
 	public static class myDbHelper extends SQLiteOpenHelper{
 		
+		@Override
+		public void onOpen(SQLiteDatabase db) {
+		    super.onOpen(db);
+		    if (!db.isReadOnly()) {
+		        // Enable foreign key constraints
+		        db.execSQL("PRAGMA foreign_keys=ON;");
+		    }
+		}
 		private static myDbHelper instance = null;
 		
 		public myDbHelper(Context context, String name, CursorFactory factory, int version){
@@ -465,6 +476,7 @@ public class Database {
 			try{
 				_db.execSQL(TABLE_IMAGES_CREATE);
 				_db.execSQL(TABLE_PARENT_CREATE);
+				_db.execSQL(CREATE_UNIQUE_INDEX_ON_PARENT);
 		
 			}catch(SQLException ex){
 				Log.w(LOG_TAG, ex);
@@ -478,9 +490,8 @@ public class Database {
 			// Log the version upgrade/
 			Log.w("TaskDBAdapter", "Upgrading from version "+	oldVersion + " to "+ newVersion + ", witch will destroy all old data");
 			db.execSQL(drop_table+ImageContract.TABLE_IMAGE);
+			db.execSQL("drop index if exists parent_idx");
 			db.execSQL(drop_table+ParentContract.TABLE_PARENT);
-			//db.execSQL(drop_table+TABLE_DESC);
-			//db.execSQL(drop_table+TABLE_HTTP);
 			onCreate(db);
 			
 		}

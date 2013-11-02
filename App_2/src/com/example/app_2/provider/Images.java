@@ -15,6 +15,7 @@ import android.content.Context;
 import android.content.OperationApplicationException;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Path;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.RemoteException;
@@ -37,36 +38,13 @@ import com.example.app_2.utils.BitmapCalc;
 import com.example.app_2.utils.ImageLoader;
 import com.example.app_2.utils.Utils;
 
-public class Images { // TODO nie mo¿e byæ static
+public class Images {
 	public static List<ImageObject> images = new LinkedList<ImageObject>();  // list of ImageObject selected by category id
 	public static List<Uri> imageUris = new ArrayList<Uri>();
 	public ImageLoader il = new ImageLoader(App_2.getAppContext());
 	public static long img_dir_last_read = Long.valueOf(Storage.readFromSharedPreferences(String.valueOf(0), "imgDirLastRead", "imgDirLastRead", App_2.getAppContext(), Context.MODE_PRIVATE));
 	public static long imgLastModified;
 	private static final String LOG_TAG = "Images";
-
-/*	
-	public static void readImagesFromDB(){ 				//TODO zmieniæ - u¿yteczne tylko do debugowania
-		Log.i(LOG_TAG, "images size: " +images.size());
-		if(images.size()<=0){
-			Database db = Database.open();	
-			images = db.getAllImages();
-			imgLastModified = Storage.getImagesDir().lastModified();
-			if(imgLastModified> img_dir_last_read){
-				Log.w(LOG_TAG, "images in directory has changed:"+String.valueOf(img_dir_last_read)+"<"+String.valueOf(imgLastModified));
-			}
-			if(images.size()<=1 || Storage.getImagesDir().lastModified()> img_dir_last_read ){
-				Log.i(LOG_TAG, "images size2: " +images.size());
-				populateImagePaths();								 //wstawia wszystko do g³ównej kategorii
-				//images = db.getAllImages();
-				generateThumbs();
-				img_dir_last_read = Storage.getImagesDir().lastModified();
-				Storage.saveToSharedPreferences("imgDirLastRead", Long.toString(img_dir_last_read), "imgDirLastRead", App_2.getAppContext(), Context.MODE_PRIVATE);
-				}
-			}
-		}
-	
-*/
 	
 	public static List<String> getImagesFileNames(List<String> fileNames){
 		Iterator<String> li =  fileNames.iterator();
@@ -78,14 +56,13 @@ public class Images { // TODO nie mo¿e byæ static
 		return fileNames;
 	}
 	
-	public static void addImagesToDatabase(String path){
+	public static void addImagesToDatabase(String path, String parent_id){ // TODO zamieniæ na async task
 		List<String> fileNames = new LinkedList<String>();
 		ContentProviderResult[] opResults = null;
 		fileNames = getImagesFileNames(Storage.getFilesNamesFromDir(new File(path)));
 		
 		ArrayList<ContentProviderOperation> batchOps = new ArrayList<ContentProviderOperation>();
-		ArrayList<ContentProviderOperation> batchOps2 = new ArrayList<ContentProviderOperation>();
-		
+	
 		for(String filename: fileNames){
 				batchOps.add(ContentProviderOperation.newInsert(ImageContract.CONTENT_URI)
 						.withValue(ImageContract.Columns.PATH, filename)
@@ -95,6 +72,7 @@ public class Images { // TODO nie mo¿e byæ static
 		
 		try {
 			opResults = App_2.getAppContext().getContentResolver().applyBatch(ImageContract.AUTHORITY, batchOps);
+			batchOps.clear();
 		} catch (RemoteException e) {
 										// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -115,11 +93,11 @@ public class Images { // TODO nie mo¿e byæ static
 		for(Uri image : imageUris){															// dodanie do g³ównego drzewa TODO zmieniæ na dodawanie do dowolnego drzewa
 			batchOps.add(ContentProviderOperation.newInsert(ParentContract.CONTENT_URI)
 					.withValue(ParentContract.Columns.IMAGE_FK, image.getLastPathSegment())
-					.withValue(ParentContract.Columns.PARENT_FK, -1)
+					.withValue(ParentContract.Columns.PARENT_FK, Long.valueOf(parent_id))
 					.build());
 		}
 		try {
-			opResults = App_2.getAppContext().getContentResolver().applyBatch(ParentContract.AUTHORITY, batchOps2);
+			opResults = App_2.getAppContext().getContentResolver().applyBatch(ParentContract.AUTHORITY, batchOps);
 		} catch (RemoteException e) {
 			e.printStackTrace();
 		} catch (OperationApplicationException e) {
@@ -315,6 +293,7 @@ public class Images { // TODO nie mo¿e byæ static
 		protected Void doInBackground(String... arg0) {
 			int count;
 			String path = arg0[0];
+			String parent_id = arg0[1];
 			// - przejrzeæ katalog
 			// - sprawdziæ czy wygenerowane miniaturki dla wpisów
 			//Cursor cursor = executing_activity.getContentResolver().query(ImageContract.CONTENT_URI, null, null, null,null);
@@ -399,7 +378,7 @@ public class Images { // TODO nie mo¿e byæ static
 				
 				img_dir_last_read = Storage.getImagesDir().lastModified();
 				Storage.saveToSharedPreferences("imgDirLastRead", Long.toString(img_dir_last_read), "imgDirLastRead", App_2.getAppContext(), Context.MODE_PRIVATE);
-				addImagesToDatabase(path);
+				addImagesToDatabase(path, parent_id);
 				//populateImagePaths();
 			
 			//cursor.close();

@@ -64,7 +64,9 @@ public class ParentContentProvider extends ContentProvider{
 		long rowID = 0;
 		switch(sURIMatcher.match(uri)){
 		case PARENT:
-			rowID = db.insert(ParentContract.TABLE_PARENT, null, values);
+			rowID = db.replace(ParentContract.TABLE_PARENT, null, values);
+			if(rowID == -1)
+				rowID = db.insertOrThrow(ParentContract.TABLE_PARENT, null, values);
 			break;
 		default:
 			throw new IllegalArgumentException("Uknown URI:" + uri);

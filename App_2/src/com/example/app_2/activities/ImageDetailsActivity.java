@@ -66,7 +66,7 @@ public class ImageDetailsActivity extends FragmentActivity{
 
     	     if(resultCode == RESULT_OK){  
     	    	 long id[] =  data.getLongArrayExtra("result");
-    	    	 details.addParents(id);
+    	    	 ImageDetailsFragment.addParents(id);
     	    	 String result = new String();
     	    	 for(Long i: id){
     	    		 result += " "+ i;

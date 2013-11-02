@@ -69,7 +69,7 @@ public class ImageContentProvider extends ContentProvider{
 		switch(sURIMatcher.match(uri)){
 		case IMAGE:
 			rowID = db.insert(ImageContract.TABLE_IMAGE, null, values);
-			db.insert(ParentContract.TABLE_PARENT, null, values);
+			//db.insert(ParentContract.TABLE_PARENT, null, values);
 			break;
 		default:
 			throw new IllegalArgumentException("Uknown URI:" + uri);

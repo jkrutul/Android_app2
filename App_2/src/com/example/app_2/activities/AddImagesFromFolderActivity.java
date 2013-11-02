@@ -1,6 +1,10 @@
 package com.example.app_2.activities;
 
 import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
@@ -9,28 +13,43 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.WindowManager;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemSelectedListener;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.app_2.R;
+import com.example.app_2.adapters.MySpinnerAdapter;
+import com.example.app_2.contentprovider.ImageContract;
 import com.example.app_2.provider.Images.ProcessBitmapsTask;
-import com.example.app_2.storage.Storage;
+import com.example.app_2.provider.SpinnerItem;
 
 public class AddImagesFromFolderActivity  extends Activity{
 	Button import_button;
 	EditText pathEditText;
+	private Spinner mSpinner;
 	private static final String TAG = "AddImagesFromFolderActivity";
 	private static final int FILE_SELECT_CODE = 0;
 	public static final int PLEASE_WAIT_DIALOG = 1;
 	public static ProgressDialog dialog;
+	Long import_to_parent_id;
+	private Map<String, Long> categories_map;
+	List<String> list = new ArrayList<String>();
+	ArrayList<SpinnerItem> items;
+	
 	@Override
 	protected void onCreate(Bundle bundle) {
 		super.onCreate(bundle);
@@ -39,11 +58,52 @@ public class AddImagesFromFolderActivity  extends Activity{
 		
 		pathEditText = (EditText) findViewById(R.id.path_to_folder);
 		import_button= (Button) findViewById(R.id.import_button);
-
+		mSpinner = (Spinner) findViewById(R.id.parent_spinner);
+		addItemsOnSpinner();
 	}
 
 
 
+	private void addItemsOnSpinner() {
+
+		mSpinner.setOnItemSelectedListener(new OnItemSelectedListener() {
+			@Override
+			public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int position, long id) {
+				SpinnerItem data = items.get(position);
+				if(data.isHint()){
+					TextView tv = (TextView)selectedItemView;
+					tv.setTextColor(Color.rgb(148, 150, 148));
+				}
+				import_to_parent_id = data.getItemId();
+				//String key = mSpinner.getSelectedItem().toString();
+				//if (categories_map.containsKey(key))
+				//	import_to_parent_id = categories_map.get(key);
+			}
+			@Override
+			public void onNothingSelected(AdapterView<?> parentView) {
+				import_to_parent_id = Long.valueOf(-1);
+			}
+
+		});
+		
+		items =  new ArrayList<SpinnerItem>();
+		items.add(new SpinnerItem(null,"Wybierz kategoriê", Long.valueOf(-1), true));
+		String[] projection = { ImageContract.Columns._ID, ImageContract.Columns.CATEGORY, ImageContract.Columns.PATH };
+		String selection = ImageContract.Columns.CATEGORY + " IS NOT NULL";
+		Cursor c = getContentResolver().query(ImageContract.CONTENT_URI, projection, selection, null, null);
+		c.moveToFirst();
+		while (!c.isAfterLast()) {
+			items.add(new SpinnerItem(c.getString(2), c.getString(1), c.getLong(0),false));
+			c.moveToNext();
+		}
+		c.close();
+		
+		MySpinnerAdapter mySpinnerAdapter = new MySpinnerAdapter(this, android.R.layout.simple_spinner_item, items);
+		mySpinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+		mSpinner.setAdapter(mySpinnerAdapter);
+		mSpinner.setSelection(items.size()-1);
+	}
+	
 	public void showFileChooser(View view) {
 		
 		//Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
@@ -77,6 +137,12 @@ public class AddImagesFromFolderActivity  extends Activity{
 	            String path = null;
 				try {
 					path = getPath(this, uri);
+					String[] fn = path.split("\\/");
+			    	if(fn.length>1)
+			    		path = "";
+			    		for(int i =0; i< (fn.length-1) ; i++)
+			    			path += fn[i] +"/";	    			
+			    	
 				} catch (URISyntaxException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
@@ -116,9 +182,12 @@ public class AddImagesFromFolderActivity  extends Activity{
 	
 	@TargetApi(Build.VERSION_CODES.HONEYCOMB)
 	public void onImportClick(View view){
+		String parent_fk= "-1";
+		int spinnerSelectedPos = mSpinner.getSelectedItemPosition();
+		if (spinnerSelectedPos != Spinner.INVALID_POSITION)
+			parent_fk = String.valueOf(items.get(spinnerSelectedPos).getItemId());
 		ProcessBitmapsTask processBitmapsTask = new ProcessBitmapsTask(this);
-		processBitmapsTask.executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, pathEditText.getText().toString());
-		
+		processBitmapsTask.executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, pathEditText.getText().toString(), parent_fk);		
 	}
 	
 	 @Override
@@ -127,7 +196,6 @@ public class AddImagesFromFolderActivity  extends Activity{
 	        case PLEASE_WAIT_DIALOG:
 	        	dialog = new ProgressDialog(this);
 	            dialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
-	     
 	            dialog.setCancelable(false);
 	            dialog.setTitle("Import obrazków....");
 	            dialog.setMessage("Proszê czekaæ....");
@@ -138,6 +206,4 @@ public class AddImagesFromFolderActivity  extends Activity{
 	        }
 	        return null;
 	    }
-	    
-	
 }
