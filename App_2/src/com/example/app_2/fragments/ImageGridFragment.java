@@ -14,6 +14,7 @@ import android.graphics.Point;
 import android.graphics.Rect;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -40,6 +41,7 @@ import android.widget.SimpleCursorAdapter;
 import com.example.app_2.R;
 import com.example.app_2.activities.ImageGridActivity;
 import com.example.app_2.contentprovider.ImageContract;
+import com.example.app_2.contentprovider.ImagesOfParentContentProvider;
 import com.example.app_2.contentprovider.ImagesOfParentContract;
 import com.example.app_2.contentprovider.ParentContract;
 import com.example.app_2.models.ImageObject;
@@ -424,11 +426,13 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
 	@TargetApi(Build.VERSION_CODES.HONEYCOMB)
 	@Override
 	public Loader<Cursor> onCreateLoader(int arg0, Bundle bundle) {
+
 		CursorLoader cursorLoader= null;
 		int category_fk = (bundle!= null) ? (int) bundle.getLong("CATEGORY_ID", -1)	: -1;
+		Uri uri = Uri.parse(ImagesOfParentContract.CONTENT_URI + "/" + category_fk);
 		
-		String[] projection = new String[] { ImageContract.Columns._ID, ImageContract.Columns.PATH, ImageContract.Columns.DESC, ImageContract.Columns.CATEGORY};	
-		String selection = ParentContract.Columns.PARENT_FK +" = ?";
+		String[] projection = new String[] { "i."+ImageContract.Columns._ID,  "i."+ImageContract.Columns.PATH,  "i."+ImageContract.Columns.DESC,  "i."+ImageContract.Columns.CATEGORY};	
+		String selection = "p."+ParentContract.Columns.PARENT_FK +" = ?";
 		String[] selectionArgs = new String[]{String.valueOf(category_fk)};
 		/*if(category_fk == -1){
 			Long imgLastModified = Storage.getImagesDir().lastModified();
@@ -440,7 +444,7 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
 
 		}*/
 
-		cursorLoader = new CursorLoader(getActivity().getApplicationContext(),ImagesOfParentContract.CONTENT_URI, projection, selection, selectionArgs ,null);
+		cursorLoader = new CursorLoader(getActivity().getApplicationContext(),uri, projection, selection, selectionArgs ,null);
 		return cursorLoader;
 	}
 

@@ -19,13 +19,13 @@ public class ImagesOfParentContentProvider extends ContentProvider{
 	private static final String DBNAME = "myDatabase.db";
 	
 	  // Used for the UriMacher
-	  private static final int PARENT = 30;
-	  private static final int PARENT_ID = 40; 
+	  private static final int PARENT = 33;
+	  private static final int PARENT_ID = 44; 
 	  
 	private static final UriMatcher sURIMatcher = new UriMatcher(UriMatcher.NO_MATCH);
 	static{
-		sURIMatcher.addURI(ParentContract.AUTHORITY, ImagesOfParentContract.BASE_PATH, PARENT);
-		sURIMatcher.addURI(ParentContract.AUTHORITY, ImagesOfParentContract.BASE_PATH + "/#", PARENT_ID);
+		//sURIMatcher.addURI(ImagesOfParentContract.AUTHORITY, ImagesOfParentContract.BASE_PATH, PARENT);
+		sURIMatcher.addURI(ImagesOfParentContract.AUTHORITY, ImagesOfParentContract.BASE_PATH + "/#", PARENT_ID);
 	}
 
 	@Override
@@ -53,18 +53,20 @@ public class ImagesOfParentContentProvider extends ContentProvider{
 	public Cursor query(Uri uri, String[] projection, String selection,	String[] selectionArgs, String sortOrder) {
 		SQLiteQueryBuilder queryBuilder = new SQLiteQueryBuilder();
 		//checkColumns(projection);
-		queryBuilder.setTables(ImageContract.TABLE_IMAGE+" INNER JOIN "+ ParentContract.TABLE_PARENT+" ON ( "+ImageContract.Columns._ID+" = "+ParentContract.Columns.PARENT_FK+" )");
+		queryBuilder.setTables(ImageContract.TABLE_IMAGE+" i  INNER JOIN "+ ParentContract.TABLE_PARENT+" p ON ( i."+ImageContract.Columns._ID+" = p."+ParentContract.Columns.IMAGE_FK+" )");
 		
 		switch(sURIMatcher.match(uri)){
 		case PARENT:
 			break;
 		case PARENT_ID:
-			queryBuilder.appendWhere(ParentContract.Columns.PARENT_FK + "=" + uri.getLastPathSegment());
+			queryBuilder.appendWhere("p."+ParentContract.Columns.PARENT_FK + "=" + uri.getLastPathSegment());
+			break;
 		default:
-		    throw new IllegalArgumentException("Unknown URI: " + uri);
+			queryBuilder.appendWhere("p."+ParentContract.Columns.PARENT_FK + "=" + uri.getLastPathSegment());
+		  //throw new IllegalArgumentException("Unknown URI: " + uri);
 		}
 		
-		String orderBy = TextUtils.isEmpty(sortOrder) ? ImageContract.Columns.DEFAULT_SORT_ORDER : sortOrder;
+		String orderBy = TextUtils.isEmpty(sortOrder) ? "i."+ImageContract.Columns.DEFAULT_SORT_ORDER : sortOrder;
 		SQLiteDatabase db = mOpenHelper.getWritableDatabase();
 		Cursor cursor = queryBuilder.query(db, projection, selection, selectionArgs, null, null, orderBy);
 		cursor.setNotificationUri(getContext().getContentResolver(), uri);

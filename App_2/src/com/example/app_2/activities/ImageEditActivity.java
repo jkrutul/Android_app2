@@ -1,31 +1,89 @@
 package com.example.app_2.activities;
 
-import com.example.app_2.R;
-import com.example.app_2.fragments.ImageDetailsFragment;
+import java.util.ArrayList;
 
-import android.app.Activity;
 import android.content.Intent;
-import android.content.res.Configuration;
+import android.database.Cursor;
+import android.graphics.Color;
 import android.os.Bundle;
-import android.support.v4.app.FragmentTransaction;
 import android.support.v4.app.FragmentActivity;
-import android.text.TextUtils;
+import android.support.v4.app.ListFragment;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemSelectedListener;
+import android.widget.ListView;
+import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
 
-public class ImageEditActivity extends FragmentActivity{
+import com.example.app_2.R;
+import com.example.app_2.adapters.MySpinnerAdapter;
+import com.example.app_2.contentprovider.ImageContract;
+import com.example.app_2.fragments.ImageDetailsFragment;
+import com.example.app_2.fragments.ImageListFragment;
+import com.example.app_2.provider.SpinnerItem;
 
+public class ImageEditActivity extends FragmentActivity{
+	private Spinner mSpinner;
+	ArrayList<SpinnerItem> items;
+	//private final ImageListFragment ilf;
+	
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 	    getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
         setContentView(R.layout.activity_image_edit);
+        
+        mSpinner = (Spinner) findViewById(R.id.category_select_spinner);
+        addItemsOnSpinner();
+        //final  com.example.app_2.fragments.ImageListFragment ilf = ( com.example.app_2.fragments.ImageListFragment) findViewById(R.id.titles);
+        
     }
     
+	private void addItemsOnSpinner() {
+
+		mSpinner.setOnItemSelectedListener(new OnItemSelectedListener() {
+			@Override
+			public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int position, long id) {
+				SpinnerItem data = items.get(position);
+				if(data.isHint()){
+					TextView tv = (TextView)selectedItemView;
+					tv.setTextColor(Color.rgb(148, 150, 148));
+				}
+				//import_to_parent_id = data.getItemId();
+				//String key = mSpinner.getSelectedItem().toString();
+				//if (categories_map.containsKey(key))
+				//	import_to_parent_id = categories_map.get(key);
+			}
+			@Override
+			public void onNothingSelected(AdapterView<?> parentView) {
+				//import_to_parent_id = Long.valueOf(-1);
+			}
+
+		});
+		
+		items =  new ArrayList<SpinnerItem>();
+		items.add(new SpinnerItem(null,"Wybierz kategoriê", Long.valueOf(-1), true));
+		String[] projection = { ImageContract.Columns._ID, ImageContract.Columns.CATEGORY, ImageContract.Columns.PATH };
+		String selection = ImageContract.Columns.CATEGORY + " IS NOT NULL";
+		Cursor c = getContentResolver().query(ImageContract.CONTENT_URI, projection, selection, null, null);
+		c.moveToFirst();
+		while (!c.isAfterLast()) {
+			items.add(new SpinnerItem(c.getString(2), c.getString(1), c.getLong(0),false));
+			c.moveToNext();
+		}
+		c.close();
+		
+		MySpinnerAdapter mySpinnerAdapter = new MySpinnerAdapter(this, android.R.layout.simple_spinner_item, items);
+		mySpinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+		mSpinner.setAdapter(mySpinnerAdapter);
+		mSpinner.setSelection(items.size()-1);
+	}
+
     
 	// Create the menu based on the XML defintion
 	@Override

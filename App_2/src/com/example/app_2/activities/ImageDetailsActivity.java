@@ -65,19 +65,22 @@ public class ImageDetailsActivity extends FragmentActivity{
     	  if (requestCode == SELECT_PARENTS_REQUEST_CODE) {
 
     	     if(resultCode == RESULT_OK){  
-    	    	 long id[] =  data.getLongArrayExtra("result");
-    	    	 ImageDetailsFragment.addParents(id);
+    	    	 long checkedIds[] =  data.getLongArrayExtra("result_checked_ids");
+    	    	 ImageDetailsFragment.addParents(checkedIds);
+    	    	 details.setParentsView(checkedIds);
     	    	 String result = new String();
-    	    	 for(Long i: id){
+    	    	 for(Long i: checkedIds)
     	    		 result += " "+ i;
-    	    	 }
-    	         //String result=data.getStringExtra("result");  
-    	         Toast.makeText(this, result, Toast.LENGTH_LONG).show();
+    	    	   
+    	         //Toast.makeText(this, "dodano " +result, Toast.LENGTH_LONG).show();
+    	         
+    	         long uncheckedIds[] = data.getLongArrayExtra("result_unchecked_ids");
+    	         ImageDetailsFragment.deleteParents(uncheckedIds);
     	     }
+    	     
     	     if (resultCode == RESULT_CANCELED) {    
-    	         //Write your code if there's no result
+
     	     }
     	  }
-    	}//onActivityResult
-
+    	}
 }

@@ -1,9 +1,6 @@
 package com.example.app_2.activities;
 
-import com.example.app_2.R;
-import com.example.app_2.fragments.ImageListFragment;
-import com.example.app_2.provider.Images;
-import com.example.app_2.storage.Storage;
+import java.io.File;
 
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
@@ -19,7 +16,11 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ShareActionProvider;
-import android.widget.Toast;
+
+import com.example.app_2.R;
+import com.example.app_2.provider.Images;
+import com.example.app_2.storage.Database;
+import com.example.app_2.storage.Storage;
 
 public class MainActivity extends Activity {
 	private final static String LOG_TAG = "MainActivity";
@@ -60,7 +61,10 @@ public class MainActivity extends Activity {
 
 					@Override
 					public void onClick(DialogInterface dialog, int which) {
-						Images.populateImagePaths();
+						Database.open();
+						Database.recreateDB();
+						
+						Images.addImagesToDatabase(Storage.getThumbsMaxDir().getAbsolutePath(), "-1");
 					}
 		        }).create().show();
 		}

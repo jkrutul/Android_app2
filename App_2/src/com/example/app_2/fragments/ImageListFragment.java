@@ -25,6 +25,7 @@ import android.widget.AdapterView.AdapterContextMenuInfo;
 import com.example.app_2.R;
 import com.example.app_2.activities.ImageDetailsActivity;
 import com.example.app_2.contentprovider.ImageContract;
+import com.example.app_2.contentprovider.ImagesOfParentContract;
 import com.example.app_2.provider.Images;
 import com.example.app_2.utils.ImageLoader;
 
@@ -45,8 +46,10 @@ public class ImageListFragment extends ListFragment implements LoaderCallbacks<C
 		super.onActivityCreated(savedInstanceState);
 		new ImageLoader(getActivity());
 
-		String[] from = new String[] { ImageContract.Columns._ID,
-				ImageContract.Columns.PATH, ImageContract.Columns.PATH,
+		String[] from = new String[] { 
+				ImageContract.Columns._ID,
+				ImageContract.Columns.PATH,
+				ImageContract.Columns.PATH,
 				ImageContract.Columns.CATEGORY};
 		int[] to = new int[] { 0, R.id.label, R.id.icon, R.id.category}; 		// Fields on the UI to which we map
 
@@ -158,13 +161,12 @@ public class ImageListFragment extends ListFragment implements LoaderCallbacks<C
 	@Override
 	public Loader<Cursor> onCreateLoader(int arg0, Bundle bundle) {
 		String[] projection = { 
-				ImageContract.Columns._ID,
-				ImageContract.Columns.PATH,
-				ImageContract.Columns.CATEGORY,
-				//ImageContract.Columns.PARENTS
+				"i."+ImageContract.Columns._ID,
+				"i."+ImageContract.Columns.PATH,
+				"i."+ImageContract.Columns.CATEGORY,
 				};
-		CursorLoader cursorLoader = new CursorLoader(getActivity(),
-				ImageContract.CONTENT_URI, projection, null, null, null);
+		Uri uri = Uri.parse(ImagesOfParentContract.CONTENT_URI+"/-1");
+		CursorLoader cursorLoader = new CursorLoader(getActivity(),uri, projection, null, null, null);
 		return cursorLoader;
 	}
 

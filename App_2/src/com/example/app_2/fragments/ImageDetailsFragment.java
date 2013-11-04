@@ -109,16 +109,8 @@ public class ImageDetailsFragment extends Fragment{
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 		super.onCreateView(inflater, container, savedInstanceState);
 		executing_activity.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
-		if (container == null) {
-			// We have different layouts, and in one of them this
-			// fragment's containing frame doesn't exist. The fragment
-			// may still be created from its saved state, but there is
-			// no reason to try to create its view hierarchy because it
-			// won't be displayed. Note this is not needed -- we could
-			// just run the code below, where we would create and return
-			// the view hierarchy; it would just never be used.
-
-		}
+		if (container == null) {}
+		
 		final View view = inflater.inflate(R.layout.image_details, container,false);
 		mId = (TextView) view.findViewById(R.id.img_id);
 		mImage = (ImageView) view.findViewById(R.id.img);
@@ -130,41 +122,6 @@ public class ImageDetailsFragment extends Fragment{
 		mParent = (EditText) view.findViewById(R.id.edit_parent);
 		mParents = (TextView) view.findViewById(R.id.parents);
 
-		/*
-		mSpinner = (Spinner) view.findViewById(R.id.parent_spinner);
-		mSpinner.setOnItemSelectedListener(new OnItemSelectedListener() {
-			@Override
-			public void onItemSelected(AdapterView<?> parentView,
-					View selectedItemView, int position, long id) {
-				String key = mSpinner.getSelectedItem().toString();
-				if (categories_map.containsKey(key))
-					mParent.setText(String.valueOf(categories_map.get(key)));
-			}
-
-			@Override
-			public void onNothingSelected(AdapterView<?> parentView) {
-				mParent.setText(-1);
-			}
-
-		});
-		
-		//mParentCheckBox = (CheckBox) view.findViewById(R.id.add_to_category);
-		mParentCheckBox
-				.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-
-					@Override
-					public void onCheckedChanged(CompoundButton buttonView,
-							boolean isChecked) {
-						if (isChecked)
-							mSpinner.setVisibility(View.VISIBLE);
-						else {
-							mSpinner.setVisibility(View.GONE);
-							mParent.setText(String.valueOf(-1));
-						}
-
-					}
-				});
-		 */
 		mCreateCategoryCheckBox = (CheckBox) view
 				.findViewById(R.id.create_category);
 		mCreateCategoryCheckBox
@@ -212,6 +169,15 @@ public class ImageDetailsFragment extends Fragment{
 		return view;
 
 	}
+	
+	public void setParentsView(long ids[]){
+		mParents.setText("");
+		String parents = new String();
+		for(Long l : ids)
+			if(categories_map.containsKey(l))
+				parents +=categories_map.get(l)+"\n";
+		mParents.setText(parents);	
+	}
 
 	private void setImageParents(Long id){
 		Uri imageParentsUri = Uri.parse(ParentsOfImageContract.CONTENT_URI+"/"+id);
@@ -226,46 +192,8 @@ public class ImageDetailsFragment extends Fragment{
 		c.close();
 	}
 	
-	private void addItemsOnSpinner() {
-		categories_map = new HashMap<String, Long>();
-		String[] projection = { ImageContract.Columns._ID,
-				ImageContract.Columns.CATEGORY };
-		String selection = ImageContract.Columns.CATEGORY + " IS NOT NULL";
-		Cursor c = executing_activity.getContentResolver().query(
-				ImageContract.CONTENT_URI, projection, selection, null, null);
-		c.moveToFirst();
-		while (!c.isAfterLast()) {
-			categories_map.put(c.getString(1), c.getLong(0));
-			c.moveToNext();
-		}
-		c.close();
-
-		list.addAll(categories_map.keySet());
-		ArrayAdapter<String> spinnerDataAdapter = new ArrayAdapter<String>(
-				executing_activity, android.R.layout.simple_spinner_dropdown_item) {
-			@Override
-			public View getView(int position, View converView, ViewGroup parent) {
-				View v = super.getView(position, converView, parent);
-				if (position == getCount()) {
-					((TextView) v.findViewById(android.R.id.text1))
-							.setText("Select category");
-					((TextView) v.findViewById(android.R.id.text1))
-							.setHint(getItem(getCount())); // "Hint to be displayed"
-				}
-				return v;
-			}
-		};
-
-		spinnerDataAdapter
-				.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-		for(String l:list)
-			spinnerDataAdapter.add(l);
-		mSpinner.setAdapter(spinnerDataAdapter);
-	}
-	
 	public static void addParents(long[] ids){
 		if(row_id != null){
-			Long alreadyHaveParensIds[];
 			List<Long> alreadyBindParentsIds = new ArrayList<Long>();
 			Uri imageParentsUri = Uri.parse(ParentsOfImageContract.CONTENT_URI+"/"+row_id);
 			String[] projection = { "i."+ImageContract.Columns._ID};
@@ -290,6 +218,29 @@ public class ImageDetailsFragment extends Fragment{
 		
 	}
 	
+	public static void deleteParents(long[] ids){
+		if(row_id != null){
+			List<Long> alreadyBindParentsIds = new ArrayList<Long>();
+			Uri imageParentsUri = Uri.parse(ParentsOfImageContract.CONTENT_URI+"/"+row_id);
+			String[] projection = { "i."+ImageContract.Columns._ID};
+			Cursor c = executing_activity.getContentResolver().query(imageParentsUri, projection, null, null, null);
+			c.moveToFirst();
+
+			while(!c.isAfterLast()){
+				alreadyBindParentsIds.add(c.getLong(0));
+				c.moveToNext();
+			}
+			
+			for(Long id : ids){
+				if(alreadyBindParentsIds.contains(id)){
+					String[] selectionArgs ={ String.valueOf(row_id), String.valueOf(id) };
+					executing_activity.getContentResolver().delete(ParentContract.CONTENT_URI, ParentContract.Columns.IMAGE_FK +" =? AND "+ ParentContract.Columns.PARENT_FK+ "=? ",selectionArgs );
+				}
+
+			}
+		}
+	}
+	
 	
 	public void onButtonClick(View view){
 		switch (view.getId()) {
@@ -311,31 +262,17 @@ public class ImageDetailsFragment extends Fragment{
 		Uri uri = Uri.parse(ImageContract.CONTENT_URI + "/" + id);
 		String[] projection = { ImageContract.Columns._ID,
 				ImageContract.Columns.PATH, ImageContract.Columns.DESC,
-				ImageContract.Columns.CATEGORY,/* ImageContract.Columns.PARENTS */ };
+				ImageContract.Columns.CATEGORY};
 		Cursor cursor = executing_activity.getContentResolver().query(uri,	projection, null, null, null);
 		if (cursor != null) {
 			cursor.moveToFirst();
 
 			String img_id = cursor.getString(cursor
 					.getColumnIndex(ImageContract.Columns._ID));
-			/*Long parent_fk = cursor.getLong(cursor
-					.getColumnIndexOrThrow(ImageContract.Columns.PARENTS));
-					*/
 			String category = cursor.getString(cursor
 					.getColumnIndexOrThrow(ImageContract.Columns.CATEGORY));
 
 			mId.setText(img_id);
-/*
-			if (parent_fk != Long.valueOf(-1)) {
-				if (categories_map.containsValue(parent_fk)) { // TODO
-					mParentCheckBox.setChecked(true);
-					String categoryName = Utils.getKeyByValue(categories_map,
-							parent_fk);
-					mSpinner.setSelection(list.indexOf(categoryName));
-				}
-			}
-			*/
-//			mParent.setText(String.valueOf(parent_fk));
 
 			if (category != null)
 				if (!category.equals("")) {
@@ -349,7 +286,6 @@ public class ImageDetailsFragment extends Fragment{
 			mDescText.setText(cursor.getString(cursor
 					.getColumnIndexOrThrow(ImageContract.Columns.DESC)));
 
-			// Always close the cursor
 			cursor.close();
 			ImageLoader.loadBitmap(Storage.getThumbsMaxDir() + File.separator
 					+ imgName, mImage, false);
@@ -379,7 +315,6 @@ public class ImageDetailsFragment extends Fragment{
 
 	private void saveState() {
 		String category = null;
-		String parent_fk = String.valueOf(-1);
 
 		if (mCreateCategoryCheckBox.isChecked()) {
 			category = mCategory.getText().toString();
@@ -387,27 +322,12 @@ public class ImageDetailsFragment extends Fragment{
 				category = null;
 			}
 		}
-		/*
-		if (mParentCheckBox.isChecked()) {
-			if (mSpinner.getSelectedItemPosition() != Spinner.INVALID_POSITION) {
-				String key = mSpinner.getSelectedItem().toString();
-				if (categories_map.containsKey(key))
-					parent_fk = String.valueOf(categories_map.get(key));
-			}
-		}
-	*/
+
 		String description = mDescText.getText().toString();
-
-		// TODO save if data changed or save button pressed
-
-		//if (description.length() == 0) {
-		//	return;
-		//}
 
 		ContentValues values = new ContentValues();
 		values.put(ImageContract.Columns.CATEGORY, category);
 		values.put(ImageContract.Columns.DESC, description);
-		//values.put(ImageContract.Columns.PARENTS, parent_fk);
 
 		if (row_id == null && this.newFileName!=null) {
 			values.put(ImageContract.Columns.PATH, this.newFileName);

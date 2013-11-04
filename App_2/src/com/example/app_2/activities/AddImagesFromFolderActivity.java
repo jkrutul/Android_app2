@@ -34,6 +34,7 @@ import android.widget.Toast;
 import com.example.app_2.R;
 import com.example.app_2.adapters.MySpinnerAdapter;
 import com.example.app_2.contentprovider.ImageContract;
+import com.example.app_2.provider.Images.AddToDatabaseTask;
 import com.example.app_2.provider.Images.ProcessBitmapsTask;
 import com.example.app_2.provider.SpinnerItem;
 
@@ -44,10 +45,10 @@ public class AddImagesFromFolderActivity  extends Activity{
 	private static final String TAG = "AddImagesFromFolderActivity";
 	private static final int FILE_SELECT_CODE = 0;
 	public static final int PLEASE_WAIT_DIALOG = 1;
+	public static final int ADD_TO_DB_WAIT_DIALOG = 2;
 	public static ProgressDialog dialog;
 	Long import_to_parent_id;
-	private Map<String, Long> categories_map;
-	List<String> list = new ArrayList<String>();
+	
 	ArrayList<SpinnerItem> items;
 	
 	@Override
@@ -182,12 +183,33 @@ public class AddImagesFromFolderActivity  extends Activity{
 	
 	@TargetApi(Build.VERSION_CODES.HONEYCOMB)
 	public void onImportClick(View view){
-		String parent_fk= "-1";
+		String parent_fk= null;
 		int spinnerSelectedPos = mSpinner.getSelectedItemPosition();
 		if (spinnerSelectedPos != Spinner.INVALID_POSITION)
 			parent_fk = String.valueOf(items.get(spinnerSelectedPos).getItemId());
+		
 		ProcessBitmapsTask processBitmapsTask = new ProcessBitmapsTask(this);
-		processBitmapsTask.executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, pathEditText.getText().toString(), parent_fk);		
+		//AddToDatabaseTask addToDbTask = new AddToDatabaseTask(this);
+		
+		//if(processBitmapsTask.getStatus() == android.os.AsyncTask.Status.PENDING)
+			processBitmapsTask.executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, pathEditText.getText().toString(), parent_fk);
+			//finish();
+		//else if(processBitmapsTask.getStatus() == android.os.AsyncTask.Status.FINISHED)
+		//	addToDbTask.executeOnExecutor(AsyncTask.SERIAL_EXECUTOR,  pathEditText.getText().toString(), parent_fk);
+		
+		//else
+		//	;
+		/*
+		finish();
+		 if (asynclass.getStatus() == android.os.AsyncTask.Status.PENDING) {
+             asynclass.execute();
+         } else if (RF.getStatus() == android.os.AsyncTask.Status.FINISHED) {
+             asynclass = new asyncclass();
+             asynclass.execute();
+         } else {
+             Toast.maketoast(this, "Plz wait", 1).show();
+         }
+         */
 	}
 	
 	 @Override
@@ -197,9 +219,17 @@ public class AddImagesFromFolderActivity  extends Activity{
 	        	dialog = new ProgressDialog(this);
 	            dialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
 	            dialog.setCancelable(false);
-	            dialog.setTitle("Import obrazków....");
+	            dialog.setTitle("Import i skalowanie obrazków....");
 	            dialog.setMessage("Proszê czekaæ....");
 	            return dialog;
+	            
+	        case ADD_TO_DB_WAIT_DIALOG:
+	        	dialog = new ProgressDialog(this);
+	            dialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+	            dialog.setCancelable(false);
+	            dialog.setTitle("Dodawanie wpisów do bazy danych....");
+	            dialog.setMessage("Proszê czekaæ....");
+	        	break;
 	 
 	        default:
 	            break;

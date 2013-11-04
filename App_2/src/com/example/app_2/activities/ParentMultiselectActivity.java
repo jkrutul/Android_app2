@@ -36,14 +36,22 @@ public class ParentMultiselectActivity extends FragmentActivity{
 		
 		switch (view.getId()) {
 		case R.id.parent_submit_button:
-			 ArrayList<Long>ids = parent.getCheckedItemIds();
-			 long id[] = new long[ids.size()];
+			 ArrayList<Long>checked_ids = parent.getCheckedItemIds();
+			 long checked_id[] = new long[checked_ids.size()];
 			 int i=0;
-			 for(Long iis : ids){
-				 id[i] = iis;
-			 	 i++;
-			 }
-			 returnIntent.putExtra("result",id);
+			 for(Long iis : checked_ids)
+				 checked_id[i++] = iis;
+			 
+			 returnIntent.putExtra("result_checked_ids",checked_id);
+			 
+			 ArrayList<Long>unchecked_ids = parent.getUncheckedItemsIds(checked_ids);
+			 long unchecked_id[] = new long[unchecked_ids.size()];
+			 i=0;
+			 for(Long iis: unchecked_ids)
+				 unchecked_id[i++]=iis;
+			 
+			 returnIntent.putExtra("result_unchecked_ids",unchecked_id);
+			 
 			 setResult(RESULT_OK,returnIntent);     
 			 finish();
 			break;

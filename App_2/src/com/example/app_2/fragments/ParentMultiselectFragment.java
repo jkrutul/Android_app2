@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
@@ -21,7 +22,6 @@ import android.widget.ListView;
 import com.example.app_2.R;
 import com.example.app_2.contentprovider.ImageContract;
 import com.example.app_2.contentprovider.ParentContract;
-import com.example.app_2.contentprovider.ParentsOfImageContentProvider;
 import com.example.app_2.contentprovider.ParentsOfImageContract;
 import com.example.app_2.provider.Images;
 import com.example.app_2.utils.ImageLoader;
@@ -34,6 +34,7 @@ public class ParentMultiselectFragment extends ListFragment implements LoaderCal
 	private static final int LOADER_ID = 32;
 	private static final String TAG = "ParentMultiselectFragment";
 	private Map<Long,Integer> posMapOfAllItems;
+	private ArrayList<Long> selectedItemsOnCreate;
 	
 	public ParentMultiselectFragment(){
 		
@@ -48,14 +49,21 @@ public class ParentMultiselectFragment extends ListFragment implements LoaderCal
 	}
 
 	public void onCreate(Bundle bundle){
-		super.onCreate(bundle);	
-		row_id = (Long) getActivity().getIntent().getExtras().get("row_id");
+		super.onCreate(bundle);
+		Intent intent =  getActivity().getIntent();
+		row_id  = getArguments().getLong("row_id");
+		if(bundle != null)
+			row_id = bundle.getLong("row_id");
+		else
+			if(row_id == null)
+				row_id = (Long) intent.getExtras().get("row_id");		
 	} 
 	@Override
 	public void onActivityCreated(Bundle savedInstanceState) {
 		super.onActivityCreated(savedInstanceState);
 		new ImageLoader(getActivity());
-
+		selectedItemsOnCreate = new ArrayList<Long>();
+		
 		String[] from = new String[] { ImageContract.Columns._ID,ImageContract.Columns.CATEGORY};
 		int[] to = new int[] { 0, android.R.id.text1}; 		// Fields on the UI to which we map
 		String[] projection3 = { 
@@ -101,6 +109,7 @@ public class ParentMultiselectFragment extends ListFragment implements LoaderCal
 			Long lo = Long.valueOf(l);
 			if(posMapOfAllItems.containsKey(lo)){
 				int position = posMapOfAllItems.get(lo);
+				selectedItemsOnCreate.add(lo);
 				lv.setItemChecked(position, true);
 			}
 		}
@@ -154,5 +163,14 @@ public class ParentMultiselectFragment extends ListFragment implements LoaderCal
                 selectedItems.add(adapter.getItemId(position));
         }
         return selectedItems;
+	}
+	
+	public ArrayList<Long> getUncheckedItemsIds(ArrayList<Long> checkedItemIds){
+		 ArrayList<Long> unSelectedItems  = new ArrayList<Long>();
+		 for(Long l : selectedItemsOnCreate){
+			 if(!checkedItemIds.contains(l))
+				 unSelectedItems.add(l);
+		 }
+		 return unSelectedItems;
 	}
 }
