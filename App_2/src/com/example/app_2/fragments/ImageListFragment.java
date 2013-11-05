@@ -160,14 +160,23 @@ public class ImageListFragment extends ListFragment implements LoaderCallbacks<C
 
 	@Override
 	public Loader<Cursor> onCreateLoader(int arg0, Bundle bundle) {
+		CursorLoader cursorLoader = null;
+		Uri uri ;
+		Long cat_id= Long.valueOf(-1);
+		
+		if(bundle!=null)
+			cat_id = bundle.getLong("cat_id");
+
 		String[] projection = { 
 				"i."+ImageContract.Columns._ID,
 				"i."+ImageContract.Columns.PATH,
 				"i."+ImageContract.Columns.CATEGORY,
 				};
-		Uri uri = Uri.parse(ImagesOfParentContract.CONTENT_URI+"/-1");
-		CursorLoader cursorLoader = new CursorLoader(getActivity(),uri, projection, null, null, null);
+		uri = Uri.parse(ImagesOfParentContract.CONTENT_URI+"/"+cat_id);
+		cursorLoader = new CursorLoader(getActivity(),uri, projection, null, null, null);
+
 		return cursorLoader;
+		
 	}
 
 	@Override

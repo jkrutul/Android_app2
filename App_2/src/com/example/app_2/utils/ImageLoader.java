@@ -104,10 +104,10 @@ public class ImageLoader {
 		//if(cancelPotentialWork(path, imageView)){
 			BitmapWorkerTask task = new BitmapWorkerTask(imageView);
 			AsyncDrawable asyncDrawable;
-			//if(darkPlaceholder)
-				asyncDrawable = new AsyncDrawable(App_2.getAppContext().getResources(), App_2.mDarkPlaceHolderBitmap, task);
-			//else
-				//asyncDrawable = new AsyncDrawable(App_2.getAppContext().getResources(), App_2.mPlaceHolderBitmap, task);
+			if(darkPlaceholder)
+				asyncDrawable = new AsyncDrawable(App_2.getAppContext().getResources(), null, task);
+			else
+				asyncDrawable = new AsyncDrawable(App_2.getAppContext().getResources(), App_2.mPlaceHolderBitmap, task);
 			imageView.setImageDrawable(asyncDrawable);
 			//if(Utils.hasHoneycomb())
 				task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, path);

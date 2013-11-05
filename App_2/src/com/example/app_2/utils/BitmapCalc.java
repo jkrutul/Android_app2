@@ -93,6 +93,8 @@ public class BitmapCalc {
 		    Bitmap output = Bitmap.createBitmap(bitmap.getWidth(),
 		        bitmap.getHeight(), Config.ARGB_8888);
 		    Canvas canvas = new Canvas(output);
+
+		    //canvas.drawColor(0, Mode.CLEAR);
 		 
 		    final int color = 0xff424242;
 		    final Paint paint = new Paint();

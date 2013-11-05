@@ -92,41 +92,6 @@ public class AddNewImageActivity extends Activity implements OnClickListener {
 		mCategory = (EditText) findViewById(R.id.edit_category);
 		mDescText = (EditText) findViewById(R.id.edit_description);
 		mParent = (EditText) findViewById(R.id.edit_parent);
-		//mSpinner = (Spinner) findViewById(R.id.parent_spinner);
-		
-
-		
-		mSpinner.setOnItemSelectedListener(new OnItemSelectedListener() {
-			@Override
-			public void onItemSelected(AdapterView<?> parentView,
-					View selectedItemView, int position, long id) {
-				String key = mSpinner.getSelectedItem().toString();
-				if (categories_map.containsKey(key))
-					mParent.setText(String.valueOf(categories_map.get(key)));
-			}
-
-			@Override
-			public void onNothingSelected(AdapterView<?> parentView) {
-				mParent.setText(-1);
-			}
-
-		});
-		//mParentCheckBox = (CheckBox) findViewById(R.id.add_to_category);
-		mParentCheckBox
-				.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-
-					@Override
-					public void onCheckedChanged(CompoundButton buttonView,
-							boolean isChecked) {
-						if (isChecked)
-							mSpinner.setVisibility(View.VISIBLE);
-						else {
-							mSpinner.setVisibility(View.GONE);
-							mParent.setText(String.valueOf(-1));
-						}
-
-					}
-				});
 
 		mCreateCategoryCheckBox = (CheckBox) findViewById(R.id.create_category);
 		mCreateCategoryCheckBox
@@ -142,7 +107,6 @@ public class AddNewImageActivity extends Activity implements OnClickListener {
 					}
 				});
 
-		addItemsOnSpinner();
 		mImage.setClickable(true);
 		
 		if(bitmap !=null){
@@ -195,42 +159,6 @@ public class AddNewImageActivity extends Activity implements OnClickListener {
 		return activities.size() > 0;
 	}
 
-	private void addItemsOnSpinner() {
-		categories_map = new HashMap<String, Long>();
-		String[] projection = { ImageContract.Columns._ID,
-				ImageContract.Columns.CATEGORY };
-		String selection = ImageContract.Columns.CATEGORY + " IS NOT NULL";
-		Cursor c = this.getContentResolver().query(ImageContract.CONTENT_URI,
-				projection, selection, null, null);
-		c.moveToFirst();
-		while (!c.isAfterLast()) {
-			categories_map.put(c.getString(1), c.getLong(0));
-			c.moveToNext();
-		}
-		c.close();
-
-		list.addAll(categories_map.keySet());
-		ArrayAdapter<String> spinnerDataAdapter = new ArrayAdapter<String>(
-				this, android.R.layout.simple_spinner_dropdown_item) {
-			@Override
-			public View getView(int position, View converView, ViewGroup parent) {
-				View v = super.getView(position, converView, parent);
-				if (position == getCount()) {
-					((TextView) v.findViewById(android.R.id.text1))
-							.setText("Select category");
-					((TextView) v.findViewById(android.R.id.text1))
-							.setHint(getItem(getCount())); // "Hint to be displayed"
-				}
-				return v;
-			}
-		};
-
-		spinnerDataAdapter
-				.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-		for (String l : list)
-			spinnerDataAdapter.add(l);
-		mSpinner.setAdapter(spinnerDataAdapter);
-	}
 
 	@Override
 	public void onClick(View v) {

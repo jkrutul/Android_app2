@@ -7,6 +7,7 @@ import android.database.Cursor;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v4.app.ListFragment;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -30,7 +31,8 @@ import com.example.app_2.provider.SpinnerItem;
 public class ImageEditActivity extends FragmentActivity{
 	private Spinner mSpinner;
 	ArrayList<SpinnerItem> items;
-	//private final ImageListFragment ilf;
+	private ImageListFragment ilf;
+
 	
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,6 +42,10 @@ public class ImageEditActivity extends FragmentActivity{
         
         mSpinner = (Spinner) findViewById(R.id.category_select_spinner);
         addItemsOnSpinner();
+        ilf = new ImageListFragment();
+    	final FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+   	 	ft.add(R.id.fcontainer, ilf);
+        ft.commit();
         //final  com.example.app_2.fragments.ImageListFragment ilf = ( com.example.app_2.fragments.ImageListFragment) findViewById(R.id.titles);
         
     }
@@ -47,6 +53,7 @@ public class ImageEditActivity extends FragmentActivity{
 	private void addItemsOnSpinner() {
 
 		mSpinner.setOnItemSelectedListener(new OnItemSelectedListener() {
+			Bundle bundle = new Bundle();
 			@Override
 			public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int position, long id) {
 				SpinnerItem data = items.get(position);
@@ -54,14 +61,13 @@ public class ImageEditActivity extends FragmentActivity{
 					TextView tv = (TextView)selectedItemView;
 					tv.setTextColor(Color.rgb(148, 150, 148));
 				}
-				//import_to_parent_id = data.getItemId();
-				//String key = mSpinner.getSelectedItem().toString();
-				//if (categories_map.containsKey(key))
-				//	import_to_parent_id = categories_map.get(key);
+				bundle.putLong("cat_id", data.getItemId());
+				getSupportLoaderManager().restartLoader(0, bundle, ilf);
 			}
 			@Override
 			public void onNothingSelected(AdapterView<?> parentView) {
-				//import_to_parent_id = Long.valueOf(-1);
+				bundle.putLong("cat_id", -1);
+				getSupportLoaderManager().restartLoader(0, bundle, ilf);
 			}
 
 		});

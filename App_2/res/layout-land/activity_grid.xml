@@ -7,6 +7,7 @@
     <!-- The main content view -->
 
     <LinearLayout
+        android:id="@+id/main_grid"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="#ff000000"
@@ -15,46 +16,36 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="2" >
+            android:layout_weight="1"
+            android:background="#80000000" >
 
             <com.example.app_2.views.HorizontalListView
                 android:id="@+id/horizontal_listview"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
-                android:layout_weight="7"
-                android:background="#ddd" />
+                android:layout_weight="1"/>
 
-            <LinearLayout
-                android:id="@+id/rigth_button_space"
-                android:layout_width="0dp"
+            <Button
+                android:id="@+id/clear_ex_button"
+                android:layout_width="wrap_content"
                 android:layout_height="match_parent"
-                android:layout_weight="3"
-                android:orientation="horizontal" >
-                
+                android:onClick="onButtonClick"
+                android:background="@drawable/remove_button" />
 
-                <Button
-                    android:id="@+id/clear_ex_button"
-                    android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:layout_weight="1"
-                    android:onClick="onButtonClick"
-                    android:text ="clear" />
-
-                <Button
-                    android:id="@+id/play_button"
-                    android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:layout_weight="1"
-                    android:onClick="onButtonClick"
-                    android:text = "play" />
-            </LinearLayout>
+            <Button
+                android:id="@+id/play_button"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:onClick="onButtonClick"
+                android:background="@drawable/speak"
+                android:text="powiedz" />
         </LinearLayout>
 
         <FrameLayout
             android:id="@+id/content_frame"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="5" >
+            android:layout_weight="3" >
 
             <ImageView
                 android:id="@+id/expanded_image"

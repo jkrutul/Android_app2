@@ -16,7 +16,6 @@ import com.example.app_2.utils.ImageLoader;
 import com.example.app_2.views.HorizontalListView;
 
 public class ExpressionListFragment extends Fragment implements OnItemClickListener{
-	private boolean doubleBackToExitPressedOnce = false;
 	private ExpressionAdapter mAdapter;
 	private ImageGridActivity executing_actv;
 
@@ -26,6 +25,7 @@ public class ExpressionListFragment extends Fragment implements OnItemClickListe
 		executing_actv = (ImageGridActivity) getActivity();
 		mAdapter = new ExpressionAdapter(getActivity().getApplicationContext());
 		HorizontalListView listview = (HorizontalListView) getActivity().findViewById(R.id.horizontal_listview);
+		
 		
 		listview.setAdapter(mAdapter);
 		listview.setOnItemClickListener(this);

@@ -306,7 +306,7 @@ public class Images {
 				try {
 					FileOutputStream out = new FileOutputStream(
 							path_toFullScreenTHUMB);
-					bitmap.compress(Bitmap.CompressFormat.JPEG, 100, out);
+					bitmap.compress(Bitmap.CompressFormat.PNG, 100, out);
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -317,7 +317,7 @@ public class Images {
 				// thumbHeight, true);
 				try {
 					FileOutputStream out = new FileOutputStream(path_toTHUMB);
-					bitmap.compress(Bitmap.CompressFormat.JPEG, 100, out);
+					bitmap.compress(Bitmap.CompressFormat.PNG, 100, out);
 				} catch (Exception e) {
 					e.printStackTrace();
 				}

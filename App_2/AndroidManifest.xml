@@ -5,7 +5,7 @@
     android:versionName="1.0" >
 
     <uses-sdk
-        android:minSdkVersion="10"
+        android:minSdkVersion="11"
         android:targetSdkVersion="17" />
     
     
@@ -123,6 +123,14 @@
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.example.app_2.activities.ImageEditActivity" />
+        </activity>
+       
+        <activity
+            android:name="com.example.app_2.activities.AddUserActivity"
+            android:label="AddUserActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.example.app_2.activities.MainActivity" />
         </activity>
         
         

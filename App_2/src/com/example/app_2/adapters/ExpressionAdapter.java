@@ -11,10 +11,12 @@ import android.text.TextUtils;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
+import android.view.ViewGroup.LayoutParams;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
 
 import com.example.app_2.App_2;
+import com.example.app_2.R;
 import com.example.app_2.activities.ImageGridActivity;
 import com.example.app_2.models.ImageObject;
 import com.example.app_2.storage.Storage;
@@ -26,9 +28,11 @@ public class ExpressionAdapter extends BaseAdapter{
 	private boolean doubleBackToExitPressedOnce = false;
 	public static List<ImageObject> dataObjects = new LinkedList<ImageObject>();
 	private Context context;
+    LayoutParams params;
 	
 	public ExpressionAdapter(Context context){
 		this.context = context;
+		 params = new LayoutParams(100, 100);
 	}
 	
 	
@@ -40,15 +44,17 @@ public class ExpressionAdapter extends BaseAdapter{
         ImageView imageView;
         if (convertView == null) { // if it's not recycled, instantiate and initialize
             imageView = new RecyclingImageView(this.context);
+
+            imageView.setLayoutParams(params);
             //imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
-            //imageView.setLayoutParams(mImageViewLayoutParams);
         } else { // Otherwise re-use the converted view
             imageView = (ImageView) convertView;
+            imageView.setLayoutParams(params);
         }
 
         // Finally load the image asynchronously into the ImageView, this also takes care of
         // setting a placeholder image while the background thread runs
-        ImageLoader.loadBitmap(Storage.getThumbsDir()+File.separator+dataObjects.get(position).getImageName(), imageView, true);
+        ImageLoader.loadBitmap(Storage.getThumbsDir()+File.separator+dataObjects.get(position).getImageName(), imageView, false);
         imageView.setClickable(true);
         
         

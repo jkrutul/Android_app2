@@ -1,22 +1,24 @@
 package com.example.app_2.activities;
 
-import java.io.File;
-
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.ActionBar;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.WallpaperManager;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
+import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.LinearLayout;
 import android.widget.ShareActionProvider;
 
+import com.example.app_2.App_2;
 import com.example.app_2.R;
 import com.example.app_2.provider.Images;
 import com.example.app_2.storage.Database;
@@ -30,7 +32,13 @@ public class MainActivity extends Activity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+
 		setContentView(R.layout.activity_main);
+
+		LinearLayout ll = (LinearLayout) findViewById(R.id.main_activity);
+		ll.setBackgroundDrawable(App_2.wallpaperDrawable);
+		//ll.setBackground(wallpaperDrawable);
+
 		ActionBar actionBar = getActionBar();
 		actionBar.setSubtitle("mytest");
 		actionBar.setTitle("vogella.com"); 
