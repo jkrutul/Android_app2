@@ -331,8 +331,7 @@ public class ImageDetailsFragment extends Fragment{
 
 		if (row_id == null && this.newFileName!=null) {
 			values.put(ImageContract.Columns.PATH, this.newFileName);
-			imageUri = executing_activity.getContentResolver().insert(
-					ImageContract.CONTENT_URI, values);
+			imageUri = executing_activity.getContentResolver().insert(ImageContract.CONTENT_URI, values);
 		} else {
 			executing_activity.getContentResolver().update(imageUri, values, null,
 					null);

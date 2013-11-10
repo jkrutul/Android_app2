@@ -8,7 +8,7 @@
         android:layout_height="wrap_content"
         android:orientation="vertical" >
 
-        <ImageView
+        <Button
             android:id="@+id/user_image"
             android:layout_width="match_parent"
             android:layout_height="300dp"
@@ -16,7 +16,9 @@
             android:layout_marginLeft="4dp"
             android:layout_marginRight="4dp"
             android:layout_marginTop="4dp"
+            android:clickable="true"
             android:background="@drawable/image_border"
+            android:text="wybierz obrazek"
             android:src="@drawable/camera_icon" />
 
         <EditText
@@ -35,14 +37,37 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:checked="true"
-                android:text="dziewczyna" />
+                android:text="chłopak" />
 
             <RadioButton
                 android:id="@+id/radioFemale"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="chłopak" />
+                android:text="dziewczyna" />
         </RadioGroup>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal" >
+
+            <Button
+                android:id="@+id/adduser_button"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:enabled="false"
+                android:text="Dodaj"
+                android:onClick="onButtonClick" />
+
+            <Button
+                android:id="@+id/cancel_adduser_button"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Anuluj"
+                 android:onClick="onButtonClick" />
+        </LinearLayout>
     </LinearLayout>
 
 </ScrollView>

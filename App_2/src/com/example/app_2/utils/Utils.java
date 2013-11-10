@@ -20,12 +20,16 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.URISyntaxException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Map;
 import java.util.Map.Entry;
 
 import android.annotation.TargetApi;
+import android.content.Context;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.Build;
 import android.os.StrictMode;
 
@@ -155,4 +159,26 @@ public class Utils {
         }
         return null;
     }
+
+	public static String getPath(Context context, Uri uri) throws URISyntaxException {
+	    if ("content".equalsIgnoreCase(uri.getScheme())) {
+	        String[] projection = { "_data" };
+	        Cursor cursor = null;
+
+	        try {
+	            cursor = context.getContentResolver().query(uri, projection, null, null, null);
+	            int column_index = cursor.getColumnIndexOrThrow("_data");
+	            if (cursor.moveToFirst()) {
+	                return cursor.getString(column_index);
+	            }
+	        } catch (Exception e) {
+	            // Eat it
+	        }
+	    }
+	    else if ("file".equalsIgnoreCase(uri.getScheme())) {
+	        return uri.getPath();
+	    }
+
+	    return null;
+	} 
 }

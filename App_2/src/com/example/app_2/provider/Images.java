@@ -57,8 +57,7 @@ public class Images {
 																			// task
 		List<String> fileNames = new LinkedList<String>();
 		ContentProviderResult[] opResults = null;
-		fileNames = getImagesFileNames(Storage.getFilesNamesFromDir(new File(
-				path)));
+		fileNames = getImagesFileNames(Storage.getFilesNamesFromDir(new File(path)));
 
 		ArrayList<ContentProviderOperation> batchOps = new ArrayList<ContentProviderOperation>();
 
@@ -71,15 +70,11 @@ public class Images {
 		}
 
 		try {
-			opResults = App_2.getAppContext().getContentResolver()
-					.applyBatch(ImageContract.AUTHORITY, batchOps);
-
+			opResults = App_2.getAppContext().getContentResolver().applyBatch(ImageContract.AUTHORITY, batchOps);
 			batchOps.clear();
 		} catch (RemoteException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (OperationApplicationException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
@@ -95,16 +90,14 @@ public class Images {
 		for (Uri image : imageUris)
 			image_fks[i++] = Long.valueOf(image.getLastPathSegment());
 
-		for (Long image_fk : image_fks) { // dodanie obrazków do s³ownika o
-											// identyfikatorze -1
+		for (Long image_fk : image_fks) { // dodanie obrazków do s³ownika o identyfikatorze -1
 			batchOps.add(ContentProviderOperation
 					.newInsert(ParentContract.CONTENT_URI)
 					.withValue(ParentContract.Columns.IMAGE_FK, image_fk)
 					.withValue(ParentContract.Columns.PARENT_FK, -1).build());
 		}
 		try {
-			opResults = App_2.getAppContext().getContentResolver()
-					.applyBatch(ParentContract.AUTHORITY, batchOps);
+			opResults = App_2.getAppContext().getContentResolver().applyBatch(ParentContract.AUTHORITY, batchOps);
 			batchOps.clear();
 		} catch (RemoteException e) {
 			e.printStackTrace();
@@ -229,80 +222,41 @@ public class Images {
 			int count;
 			String path = arg0[0];
 			String parent_id = arg0[1];
-			// - przejrzeæ katalog
-			// - sprawdziæ czy wygenerowane miniaturki dla wpisów
-			// Cursor cursor =
-			// executing_activity.getContentResolver().query(ImageContract.CONTENT_URI,
-			// null, null, null,null);
-			// cursor.moveToFirst();
 
 			imgLastModified = Storage.getImagesDir().lastModified();
-			// if(imgLastModified> img_dir_last_read){ // katalog zosta³
-			// zmodyfikowany
-			// if(true){
-			Log.w(LOG_TAG,
-					"images in directory has changed:"
-							+ String.valueOf(img_dir_last_read) + "<"
-							+ String.valueOf(imgLastModified));
-			// executing_activity.getContentResolver().delete(ImageContract.CONTENT_URI,
-			// null, null);
 
-			// List<String> fileNames =
-			// getImagesFileNames(Storage.getChangedFilesFromDir(Storage.getImagesDir()));
-			List<String> fileNames = getImagesFileNames(Storage
-					.getFilesNamesFromDir(new File(path)));
-			// List<String> fileNames =
-			// getImagesFileNames(Storage.getFilesNamesFromDir(Storage.getImagesDir()));
-
-			// ContentResolver contentRes=
-			// App_2.getAppContext().getContentResolver();
-			// ContentValues cv = new ContentValues();
-			// cv.put(ImageContract.Columns.PARENTS, -1);
+			List<String> fileNames = getImagesFileNames(Storage.getFilesNamesFromDir(new File(path)));
 
 			// GENERUJ MINIATURKI
-			String path_toIMG, path_toTHUMB, path_toFullScreenTHUMB;
+			String path_toIMG, path_toTHUMB, path_toFullScreenTHUMB, app_thumb_dir, app_fc_thumb_dir;
 			Bitmap bitmap = null;
-			// Cursor c =
-			// executing_activity.getContentResolver().query(ImageContract.CONTENT_URI,
-			// null, null, null,null);
-			// c.moveToFirst();
-			// List<ImageObject> all_images = db.getAllImages();
-			// int thumbWidth=ImageLoader.mWidth;
-			// int thumbHeight = ImageLoader.mHeight;
-			int thumbWidth, thumbHeight;
-			thumbWidth = App_2.getAppContext().getResources()
-					.getDimensionPixelSize(R.dimen.image_thumbnail_size);
-			thumbHeight = App_2.getAppContext().getResources()
-					.getDimensionPixelSize(R.dimen.image_thumbnail_size);
 
-			// full screen thumbs
-			WindowManager wm = (WindowManager) App_2.getAppContext()
-					.getSystemService(Context.WINDOW_SERVICE);
-			Display display = wm.getDefaultDisplay();
-			int maxWidth = display.getWidth();
-			int maxHeight = display.getHeight();
+			int thumbWidth, thumbHeight, maxWidth, maxHeight;
+			thumbWidth = App_2.getAppContext().getResources().getDimensionPixelSize(R.dimen.image_thumbnail_size);
+			thumbHeight = App_2.getAppContext().getResources().getDimensionPixelSize(R.dimen.image_thumbnail_size);
+
+			maxWidth = App_2.getMaxWidth();
+			maxHeight = App_2.getMaxHeight();
 
 			Log.i(LOG_TAG, "thumbs will be w:" + thumbWidth + " h:"
 					+ thumbHeight);
 			Log.i(LOG_TAG, "max thumbs will be w:" + maxWidth + " h:"
 					+ maxHeight);
-			// count = all_images.size();
+
 			count = fileNames.size();
 			int i = 0;
 
-			// File f;
+			app_thumb_dir = Storage.getThumbsDir() + File.separator;
+			app_fc_thumb_dir = Storage.getThumbsMaxDir() + File.separator;
+			
 			for (String filename : fileNames) {
 				publishProgress((int) ((i / (float) count) * 100));
 				path_toIMG = path + File.separator + filename;
-				// f = new File(path_toIMG);
-				path_toTHUMB = Storage.getThumbsDir() + File.separator
-						+ filename;
-				path_toFullScreenTHUMB = Storage.getThumbsMaxDir()
-						+ File.separator + filename;
+				path_toTHUMB = app_thumb_dir+ filename;
+				path_toFullScreenTHUMB = app_fc_thumb_dir + filename;
 
-				bitmap = BitmapCalc.decodeSampleBitmapFromFile(path_toIMG,
-						maxWidth, maxHeight); // mo¿e byæ null
-				// Log.w(LOG_TAG, bitmap.getHeight() + " " +bitmap.getWidth());
+				bitmap = BitmapCalc.decodeSampleBitmapFromFile(path_toIMG, maxWidth, maxHeight); // mo¿e byæ null
+
 				try {
 					FileOutputStream out = new FileOutputStream(
 							path_toFullScreenTHUMB);
@@ -311,8 +265,7 @@ public class Images {
 					e.printStackTrace();
 				}
 
-				bitmap = BitmapCalc.decodeSampleBitmapFromFile(
-						path_toFullScreenTHUMB, thumbWidth, thumbHeight);
+				bitmap = BitmapCalc.decodeSampleBitmapFromFile(path_toFullScreenTHUMB, thumbWidth, thumbHeight);
 				// bitmap = Bitmap.createScaledBitmap(bitmap, thumbWidth,
 				// thumbHeight, true);
 				try {
@@ -322,23 +275,14 @@ public class Images {
 					e.printStackTrace();
 				}
 
-				// f.delete();
-
 				i++;
-
-				// cv.put(ImageContract.Columns.PATH, filename);
-				// contentRes.insert(ImageContract.CONTENT_URI, cv);
-
-				// Escape early if cancel() is called
 				if (isCancelled())
 					break;
 
 			}
 
 			img_dir_last_read = Storage.getImagesDir().lastModified();
-			Storage.saveToSharedPreferences("imgDirLastRead",
-					Long.toString(img_dir_last_read), "imgDirLastRead",
-					App_2.getAppContext(), Context.MODE_PRIVATE);
+			Storage.saveToSharedPreferences("imgDirLastRead", Long.toString(img_dir_last_read), "imgDirLastRead",App_2.getAppContext(), Context.MODE_PRIVATE);
 			addImagesToDatabase(path, parent_id);
 
 			// cursor.close();
@@ -382,11 +326,8 @@ public class Images {
 					.getDimensionPixelSize(R.dimen.image_thumbnail_size);
 
 			// full screen thumbs
-			WindowManager wm = (WindowManager) App_2.getAppContext()
-					.getSystemService(Context.WINDOW_SERVICE);
-			Display display = wm.getDefaultDisplay();
-			int maxWidth = display.getWidth();
-			int maxHeight = display.getHeight();
+			int maxWidth = App_2.getMaxWidth();
+			int maxHeight = App_2.getMaxHeight();
 
 			Log.i(LOG_TAG, "thumbs will be w:" + thumbWidth + " h:"
 					+ thumbHeight);
@@ -402,7 +343,7 @@ public class Images {
 			try {
 				FileOutputStream out = new FileOutputStream(
 						path_toFullScreenTHUMB);
-				bitmap.compress(Bitmap.CompressFormat.JPEG, 100, out);
+				bitmap.compress(Bitmap.CompressFormat.PNG, 100, out);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -411,7 +352,7 @@ public class Images {
 					path_toFullScreenTHUMB, thumbWidth, thumbHeight);
 			try {
 				FileOutputStream out = new FileOutputStream(path_toTHUMB);
-				bitmap.compress(Bitmap.CompressFormat.JPEG, 100, out);
+				bitmap.compress(Bitmap.CompressFormat.PNG, 100, out);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}

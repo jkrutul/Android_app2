@@ -44,6 +44,13 @@
             android:layout_height="wrap_content"
             android:onClick="onClick"
             android:text="edit_activity" />
+        
+        <Button
+            android:id="@+id/users_activity"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="onClick"
+            android:text="users_activity" />
     </LinearLayout>
 
 </ScrollView>

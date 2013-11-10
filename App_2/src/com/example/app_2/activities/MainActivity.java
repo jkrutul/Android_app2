@@ -109,6 +109,10 @@ public class MainActivity extends Activity {
 			intent = new Intent(this, ImageEditActivity.class);
 			startActivity(intent);
 			break;
+		
+		case R.id.users_activity:
+			intent = new Intent(this, UsersActivity.class);
+			startActivity(intent);
 
 		default:
 			intent = null;

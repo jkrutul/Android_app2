@@ -366,13 +366,13 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 				   ImageContract.Columns.PATH,
 				   ImageContract.Columns.CATEGORY};
 				// Fields on the UI to which we map
-		int[] to = new int[] { 0, R.id.category_image, R.id.category_name };
+		int[] to = new int[] { 0, R.id.icon, R.id.category };
 		
-        SimpleCursorAdapter adapter = new SimpleCursorAdapter(getApplicationContext(), R.layout.drawer_row, c, from,to, 0);
+        SimpleCursorAdapter adapter = new SimpleCursorAdapter(getApplicationContext(), R.layout.image_row /*drawer_row */, c, from,to, 0);
     	adapter.setViewBinder(new SimpleCursorAdapter.ViewBinder(){
 			   /** Binds the Cursor column defined by the specified index to the specified view */
 			   public boolean setViewValue(View view, Cursor cursor, int columnIndex){
-			       if(view.getId() == R.id.category_image){
+			       if(view.getId() == R.id.icon/*category_image*/){
 						 String path = Images.getImageThumbsPath(cursor.getString(cursor.getColumnIndex(ImageContract.Columns.PATH)));
 						 ImageLoader.loadBitmap(path, (ImageView) view, true);
 			           return true; //true because the data was bound to the view

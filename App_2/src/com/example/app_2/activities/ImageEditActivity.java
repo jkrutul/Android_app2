@@ -111,6 +111,10 @@ public class ImageEditActivity extends FragmentActivity{
 			i = new Intent(this, AddImagesFromFolderActivity.class);
 			startActivity(i);
 			return true;
+		case R.id.adduser:
+			i = new Intent(this, AddUserActivity.class);
+			startActivity(i);
+			return true;
 		}
 		return super.onOptionsItemSelected(item);
 	}

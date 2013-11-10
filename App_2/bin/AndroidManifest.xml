@@ -133,6 +133,14 @@
                 android:value="com.example.app_2.activities.MainActivity" />
         </activity>
         
+        <activity
+            android:name="com.example.app_2.activities.UsersActivity"
+            android:label="UsersActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.example.app_2.activities.MainActivity" />
+        </activity>
+        
         
        <provider 
            android:name= "com.example.app_2.contentprovider.ImageContentProvider"
@@ -150,6 +158,11 @@
        <provider 
            android:name= "com.example.app_2.contentprovider.ParentsOfImageContentProvider"
            android:authorities="com.example.app_2.contentprovider.parentsofimage">
+       </provider>
+       
+      <provider 
+           android:name= "com.example.app_2.contentprovider.UserContentProvider"
+           android:authorities="com.example.app_2.contentprovider.user">
        </provider>
        
        <service

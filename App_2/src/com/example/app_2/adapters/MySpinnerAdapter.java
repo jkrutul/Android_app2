@@ -22,6 +22,9 @@ public class MySpinnerAdapter extends ArrayAdapter<SpinnerItem> {
 	private Activity context;
 	ImageLoader il;
 	
+	
+
+	
     public MySpinnerAdapter(Activity context, int resource, List<SpinnerItem> objects) {
         super(context, resource, objects);
         this.items = objects;
@@ -66,9 +69,8 @@ public class MySpinnerAdapter extends ArrayAdapter<SpinnerItem> {
 				ImageView imageView = (ImageView) row.findViewById(R.id.icon);
 				
 				categoryName.setText(item.getItemString());
-				ImageLoader.loadBitmap(Images.getImageThumbsPath(item.getPath()), imageView, false);
-				
-
+				if(item.getPath()!=null)
+					ImageLoader.loadBitmap(Images.getImageThumbsPath(item.getPath()), imageView, false);
     		}
     	}
     	return row;    	
@@ -76,7 +78,7 @@ public class MySpinnerAdapter extends ArrayAdapter<SpinnerItem> {
     
     @Override
     public int getCount() {
-        return super.getCount() - 1; // This makes the trick: do not show last item
+        return super.getCount(); // This makes the trick: do not show last item
     }
 
     @Override

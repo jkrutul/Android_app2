@@ -29,12 +29,19 @@
                 android:onClick="showFileChooser"
                 android:text="Wybierz folder" />
         </LinearLayout>
-
+		<!--
+        <Spinner
+            android:id="@+id/user_spinner"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/upper_layout" />
+         -->
+        
         <Spinner
             android:id="@+id/parent_spinner"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:layout_below="@id/upper_layout" />
+            android:layout_below="@id/user_spinner" />
 
         <Button
             android:id="@+id/import_button"

@@ -46,6 +46,7 @@ public class ImageContentProvider extends ContentProvider{
 			break;
 		case IMAGE_ID:
 			whereClause = ImageContract.Columns._ID + "="+id+(!TextUtils.isEmpty(selection) ? " AND ("+selection+')' : "");
+			rowsDeleted = db.delete(ImageContract.TABLE_IMAGE, whereClause, selectionArgs);
 		default:
 		    throw new IllegalArgumentException("Unknown URI: " + uri);
 		}
@@ -115,8 +116,7 @@ public class ImageContentProvider extends ContentProvider{
 	}
 
 	@Override
-	public int update(Uri uri, ContentValues values, String selection,
-			String[] selectionArgs) {
+	public int update(Uri uri, ContentValues values, String selection, String[] selectionArgs) {
 		SQLiteDatabase db = mOpenHelper.getWritableDatabase();
 		int rowsUpdated = 0;
 		String id = uri.getLastPathSegment();

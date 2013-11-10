@@ -24,6 +24,7 @@ import android.util.Log;
 import com.example.app_2.App_2;
 import com.example.app_2.contentprovider.ImageContract;
 import com.example.app_2.contentprovider.ParentContract;
+import com.example.app_2.contentprovider.UserContract;
 import com.example.app_2.models.ImageObject;
 import com.example.app_2.utils.Utils;
 
@@ -56,7 +57,8 @@ public class Database {
 			ImageContract.Columns.MODIFIED+ " DATETIME, "+
 			ImageContract.Columns.TIME_USED+ " INTEGER DEFAULT 0 ,"+
 			ImageContract.Columns.LAST_USED+ " DATETIME, "+
-			ImageContract.Columns.CATEGORY+ " TEXT "+
+			ImageContract.Columns.CATEGORY+ " TEXT, "+
+			ImageContract.Columns.AUTHOR_FK+ " INTEGER "+
 	");";
 	
 	private static final String TABLE_PARENT_CREATE = "CREATE TABLE "+
@@ -66,6 +68,16 @@ public class Database {
 			ParentContract.Columns.PARENT_FK+" INTEGER DEFAULT 0, "+
 		    "FOREIGN KEY("+ParentContract.Columns.PARENT_FK+") REFERENCES "+ImageContract.TABLE_IMAGE+"("+ImageContract.Columns._ID+"), "+
 			"FOREIGN KEY("+ParentContract.Columns.IMAGE_FK+") REFERENCES "+ ImageContract.TABLE_IMAGE+"("+ImageContract.Columns._ID+") " +
+	");";
+	
+	private static final String TABLE_USER_CREATE = "CREATE TABLE "+
+			UserContract.TABLE_USER+" ("+
+			UserContract.Columns._ID+" INTEGER PRIMARY KEY AUTOINCREMENT,"+
+			UserContract.Columns.USERNAME+" TEXT, "+
+			UserContract.Columns.IMG_FILENAME+" TEXT, "+
+			UserContract.Columns.ISMALE+" INTEGER DEFAULT 1, "+
+			UserContract.Columns.ROOT_FK+" INTEGER, "+
+		    "FOREIGN KEY("+UserContract.Columns.ROOT_FK+") REFERENCES "+ImageContract.TABLE_IMAGE+"("+ImageContract.Columns._ID+") "+
 	");";
 	
 		
@@ -78,6 +90,7 @@ public class Database {
 		
 		db.execSQL(drop_table+ParentContract.TABLE_PARENT);
 		db.execSQL(drop_table+ImageContract.TABLE_IMAGE);
+		db.execSQL(drop_table+UserContract.TABLE_USER);
 		//db.execSQL("drop index if exists parent_idx");
 		dbHelper.onCreate(db);
 	}
@@ -477,6 +490,7 @@ public class Database {
 			try{
 				_db.execSQL(TABLE_IMAGES_CREATE);
 				_db.execSQL(TABLE_PARENT_CREATE);
+				_db.execSQL(TABLE_USER_CREATE);
 				//_db.execSQL(CREATE_UNIQUE_INDEX_ON_PARENT);
 		
 			}catch(SQLException ex){
@@ -493,6 +507,7 @@ public class Database {
 			db.execSQL(drop_table+ImageContract.TABLE_IMAGE);
 			//db.execSQL("drop index if exists parent_idx");
 			db.execSQL(drop_table+ParentContract.TABLE_PARENT);
+			db.execSQL(drop_table+UserContract.TABLE_USER);
 			onCreate(db);
 			
 		}
