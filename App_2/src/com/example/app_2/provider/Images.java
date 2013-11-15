@@ -50,17 +50,65 @@ public class Images {
 	public static long imgLastModified;
 	private static final String LOG_TAG = "Images";
 
-	public static void addImagesToDatabase(String path, String parent_id) { // TODO
-																			// zamieniæ
-																			// na
-																			// async
-																			// task
+	private static Long[] getIdsFromContentProviderResult(ContentProviderResult cpr[]){
+		Uri[] uris = null;
+		Long[] ids = null;
+		if (cpr != null) {
+			uris = new Uri[cpr.length];
+			for (int index = 0; index < cpr.length; index++)
+				uris[index] = cpr[index].uri;
+			ids = new Long[uris.length];
+			int i = 0;
+			for (Uri uri : uris)
+				ids[i++] = Long.valueOf(uri.getLastPathSegment());
+		}
+		return ids;
+	}
+	
+	private static void addToDict(Long[] ids, Long[] parents){
+		ContentProviderResult[] opResults = null;
+		ArrayList<ContentProviderOperation> batchOps = new ArrayList<ContentProviderOperation>();
+		for (Long image_fk : ids) { 								// dodanie obrazków do s³ownika o identyfikatorze -1
+			batchOps.add(ContentProviderOperation
+					.newInsert(ParentContract.CONTENT_URI)
+					.withValue(ParentContract.Columns.IMAGE_FK, image_fk)
+					.withValue(ParentContract.Columns.PARENT_FK, -1).build());
+		}
+		try {
+			opResults = App_2.getAppContext().getContentResolver().applyBatch(ParentContract.AUTHORITY, batchOps);
+			batchOps.clear();
+		} catch (RemoteException e) {
+			e.printStackTrace();
+		} catch (OperationApplicationException e) {
+			e.printStackTrace();
+		}
+		for(Long p : parents){
+			for (Long image_fk : ids) { 								// dodanie do wszystkich kategorii
+				batchOps.add(ContentProviderOperation
+						.newInsert(ParentContract.CONTENT_URI)
+						.withValue(ParentContract.Columns.IMAGE_FK, image_fk)
+						.withValue(ParentContract.Columns.PARENT_FK, p).build());
+			}
+			try {
+				opResults = App_2.getAppContext().getContentResolver().applyBatch(ParentContract.AUTHORITY, batchOps);
+				batchOps.clear();
+			} catch (RemoteException e) {
+				e.printStackTrace();
+			} catch (OperationApplicationException e) {
+				e.printStackTrace();
+			}
+		}
+
+		
+	}
+	
+	public static void addImagesToDatabase(String path, String parent_id) {
 		List<String> fileNames = new LinkedList<String>();
 		ContentProviderResult[] opResults = null;
 		fileNames = getImagesFileNames(Storage.getFilesNamesFromDir(new File(path)));
 
 		ArrayList<ContentProviderOperation> batchOps = new ArrayList<ContentProviderOperation>();
-
+		/* DODANIE OBRAZKA DO BAZY I POWI¥ZANIE ZE S£OWNIKIEM */
 		for (String filename : fileNames) {
 			batchOps.add(ContentProviderOperation
 					.newInsert(ImageContract.CONTENT_URI)
@@ -77,7 +125,7 @@ public class Images {
 		} catch (OperationApplicationException e) {
 			e.printStackTrace();
 		}
-
+/*
 		Uri[] imageUris = null;
 		if (opResults != null) {
 			imageUris = new Uri[opResults.length];
@@ -89,8 +137,12 @@ public class Images {
 		int i = 0;
 		for (Uri image : imageUris)
 			image_fks[i++] = Long.valueOf(image.getLastPathSegment());
-
-		for (Long image_fk : image_fks) { // dodanie obrazków do s³ownika o identyfikatorze -1
+*/
+		Long parents[] = new Long[1];
+		parents[0]=Long.valueOf(parent_id);
+		addToDict(getIdsFromContentProviderResult(opResults), parents);
+		/*
+		for (Long image_fk : getIdsFromContentProviderResult(opResults)) { // dodanie obrazków do s³ownika o identyfikatorze -1
 			batchOps.add(ContentProviderOperation
 					.newInsert(ParentContract.CONTENT_URI)
 					.withValue(ParentContract.Columns.IMAGE_FK, image_fk)
@@ -104,18 +156,16 @@ public class Images {
 		} catch (OperationApplicationException e) {
 			e.printStackTrace();
 		}
-
-		if (parent_id != null) {
-			for (Long image_fk : image_fks) { // dodanie do wybranego drzewa
+		
+		if(parent_id != null){
+			for (Long image_fk : getIdsFromContentProviderResult(opResults)) {
 				batchOps.add(ContentProviderOperation
 						.newInsert(ParentContract.CONTENT_URI)
 						.withValue(ParentContract.Columns.IMAGE_FK, image_fk)
-						.withValue(ParentContract.Columns.PARENT_FK,
-								Long.valueOf(parent_id)).build());
+						.withValue(ParentContract.Columns.PARENT_FK, parent_id).build());
 			}
 			try {
-				opResults = App_2.getAppContext().getContentResolver()
-						.applyBatch(ParentContract.AUTHORITY, batchOps);
+				opResults = App_2.getAppContext().getContentResolver().applyBatch(ParentContract.AUTHORITY, batchOps);
 				batchOps.clear();
 			} catch (RemoteException e) {
 				e.printStackTrace();
@@ -123,7 +173,42 @@ public class Images {
 				e.printStackTrace();
 			}
 		}
+		*/
 
+		/* DODANIE OBRAZKA DO WYBRANYCH KATEGORII */
+		if (parent_id != null) {// TODO zmieniæ na for i dodawaæ obrazki po tablicy rodziców
+			for (String filename : fileNames) {
+				batchOps.add(ContentProviderOperation
+						.newInsert(ImageContract.CONTENT_URI)
+						.withValue(ImageContract.Columns.PATH, filename)
+						.withValue(ImageContract.Columns.DESC,
+								Utils.cutExtention(filename)).build());
+			}
+			try {
+				opResults = App_2.getAppContext().getContentResolver().applyBatch(ImageContract.AUTHORITY, batchOps);
+				batchOps.clear();
+			} catch (RemoteException e) {
+				e.printStackTrace();
+			} catch (OperationApplicationException e) {
+				e.printStackTrace();
+			}
+			
+				for (Long image_fk :getIdsFromContentProviderResult(opResults)) { // dodanie do wybranego drzewa
+					batchOps.add(ContentProviderOperation
+							.newInsert(ParentContract.CONTENT_URI)
+							.withValue(ParentContract.Columns.IMAGE_FK, image_fk)
+							.withValue(ParentContract.Columns.PARENT_FK,
+									Long.valueOf(parent_id)).build());
+				}
+				try {
+					opResults = App_2.getAppContext().getContentResolver().applyBatch(ParentContract.AUTHORITY, batchOps);
+					batchOps.clear();
+				} catch (RemoteException e) {
+					e.printStackTrace();
+				} catch (OperationApplicationException e) {
+					e.printStackTrace();
+				}
+		}
 	}
 
 	public static List<String> getImagesFileNames(List<String> fileNames) {

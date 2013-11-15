@@ -23,21 +23,21 @@
                 android:id="@+id/horizontal_listview"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
-                android:layout_weight="5"/>
+                android:layout_weight="5" />
 
             <Button
                 android:id="@+id/clear_ex_button"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
-                android:onClick="onButtonClick"
-                android:background="@drawable/remove_button" />
+                android:background="@drawable/remove_button"
+                android:onClick="onButtonClick" />
 
             <Button
                 android:id="@+id/play_button"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
-                android:onClick="onButtonClick"
                 android:background="@drawable/speak"
+                android:onClick="onButtonClick"
                 android:text="powiedz" />
         </LinearLayout>
 

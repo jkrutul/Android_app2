@@ -41,10 +41,12 @@ import android.support.v4.app.FragmentTransaction;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v4.widget.SimpleCursorAdapter;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.View.OnKeyListener;
 import android.widget.AdapterView;
 import android.widget.ImageView;
 import android.widget.ListView;
@@ -80,6 +82,8 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
     public ImageLoader imageLoader;
     public ExpressionListFragment elf;
     
+    private ImageGridFragment igf;
+    
 	public static final int MY_DATA_CHECK_CODE = 1;
     
     
@@ -89,6 +93,8 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 	@Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+       
+        igf = new ImageGridFragment();
        
         
         //getWindow().requestFeature(Window.FEATURE_ACTION_BAR_OVERLAY);
@@ -110,15 +116,15 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
         // za³adowanie do content_frame ImageGridFragment
         if (getSupportFragmentManager().findFragmentByTag(GRID_FRAGMENT_TAG) == null) {
             final FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
-            ft.add(R.id.content_frame, new ImageGridFragment(), GRID_FRAGMENT_TAG);
+            ft.add(R.id.content_frame, igf, GRID_FRAGMENT_TAG);
             ft.commit();
         }
         
 
         	elf= new ExpressionListFragment();
-        	final FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
-        	 ft.replace(R.id.horizontal_listview, elf);
-             ft.commit();
+            final FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+        	ft.replace(R.id.horizontal_listview, elf);
+            ft.commit();
         
 
     }
@@ -392,26 +398,17 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 	/*
 	@Override
 	public void onBackPressed() {
-		//super.onBackPressed();
-		/*
-	    new AlertDialog.Builder(this)
-	        .setTitle("Really Exit?")
-	        .setMessage("Are you sure you want to exit?")
-	        .setNegativeButton(android.R.string.no, null)
-	        .setPositiveButton(android.R.string.yes, new OnClickListener() {
-
-				@Override
-				public void onClick(DialogInterface dialog, int which) {
-					overridePendingTransition  (R.anim.right_slide_in, R.anim.right_slide_out);
-					ImageGridActivity.super.onBackPressed();
-					
-					
-				}
-	        }).create().show();
-	     
-		this.finish();
-		overridePendingTransition(R.anim.right_slide_in, R.anim.right_slide_out);
-
+		super.onBackPressed();
+		igf.getView().setOnKeyListener( new OnKeyListener(){
+		    @Override
+		    public boolean onKey( View v, int keyCode, KeyEvent event ){
+		        if( keyCode == KeyEvent.KEYCODE_BACK )
+		            return true;
+		        return false;
+		    }
+		} );
 	}
-*/
+	 */
+	
+	
 }

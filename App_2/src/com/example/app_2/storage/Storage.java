@@ -61,7 +61,7 @@ public class Storage {
 	}
 	
 	public static File createTempImageFile(){
-		String JPEG_FILE_PREFIX = "tmp";
+		String JPEG_FILE_PREFIX = "img";
 		String JPEG_FILE_SUFIX = ".jpg";
 		// create a image file name
 		String timeStamp = new SimpleDateFormat("yyyyyMMdd_HHmmss")

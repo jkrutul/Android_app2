@@ -23,16 +23,21 @@ import java.io.InputStreamReader;
 import java.net.URISyntaxException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
 import android.annotation.TargetApi;
 import android.content.Context;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
 import android.os.StrictMode;
 
+import com.example.app_2.App_2;
 import com.example.app_2.activities.ImageGridActivity;
 
 /**
@@ -136,7 +141,13 @@ public class Utils {
         }
         return cacheKey;
     }
-    
+	
+    public static boolean verifyResolves(Intent intent) {
+		PackageManager packageManager = App_2.getAppContext().getPackageManager();
+		List<ResolveInfo> activities = packageManager.queryIntentActivities(
+				intent, PackageManager.PERMISSION_GRANTED);
+		return activities.size() > 0;
+	}
     
     private static String bytesToHexString(byte[] bytes) {
         // http://stackoverflow.com/questions/332079

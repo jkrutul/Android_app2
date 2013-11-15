@@ -29,12 +29,14 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.View.OnLongClickListener;
 import android.view.ViewGroup;
 import android.view.ViewGroup.LayoutParams;
 import android.view.ViewTreeObserver;
 import android.view.animation.DecelerateInterpolator;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemLongClickListener;
 import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.ListView;
@@ -170,6 +172,56 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
         mGridView.setAdapter(adapter);
 	    mGridView.setOnItemClickListener(this);
 	    mGridView.setMultiChoiceModeListener(this);
+	    mGridView.setOnItemLongClickListener(new OnItemLongClickListener() {
+	    	public boolean onItemLongClick(AdapterView<?> parent, final  View thumbView, int position, long i) {
+	        	/*
+	            if (mActionMode != null) {
+	                return false;
+	            }
+
+	            // Start the CAB using the ActionMode.Callback defined above
+	            mActionMode = getActivity().startActionMode(mActionModeCallback);
+	            view.setSelected(true);
+	            return true;
+	            */
+	        	
+	    		Cursor c = (Cursor) adapter.getItem(position);						
+	    		ImageObject img_object= new ImageObject();
+	    		img_object.setImageName(c.getString(c.getColumnIndex(ImageContract.Columns.PATH)));
+	    		img_object.setDescription( c.getString(c.getColumnIndex(ImageContract.Columns.DESC)));
+	    		img_object.setCategory(c.getString(c.getColumnIndex(ImageContract.Columns.CATEGORY)));
+	    		    // Load the high-resolution "zoomed-in" image.
+	    			if(expandedImageView!=null){
+	    				expandedImageView.bringToFront();
+	    				 String path = Images.getImageFullScreenThumbsPath(img_object.getImageName());
+	    				 Bitmap b = BitmapFactory.decodeFile(path);
+	    				 Drawable verticalImage = new BitmapDrawable(getResources(), b);
+	    				 expandedImageView.setImageDrawable(verticalImage);
+	    				 //BitmapCalc.decodeSampleBitmapFromFile(filePath, reqWidth, reqHeight)
+	    				 //imageLoader.loadBitmap(path, expandedImageView);
+	    				 /*
+	    				 if(TextUtils.isEmpty(description))
+	    					 ((ImageGridActivity) getActivity()).speakOut(Utils.cutExtention(filename));
+	    				 else
+	    					 ((ImageGridActivity) getActivity()).speakOut(Utils.cutExtention(description));
+	    				 */
+	    			}
+
+	    		    thumbView.setAlpha(0f);
+	    		    expandedImageView.setVisibility(View.VISIBLE);
+	    		    expandedImageView.setOnClickListener(new View.OnClickListener() {
+	    		        @SuppressLint("NewApi")
+	    				@Override
+	    		        public void onClick(View view) {
+	    		        	thumbView.setAlpha(1f);
+	    		            expandedImageView.setVisibility(View.GONE);
+	    		        }
+	    		    });
+	        	return true;
+	    	}
+	    }
+	        );
+	 
 	    //mGridView.setChoiceMode(GridView.CHOICE_MODE_MULTIPLE_MODAL);
 
 	        	        
@@ -236,20 +288,8 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
         
     }
     
-    
-    /*
-	@Override
-	public boolean onItemLongClick(AdapterView<?> arg0, View view, int position, long id) {
-        if (mActionMode != null) {
-            return false;
-        }
 
-        // Start the CAB using the ActionMode.Callback defined above
-        mActionMode = getActivity().startActionMode(mActionModeCallback);
-        view.setSelected(true);
-        return true;
-	}
-	*/
+	
 	@TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
 	@Override
 	public void onItemClick(AdapterView<?> parent, final  View thumbView, int position, long id) {
@@ -267,172 +307,24 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
 		if (mCurrentAnimator != null) {
 	        mCurrentAnimator.cancel();
 	    }
-		
-		if(loadExpandedImage){
-		    // Load the high-resolution "zoomed-in" image.
-			if(expandedImageView!=null){
-				expandedImageView.bringToFront();
-				 String path = Images.getImageFullScreenThumbsPath(img_object.getImageName());
-				 Bitmap b = BitmapFactory.decodeFile(path);
-				 Drawable verticalImage = new BitmapDrawable(getResources(), b);
-				 expandedImageView.setImageDrawable(verticalImage);
-				 //BitmapCalc.decodeSampleBitmapFromFile(filePath, reqWidth, reqHeight)
-				 //imageLoader.loadBitmap(path, expandedImageView);
-				 /*
-				 if(TextUtils.isEmpty(description))
-					 ((ImageGridActivity) getActivity()).speakOut(Utils.cutExtention(filename));
-				 else
-					 ((ImageGridActivity) getActivity()).speakOut(Utils.cutExtention(description));
-				 */
-			}
-			
-		    final Rect startBounds = new Rect();
-		    final Rect finalBounds = new Rect();
-		    final Point globalOffset = new Point();
-		    thumbView.getGlobalVisibleRect(startBounds);
-		    getActivity().findViewById(R.id.content_frame)
-		            .getGlobalVisibleRect(finalBounds, globalOffset);
-		    startBounds.offset(-globalOffset.x, -globalOffset.y);
-		    finalBounds.offset(-globalOffset.x, -globalOffset.y);
-
-		    // Adjust the start bounds to be the same aspect ratio as the final
-		    // bounds using the "center crop" technique. This prevents undesirable
-		    // stretching during the animation. Also calculate the start scaling
-		    // factor (the end scaling factor is always 1.0).
-		    float startScale;
-		    if ((float) finalBounds.width() / finalBounds.height()
-		            > (float) startBounds.width() / startBounds.height()) {
-		        // Extend start bounds horizontally
-		        startScale = (float) startBounds.height() / finalBounds.height();
-		        float startWidth = startScale * finalBounds.width();
-		        float deltaWidth = (startWidth - startBounds.width()) / 2;
-		        startBounds.left -= deltaWidth;
-		        startBounds.right += deltaWidth;
-		    } else {
-		        // Extend start bounds vertically
-		        startScale = (float) startBounds.width() / finalBounds.width();
-		        float startHeight = startScale * finalBounds.height();
-		        float deltaHeight = (startHeight - startBounds.height()) / 2;
-		        startBounds.top -= deltaHeight;
-		        startBounds.bottom += deltaHeight;
-		    }
-
-		    // Hide the thumbnail and show the zoomed-in view. When the animation
-		    // begins, it will position the zoomed-in view in the place of the
-		    // thumbnail.
-		    thumbView.setAlpha(0f);
-		    expandedImageView.setVisibility(View.VISIBLE);
-
-		    // Set the pivot point for SCALE_X and SCALE_Y transformations
-		    // to the top-left corner of the zoomed-in view (the default
-		    // is the center of the view).
-		    expandedImageView.setPivotX(0f);
-		    expandedImageView.setPivotY(0f);
-
-		    // Construct and run the parallel animation of the four translation and
-		    // scale properties (X, Y, SCALE_X, and SCALE_Y).
-		    AnimatorSet set = new AnimatorSet();
-		    set
-		            .play(ObjectAnimator.ofFloat(expandedImageView, View.X,
-		                    startBounds.left, finalBounds.left))
-		            .with(ObjectAnimator.ofFloat(expandedImageView, View.Y,
-		                    startBounds.top, finalBounds.top))
-		            .with(ObjectAnimator.ofFloat(expandedImageView, View.SCALE_X,
-		            startScale, 1f)).with(ObjectAnimator.ofFloat(expandedImageView,
-		                    View.SCALE_Y, startScale, 1f));
-		    set.setDuration(mShortAnimationDuration);
-		    set.setInterpolator(new DecelerateInterpolator());
-		    set.addListener(new AnimatorListenerAdapter() {
-		        @Override
-		        public void onAnimationEnd(Animator animation) {
-		            mCurrentAnimator = null;
-		        }
-
-		        @Override
-		        public void onAnimationCancel(Animator animation) {
-		            mCurrentAnimator = null;
-		        }
-		    });
-		    set.start();
-		    mCurrentAnimator = set;
-		    
-
-		    // Upon clicking the zoomed-in image, it should zoom back down
-		    // to the original bounds and show the thumbnail instead of
-		    // the expanded image.
-		    final float startScaleFinal = startScale;
-		    expandedImageView.setOnClickListener(new View.OnClickListener() {
-		        @SuppressLint("NewApi")
-				@Override
-		        public void onClick(View view) {
-		            if (mCurrentAnimator != null) {
-		                mCurrentAnimator.cancel();
-		            }
-
-		            // Animate the four positioning/sizing properties in parallel,
-		            // back to their original values.
-		            AnimatorSet set = new AnimatorSet();
-		            set.play(ObjectAnimator
-		                        .ofFloat(expandedImageView, View.X, startBounds.left))
-		                        .with(ObjectAnimator
-		                                .ofFloat(expandedImageView, 
-		                                        View.Y,startBounds.top))
-		                        .with(ObjectAnimator
-		                                .ofFloat(expandedImageView, 
-		                                        View.SCALE_X, startScaleFinal))
-		                        .with(ObjectAnimator
-		                                .ofFloat(expandedImageView, 
-		                                        View.SCALE_Y, startScaleFinal));
-		            set.setDuration(mShortAnimationDuration);
-		            set.setInterpolator(new DecelerateInterpolator());
-		            set.addListener(new AnimatorListenerAdapter() {
-		                @Override
-		                public void onAnimationEnd(Animator animation) {
-		                    thumbView.setAlpha(1f);
-		                    expandedImageView.setVisibility(View.GONE);
-		                    expandedImageView.getDrawable().setCallback(null);
-		                    //expandedImageView.setImageResource(R.drawable.empty_photo);
-		                    mCurrentAnimator = null;
-		                }
-
-		                @Override
-		                public void onAnimationCancel(Animator animation) {
-		                    thumbView.setAlpha(1f);
-		                    expandedImageView.setVisibility(View.GONE);
-		                    mCurrentAnimator = null;
-		                }
-		            });
-		            set.start();
-		            mCurrentAnimator = set;
-		            //App_2.actvity.getActionBar().show();
-		        }
-		    });
-		}
-/*
-		 if(TextUtils.isEmpty(img_object.getDescription()))
-			 ((ImageGridActivity) getActivity()).speakOut(Utils.cutExtention(img_object.getImageName()));
-		 else
-			 ((ImageGridActivity) getActivity()).speakOut(Utils.cutExtention(img_object.getDescription()));
-*/		 
+		 
 		 if(img_object.getCategory()!=null){
-			 // przejœcie do nastêpenej kategorii
+			Fragment fragment = new ImageGridFragment();
+			Bundle args = new Bundle();			
+			args.putLong("CATEGORY_ID", c.getLong(c.getColumnIndex(ImageContract.Columns._ID)));
+			fragment.setArguments(args);
 			 
-				Fragment fragment = new ImageGridFragment();
-				Bundle args = new Bundle();	
-				
-				args.putLong("CATEGORY_ID", c.getLong(c.getColumnIndex(ImageContract.Columns._ID)));
-				fragment.setArguments(args);
-			 
-			 //if(getActivity().getSupportFragmentManager().findFragmentByTag(TAG)!=null){
-					final FragmentTransaction ft = getActivity().getSupportFragmentManager().beginTransaction();
-		            //ft.setTransitionStyle(FragmentTransaction.TRANSIT_FRAGMENT_FADE); //		overridePendingTransition(R.anim.right_slide_in, R.anim.right_slide_out);
+			final FragmentTransaction ft = getActivity().getSupportFragmentManager().beginTransaction();
+		            //ft.setTransitionStyle(FragmentTransaction.TRANSIT_FRAGMENT_FADE); 
+					//overridePendingTransition(R.anim.right_slide_in, R.anim.right_slide_out);
 		            //ft.setTransition(R.anim.right_slide_in);
-		            //ft.setCustomAnimations(R.anim.slide_in_right,R.anim.slide_out_left);
+		            //ft.setCustomAnimations(android.R.anim.,android.R.anim.slide_out_left);
+			//ft.setTransition(android.R.anim.fade_in);
 					//ft.setCustomAnimations(android.R.animator.fade_in, android.R.animator.fade_out);
-		            ft.replace(R.id.content_frame, fragment, TAG);
-		            ft.addToBackStack(null);
-		            ft.commit();				
-			//	}
+			 ft.setCustomAnimations(R.anim.slide_in_right, R.anim.slide_out_left);
+		     ft.replace(R.id.content_frame, fragment, TAG);
+		     ft.addToBackStack(null);
+		     ft.commit();				
 		 }
 		 
 

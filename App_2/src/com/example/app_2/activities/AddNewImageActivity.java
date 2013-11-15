@@ -2,7 +2,6 @@ package com.example.app_2.activities;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -11,22 +10,15 @@ import android.app.AlertDialog;
 import android.content.ContentValues;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.content.pm.ResolveInfo;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
-import android.support.v4.app.FragmentActivity;
-import android.support.v4.app.FragmentTransaction;
 import android.util.Log;
 import android.view.View;
-import android.view.ViewGroup;
-import android.view.WindowManager;
 import android.view.View.OnClickListener;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
@@ -34,16 +26,13 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.TextView;
-import android.widget.AdapterView.OnItemSelectedListener;
 
 import com.example.app_2.R;
 import com.example.app_2.contentprovider.ImageContract;
 import com.example.app_2.fragments.ImageDetailsFragment;
-import com.example.app_2.fragments.ImageGridFragment;
 import com.example.app_2.provider.Images.AddingImageTask;
 import com.example.app_2.storage.Storage;
 import com.example.app_2.utils.BitmapCalc;
-import com.example.app_2.utils.ImageLoader;
 import com.example.app_2.utils.Utils;
 
 // za³adowawnie pustego ImageDetailsFragment
@@ -152,18 +141,12 @@ public class AddNewImageActivity extends Activity implements OnClickListener {
 	}
 	
 	
-	private boolean verifyResolves(Intent intent) {
-		PackageManager packageManager = getPackageManager();
-		List<ResolveInfo> activities = packageManager.queryIntentActivities(
-				intent, PackageManager.PERMISSION_GRANTED);
-		return activities.size() > 0;
-	}
 
 
 	@Override
 	public void onClick(View v) {
 		Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-		if (verifyResolves(takePictureIntent)) {
+		if (Utils.verifyResolves(takePictureIntent)) {
 			File f = Storage.createTempImageFile(); // tworzy tymczasowy plik
 			String mCurrentPhotoPath = f.getAbsolutePath();
 			Storage.saveToPreferences(mCurrentPhotoPath, "photoPath", this,

@@ -50,13 +50,13 @@ public class UsersActivity extends FragmentActivity implements LoaderCallbacks<C
 				UserContract.Columns.ROOT_FK,
 				UserContract.Columns.ISMALE};
 
-		int[] to = new int[] { 0, R.id.user_name, R.id.user_image, R.id.user_root, R.id.user_gender}; 		// Fields on the UI to which we map
+		int[] to = new int[] { 0, R.id.user_name, R.id.user_pic, R.id.user_root, R.id.user_gender}; 		// Fields on the UI to which we map
 
 		adapter = new SimpleCursorAdapter( this.getApplicationContext(), R.layout.user_row, null, from, to, 0);
 		adapter.setViewBinder(new SimpleCursorAdapter.ViewBinder() {
 			public boolean setViewValue(View view, Cursor cursor,int columnIndex) {
 				switch(view.getId()){
-				case R.id.user_image:
+				case R.id.user_pic:
 					String path = Images.getImageThumbsPath(cursor.getString(cursor.getColumnIndex(UserContract.Columns.IMG_FILENAME)));
 					ImageLoader.loadBitmap(path, (ImageView) view, false);
 					return true;

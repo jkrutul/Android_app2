@@ -4,34 +4,38 @@ import java.io.File;
 import java.util.LinkedList;
 import java.util.List;
 
-import android.app.AlertDialog;
 import android.content.Context;
-import android.os.Handler;
-import android.text.TextUtils;
+import android.view.LayoutInflater;
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.view.ViewGroup.LayoutParams;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
+import android.widget.TextView;
 
 import com.example.app_2.App_2;
 import com.example.app_2.R;
-import com.example.app_2.activities.ImageGridActivity;
 import com.example.app_2.models.ImageObject;
 import com.example.app_2.storage.Storage;
 import com.example.app_2.utils.ImageLoader;
-import com.example.app_2.utils.Utils;
 import com.example.app_2.views.RecyclingImageView;
+import com.example.app_2.views.WordView;
 
 public class ExpressionAdapter extends BaseAdapter{
 	private boolean doubleBackToExitPressedOnce = false;
 	public static List<ImageObject> dataObjects = new LinkedList<ImageObject>();
 	private Context context;
     LayoutParams params;
+    LayoutInflater inflater;
+    
+    private static class ViewHolderItem{
+    	RecyclingImageView rImageView;
+    	TextView textView;
+    }
 	
 	public ExpressionAdapter(Context context){
 		this.context = context;
+		inflater = LayoutInflater.from(App_2.getAppContext());
 		 params = new LayoutParams(100, 100);
 	}
 	
@@ -39,27 +43,50 @@ public class ExpressionAdapter extends BaseAdapter{
 	
 	@Override
 	public View getView(int position, View convertView, ViewGroup parent) {
+			ImageView iv = null;
+		
+			View retval = LayoutInflater.from(parent.getContext()).inflate(R.layout.image_item, null);
+			TextView tv= (TextView) retval.findViewById(R.id.image_desc);
+			iv = (ImageView) retval.findViewById(R.id.recycling_image);
+			
+			tv.setText(dataObjects.get(position).getDescription());
+			convertView = retval;
+			//convertView = new RecyclingImageView(this.context);
+			
+			//WordView wv = new WordView(this.context);
+			//wv.setText(dataObjects.get(position).getDescription());
+			//convertView=wv;
+			//convertView.setLayoutParams(params);
+			
+			
+			/*
+			RecyclingImageView rImageView;
+			TextView textView;
+			convertView = inflater.inflate(R.layout.image_item, parent, false);
+			rImageView = (RecyclingImageView) convertView.findViewById(R.id.recycling_image);
+			textView = (TextView) convertView.findViewById(R.id.image_desc);
+			rImageView.setLayoutParams(params);
+			ImageLoader.loadBitmap(Storage.getThumbsDir()+File.separator+dataObjects.get(position).getImageName(), rImageView, true);
+			textView.setText(dataObjects.get(position).getDescription());
+			 */
+		
+	
+		
+		/*
 		final int pos = position;
 		
         // Now handle the main ImageView thumbnails
-        ImageView imageView;
+		RecyclingImageView imageView;
         if (convertView == null) { // if it's not recycled, instantiate and initialize
             imageView = new RecyclingImageView(this.context);
-
             imageView.setLayoutParams(params);
-            //imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
-        } else { // Otherwise re-use the converted view
-            imageView = (ImageView) convertView;
             imageView.setLayoutParams(params);
+            ImageLoader.loadBitmap(Storage.getThumbsDir()+File.separator+dataObjects.get(position).getImageName(), imageView, false);
+            imageView.setClickable(true);
         }
-
-        // Finally load the image asynchronously into the ImageView, this also takes care of
-        // setting a placeholder image while the background thread runs
-        ImageLoader.loadBitmap(Storage.getThumbsDir()+File.separator+dataObjects.get(position).getImageName(), imageView, false);
-        imageView.setClickable(true);
-        
-        
-        return imageView;
+	*/
+		ImageLoader.loadBitmap(Storage.getThumbsDir()+File.separator+dataObjects.get(position).getImageName(), iv, true);
+        return convertView;
 		//return null;
 	}
 	

@@ -1,55 +1,81 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content" >
+    android:layout_width="match_parent"
+    android:layout_height="match_parent" >
 
-    <LinearLayout
+    <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         android:orientation="vertical" >
 
-        <Button
+        <ImageView
             android:id="@+id/user_image"
-            android:layout_width="match_parent"
-            android:layout_height="300dp"
+            android:layout_centerHorizontal="true"
+            android:layout_width="150dp"
+            android:layout_height="150dp"
+            android:layout_gravity="center"
             android:layout_marginBottom="4dp"
             android:layout_marginLeft="4dp"
             android:layout_marginRight="4dp"
             android:layout_marginTop="4dp"
-            android:clickable="true"
             android:background="@drawable/image_border"
+            android:clickable="true"
+            android:onClick="onButtonClick"
             android:text="wybierz obrazek"
-            android:src="@drawable/camera_icon" />
+            android:textSize="25sp" />
+        
+      <TextView
+        android:id="@+id/user_img_hint"
+        android:layout_width="wrap_content"
+	    android:layout_height="150dp"
+	    android:layout_alignLeft="@id/user_image"
+	    android:layout_alignRight="@id/user_image"
+	    android:layout_alignBottom="@id/user_image"
+ 		android:gravity="center"
+        android:textSize="25sp"
+        android:background="#ff000000"
+        android:textColor="#fff"
+        android:visibility="visible"
+        android:text="Wybierz obrazek" />
+
 
         <EditText
             android:id="@+id/user_name"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="nazwa użytkownika" />
+            android:layout_gravity="center"
+            android:gravity="center_horizontal"
+            android:hint="nazwa użytkownika"
+            android:layout_below="@id/user_image" />
 
         <RadioGroup
             android:id="@+id/radioSex"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content" >
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_below="@id/user_name" >
 
             <RadioButton
                 android:id="@+id/radioMale"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
+                android:layout_weight="1"
                 android:layout_height="wrap_content"
                 android:checked="true"
                 android:text="chłopak" />
 
             <RadioButton
                 android:id="@+id/radioFemale"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
+                android:layout_weight="1"
                 android:layout_height="wrap_content"
                 android:text="dziewczyna" />
         </RadioGroup>
 
         <LinearLayout
-            android:layout_width="match_parent"
+            android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal" >
+            android:orientation="horizontal"
+            android:layout_below="@id/radioSex" >
 
             <Button
                 android:id="@+id/adduser_button"
@@ -57,17 +83,17 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:enabled="false"
-                android:text="Dodaj"
-                android:onClick="onButtonClick" />
+                android:onClick="onButtonClick"
+                android:text="Dodaj" />
 
-            <Button
+            <Button 
                 android:id="@+id/cancel_adduser_button"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Anuluj"
-                 android:onClick="onButtonClick" />
+                android:onClick="onButtonClick"
+                android:text="Anuluj" />
         </LinearLayout>
-    </LinearLayout>
+    </RelativeLayout>
 
 </ScrollView>

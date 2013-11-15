@@ -58,7 +58,7 @@ public class AddImagesFromFolderActivity  extends Activity{
 		setContentView(R.layout.activity_import);
 		pathEditText = (EditText) findViewById(R.id.path_to_folder);
 		import_button= (Button) findViewById(R.id.import_button);
-		mUserSpinner = (Spinner) findViewById(R.id.user_spinner);
+		//mUserSpinner = (Spinner) findViewById(R.id.user_spinner);
 		mCatSpinner = (Spinner) findViewById(R.id.parent_spinner);
 		
 		//addItemsOnUserSpinner();
@@ -199,33 +199,35 @@ public class AddImagesFromFolderActivity  extends Activity{
 
 	@TargetApi(Build.VERSION_CODES.HONEYCOMB)
 	public void onImportClick(View view){
-		String parent_fk= null;
-		int spinnerSelectedPos = mCatSpinner.getSelectedItemPosition();
-		if (spinnerSelectedPos != Spinner.INVALID_POSITION)
-			parent_fk = String.valueOf(categoryItems.get(spinnerSelectedPos).getItemId());
-		
-		ProcessBitmapsTask processBitmapsTask = new ProcessBitmapsTask(this);
-		//AddToDatabaseTask addToDbTask = new AddToDatabaseTask(this);
-		
-		//if(processBitmapsTask.getStatus() == android.os.AsyncTask.Status.PENDING)
-			processBitmapsTask.executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, pathEditText.getText().toString(), parent_fk);
-			//finish();
-		//else if(processBitmapsTask.getStatus() == android.os.AsyncTask.Status.FINISHED)
-		//	addToDbTask.executeOnExecutor(AsyncTask.SERIAL_EXECUTOR,  pathEditText.getText().toString(), parent_fk);
-		
-		//else
-		//	;
-		/*
-		finish();
-		 if (asynclass.getStatus() == android.os.AsyncTask.Status.PENDING) {
-             asynclass.execute();
-         } else if (RF.getStatus() == android.os.AsyncTask.Status.FINISHED) {
-             asynclass = new asyncclass();
-             asynclass.execute();
-         } else {
-             Toast.maketoast(this, "Plz wait", 1).show();
-         }
-         */
+		if(!pathEditText.getText().equals("")){
+			String parent_fk= null;
+			int spinnerSelectedPos = mCatSpinner.getSelectedItemPosition();
+			if (spinnerSelectedPos != Spinner.INVALID_POSITION)
+				parent_fk = String.valueOf(categoryItems.get(spinnerSelectedPos).getItemId());
+			
+			ProcessBitmapsTask processBitmapsTask = new ProcessBitmapsTask(this);
+			//AddToDatabaseTask addToDbTask = new AddToDatabaseTask(this);
+			
+			//if(processBitmapsTask.getStatus() == android.os.AsyncTask.Status.PENDING)
+				processBitmapsTask.executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, pathEditText.getText().toString(), parent_fk);
+				//finish();
+			//else if(processBitmapsTask.getStatus() == android.os.AsyncTask.Status.FINISHED)
+			//	addToDbTask.executeOnExecutor(AsyncTask.SERIAL_EXECUTOR,  pathEditText.getText().toString(), parent_fk);
+			
+			//else
+			//	;
+			/*
+			finish();
+			 if (asynclass.getStatus() == android.os.AsyncTask.Status.PENDING) {
+	             asynclass.execute();
+	         } else if (RF.getStatus() == android.os.AsyncTask.Status.FINISHED) {
+	             asynclass = new asyncclass();
+	             asynclass.execute();
+	         } else {
+	             Toast.maketoast(this, "Plz wait", 1).show();
+	         }
+	         */
+			}
 	}
 	
 	@Override
