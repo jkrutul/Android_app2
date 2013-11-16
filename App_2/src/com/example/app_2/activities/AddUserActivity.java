@@ -28,8 +28,10 @@ import com.example.app_2.contentprovider.ImageContract;
 import com.example.app_2.contentprovider.UserContract;
 import com.example.app_2.provider.Images.AddingImageTask;
 import com.example.app_2.storage.Storage;
+import com.example.app_2.utils.BitmapCalc;
 import com.example.app_2.utils.ImageLoader;
 import com.example.app_2.utils.Utils;
+import com.example.app_2.intents.ImageIntents;
 
 public class AddUserActivity extends Activity {
 	EditText mUserName;
@@ -37,9 +39,10 @@ public class AddUserActivity extends Activity {
 	RadioButton mMaleRB, mFemaleRB;
 	private Button mSubmit_button;
 	private ImageView mUserImage;
-	private final int FILE_SELECT_CODE = 12;
-	private static final int CROPPED_PHOTO = 48;
-	private static final int TAKE_PIC_REQUEST = 24;
+	private final int FILE_SELECT_REQUEST = 12;
+	private final int TAKE_PIC_REQUEST = 24;
+	private String pathToNewImage;
+	private Bitmap bitmap;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -55,7 +58,6 @@ public class AddUserActivity extends Activity {
 
 		mUserName.addTextChangedListener(new TextWatcher() {
 			public void afterTextChanged(Editable s) {
-
 			}
 
 			public void beforeTextChanged(CharSequence s, int start, int count,
@@ -64,9 +66,9 @@ public class AddUserActivity extends Activity {
 
 			public void onTextChanged(CharSequence s, int start, int before,
 					int count) {
-				if (s.length() == 0) {
+				if (s.length() == 0)
 					mSubmit_button.setEnabled(false);
-				} else
+				else
 					mSubmit_button.setEnabled(true);
 			}
 		});
@@ -76,145 +78,92 @@ public class AddUserActivity extends Activity {
 		switch (view.getId()) {
 		case R.id.adduser_button:
 			String username = mUserName.getText().toString();
-			String path_toIMG = Storage.readFromPreferences(null,"photoPath", this, Activity.MODE_PRIVATE);
-			String filename = Utils.getFilenameFromPath(path_toIMG);
-			if(path_toIMG != null){
-				AddingImageTask ait= new AddingImageTask();
-				ait.execute(path_toIMG);
-			}	
+			String filename = null;
+			if (pathToNewImage != null) {
+				filename = Utils.getFilenameFromPath(pathToNewImage);
+				AddingImageTask ait = new AddingImageTask();
+				ait.execute(pathToNewImage);
+			}
 			int ismale = mMaleRB.isChecked() == true ? 1 : 0;
-			// String[] projection = { ImageContract.Columns._ID,
-			// ImageContract.Columns.CATEGORY };
 
 			ContentValues img_val = new ContentValues();
 			img_val.put(ImageContract.Columns.PATH, filename);
 			img_val.put(ImageContract.Columns.CATEGORY, username + " - G³ówna");
-			// img_val.put(ImageContract.Columns.PATH, )
 			Uri img_uri = getContentResolver().insert(
 					ImageContract.CONTENT_URI, img_val);
-
 			Long user_root_fk = Long.valueOf(img_uri.getLastPathSegment());
 			ContentValues user_val = new ContentValues();
 			user_val.put(UserContract.Columns.USERNAME, username);
 			user_val.put(UserContract.Columns.ISMALE, ismale);
 			user_val.put(UserContract.Columns.IMG_FILENAME, filename);
 			user_val.put(UserContract.Columns.ROOT_FK, user_root_fk);
-			Uri user_uri = getContentResolver().insert(UserContract.CONTENT_URI, user_val);
+			Uri user_uri = getContentResolver().insert(
+					UserContract.CONTENT_URI, user_val);
 
-			img_val.put(ImageContract.Columns.AUTHOR_FK,user_uri.getLastPathSegment()); // ustawienie autora korzenia
+			img_val.put(ImageContract.Columns.AUTHOR_FK,
+					user_uri.getLastPathSegment()); // ustawienie autora
+													// korzenia
 			getContentResolver().update(img_uri, img_val, null, null);
-
+			Storage.saveToPreferences(null, "photoPath", this,
+					Activity.MODE_PRIVATE); // clear preferences
 			finish();
 			break;
 
 		case R.id.cancel_adduser_button:
-
+			Storage.saveToPreferences(null, "photoPath", this,
+					Activity.MODE_PRIVATE); // clear preferences
 			finish();
 			break;
 
 		case R.id.user_image:
 			final Activity a = this;
-			AlertDialog.Builder builder = new AlertDialog.Builder(this);	// Add the buttons
+			AlertDialog.Builder builder = new AlertDialog.Builder(this); // Add
+																			// the
+																			// buttons
 			builder.setPositiveButton("zrób zdjêcie",
 					new DialogInterface.OnClickListener() {
 						public void onClick(DialogInterface dialog, int id) {
-							cameraIntent();
+							ImageIntents.cameraIntent(a, TAKE_PIC_REQUEST);
 						}
 					});
-			builder.setNegativeButton("wybierz obrazek",new DialogInterface.OnClickListener() {
+			builder.setNegativeButton("wybierz obrazek",
+					new DialogInterface.OnClickListener() {
 						public void onClick(DialogInterface dialog, int id) {
-							selectImageIntent();
+							ImageIntents.selectImageIntent(a,
+									FILE_SELECT_REQUEST);
 						}
 					});
 
 			AlertDialog dialog = builder.create();
 			dialog.show();
+			break;
 		default:
 			break;
 		}
-
 	}
 
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-		switch (requestCode) {
-		case FILE_SELECT_CODE:
-			if (resultCode == RESULT_OK) {
+		super.onActivityResult(requestCode, resultCode, data);
+		if (resultCode == RESULT_OK) {
+			if(requestCode == TAKE_PIC_REQUEST || requestCode == FILE_SELECT_REQUEST){
 				Uri uri = data.getData();
-				String path = null;
-				try {
-					if(uri != null){
-					path = Utils.getPath(this, uri);
-					ImageLoader.loadBitmap(path, mUserImage, true);
-					mHintText.setVisibility(View.INVISIBLE);
-					//Bitmap bitmap = BitmapCalc.decodeSampleBitmapFromFile(path,	150, 150);
-					// drawable = new BitmapDrawable(bitmap);
-					//mUserImage.setBackgroundDrawable(drawable);
-					}
-				} catch (URISyntaxException e) {
-					e.printStackTrace();
-				}
-			}
-			break;
-		case TAKE_PIC_REQUEST:
-			if (resultCode == RESULT_OK) {
-				String path_toIMG = Storage.readFromPreferences(null,"photoPath", this, Activity.MODE_PRIVATE);
-				ImageLoader.loadBitmap(path_toIMG, mUserImage, true);
+				if(uri != null)
+					pathToNewImage = Utils.getPath(this, uri);
+				else
+					pathToNewImage = Storage.readFromPreferences(null,"photoPath", this, Activity.MODE_PRIVATE);
+				
 				mHintText.setVisibility(View.INVISIBLE);
-				//Bitmap bitmap = BitmapCalc.decodeSampleBitmapFromFile(path_toIMG, mUserImage.getWidth(), mUserImage.getHeight());
-				Toast.makeText(this, path_toIMG, Toast.LENGTH_LONG).show();
-				//BitmapDrawable drawable = new BitmapDrawable(bitmap);
-				//mUserImage.setBackgroundDrawable(drawable);
+				int w, h;
+				w = mUserImage.getWidth();
+				h = mUserImage.getHeight();
+				bitmap = BitmapCalc.decodeSampleBitmapFromFile(pathToNewImage,	w, h);
+				mUserImage.setImageBitmap(bitmap);
+				mHintText.setVisibility(View.INVISIBLE);
+				Toast.makeText(this, pathToNewImage, Toast.LENGTH_LONG).show();		
+				
 			}
-			break;
-
 		}
-		//super.onActivityResult(requestCode, resultCode, data);
-	}
-	
-	private void selectImageIntent(){
-		Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-		File f = Storage.createTempImageFile(); // tworzy tymczasowy plik
-		String mCurrentPhotoPath = f.getAbsolutePath();
-		Storage.saveToPreferences(mCurrentPhotoPath,"photoPath", this, Activity.MODE_PRIVATE);
-		intent.setType("image/*");
-		intent.putExtra("crop", "true");
-		intent.putExtra("outputX", 150);
-		intent.putExtra("outputY", 150);
-		intent.putExtra("aspectX",1);
-		intent.putExtra("aspectY", 1);
-		intent.putExtra("scale", true);
-		intent.putExtra("return-data", true);
-		intent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(f));
-		intent.putExtra("outputFormat", Bitmap.CompressFormat.JPEG);
-		try {
-			startActivityForResult(Intent.createChooser(intent, "Wybierz obrazek"),	FILE_SELECT_CODE);
-		} catch (android.content.ActivityNotFoundException ex) {
-			Toast.makeText(getApplicationContext(),"Proszê zainstalowaæ menad¿er plików", Toast.LENGTH_SHORT).show();
-		}
-	}
-	
-	private void cameraIntent(){
-		Intent camera = new Intent(	MediaStore.ACTION_IMAGE_CAPTURE);
-		if (Utils.verifyResolves(camera)) {
-			File f = Storage.createTempImageFile(); // tworzy tymczasowy plik
-			String mCurrentPhotoPath = f.getAbsolutePath();
-			Storage.saveToPreferences(mCurrentPhotoPath,"photoPath", this, Activity.MODE_PRIVATE);
-			camera.putExtra("crop", "true");
-			camera.putExtra("outputX", 150);
-			camera.putExtra("outputY", 150);
-			camera.putExtra("aspectX",1);
-			camera.putExtra("aspectY", 1);
-			camera.putExtra("scale", true);
-			camera.putExtra("return-data", true);
-			camera.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(f));
-			camera.putExtra("outputFormat", Bitmap.CompressFormat.JPEG);
-			try{
-			startActivityForResult(camera, TAKE_PIC_REQUEST);
-			}catch (android.content.ActivityNotFoundException ex){
-				Toast.makeText(getApplicationContext(),"Brak aparatu???", Toast.LENGTH_SHORT).show();
-			}
-		}		
 	}
 
 }

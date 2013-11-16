@@ -102,7 +102,7 @@
         </activity>
         
         <activity
-            android:name="com.example.app_2.activities.AddNewImageActivity"
+            android:name="com.example.app_2.activities.NewImgTemplateActivity"
             android:label="AddNewImageActivity">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"

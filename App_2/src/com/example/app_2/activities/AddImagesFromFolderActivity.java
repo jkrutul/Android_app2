@@ -174,18 +174,14 @@ public class AddImagesFromFolderActivity  extends Activity{
 	            Log.d(TAG, "File Uri: " + uri.toString());
 	            // Get the path
 	            String path = null;
-				try {
+
 					path = Utils.getPath(this, uri);
 					String[] fn = path.split("\\/");
 			    	if(fn.length>1)
 			    		path = "";
 			    		for(int i =0; i< (fn.length-1) ; i++)
 			    			path += fn[i] +"/";	    			
-			    	
-				} catch (URISyntaxException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
+
 				pathEditText.setText(path);
 	            Log.d(TAG, "File Path: " + path);
 	            // Get the file instance

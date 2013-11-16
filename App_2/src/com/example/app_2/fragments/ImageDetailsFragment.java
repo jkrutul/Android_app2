@@ -1,31 +1,26 @@
 package com.example.app_2.fragments;
 
 import java.io.File;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.ContentValues;
+import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.content.pm.ResolveInfo;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
-import android.provider.MediaStore;
 import android.support.v4.app.Fragment;
-import android.text.TextUtils;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
-import android.widget.AdapterView;
-import android.widget.AdapterView.OnItemSelectedListener;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
@@ -33,19 +28,19 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
-import com.example.app_2.App_2;
 import com.example.app_2.R;
 import com.example.app_2.activities.ImageDetailsActivity;
 import com.example.app_2.contentprovider.ImageContract;
 import com.example.app_2.contentprovider.ParentContract;
 import com.example.app_2.contentprovider.ParentsOfImageContract;
-import com.example.app_2.provider.Images.AddingImageTask;
+import com.example.app_2.intents.ImageIntents;
 import com.example.app_2.storage.Storage;
 import com.example.app_2.utils.BitmapCalc;
 import com.example.app_2.utils.ImageLoader;
-import com.example.app_2.utils.Utils;
 //import android.widget.ArrayAdapter;
+import com.example.app_2.utils.Utils;
 
 public class ImageDetailsFragment extends Fragment{
 	private TextView mId;
@@ -57,17 +52,17 @@ public class ImageDetailsFragment extends Fragment{
 	private Button mButton;
 	public  ImageView mImage;
 	private static Bitmap bitmap;
-	//private CheckBox mParentCheckBox;
 	private CheckBox mCreateCategoryCheckBox;
-	private String newFileName;
+	private String pathToNewImage;
+	private String filename;
 
 	private Map<String, Long> categories_map;
-	private Spinner mSpinner;
 	List<String> list = new ArrayList<String>();
 
 	private Uri imageUri;
 	private static Long row_id;
 	public static final int TAKE_PIC_REQUEST = 2;
+	public static final int FILE_SELECT_REQUEST = 3;
 	private static Activity executing_activity;
 
 
@@ -114,7 +109,6 @@ public class ImageDetailsFragment extends Fragment{
 		final View view = inflater.inflate(R.layout.image_details, container,false);
 		mId = (TextView) view.findViewById(R.id.img_id);
 		mImage = (ImageView) view.findViewById(R.id.img);
-		//mImage.setOnClickListener(this);
 		mButton = (Button) view.findViewById(R.id.submit_button);
 		mTitleText = (TextView) view.findViewById(R.id.edit_name);
 		mCategory = (EditText) view.findViewById(R.id.edit_category);
@@ -247,8 +241,30 @@ public class ImageDetailsFragment extends Fragment{
 		case R.id.submit_button:
 			saveState();
 			break;
-		case R.id.cancel_button:
+		case R.id.cancel_button: // TODO if dual pane
 			break;
+			
+		case R.id.img:
+			final Activity a = getActivity();
+			final Fragment f = this;
+			AlertDialog.Builder builder = new AlertDialog.Builder(a);	// Add the buttons
+			builder.setPositiveButton("zrób zdjêcie",
+					new DialogInterface.OnClickListener() {
+						public void onClick(DialogInterface dialog, int id) {
+
+							ImageIntents.cameraIntent(a, f, TAKE_PIC_REQUEST);
+						}
+					});
+			builder.setNegativeButton("wybierz obrazek",new DialogInterface.OnClickListener() {
+						public void onClick(DialogInterface dialog, int id) {
+							ImageIntents.selectImageIntent(a, f , FILE_SELECT_REQUEST);
+						}
+					});
+
+			AlertDialog dialog = builder.create();
+			dialog.show();
+			break;
+
 		default:
 			break;
 		}
@@ -257,6 +273,8 @@ public class ImageDetailsFragment extends Fragment{
 		if(executing_activity instanceof ImageDetailsActivity)
 			executing_activity.finish();
 	}
+
+	
 	
 	private void fillData(Long id) {
 		Uri uri = Uri.parse(ImageContract.CONTENT_URI + "/" + id);
@@ -295,6 +313,26 @@ public class ImageDetailsFragment extends Fragment{
 		
 	}
 
+	@Override
+	public void onActivityResult(int requestCode, int resultCode, Intent data) {
+		if (resultCode == Activity.RESULT_OK) {
+			if(requestCode == TAKE_PIC_REQUEST || requestCode == FILE_SELECT_REQUEST){
+				Uri uri = data.getData();
+				if(uri != null)
+					pathToNewImage = Utils.getPath(getActivity(), uri);
+				else
+					pathToNewImage = Storage.readFromPreferences(null,"photoPath", getActivity(), Activity.MODE_PRIVATE);
+				
+				filename = Utils.getFilenameFromPath(pathToNewImage);
+				String title = Utils.cutExtention(filename);
+				mTitleText.setText(title);
+				mDescText.setText(title);
+				mCategory.setText(title);
+				bitmap = BitmapCalc.decodeSampleBitmapFromFile(pathToNewImage,	mImage.getWidth(), mImage.getHeight());
+				mImage.setImageBitmap(bitmap);
+			}
+		}
+	}
 	public void onSaveInstanceState(Bundle outState) {
 		super.onSaveInstanceState(outState);
 
@@ -329,12 +367,11 @@ public class ImageDetailsFragment extends Fragment{
 		values.put(ImageContract.Columns.CATEGORY, category);
 		values.put(ImageContract.Columns.DESC, description);
 
-		if (row_id == null && this.newFileName!=null) {
-			values.put(ImageContract.Columns.PATH, this.newFileName);
+		if (row_id == null && this.filename!=null) {
+			values.put(ImageContract.Columns.PATH, this.filename);
 			imageUri = executing_activity.getContentResolver().insert(ImageContract.CONTENT_URI, values);
 		} else {
-			executing_activity.getContentResolver().update(imageUri, values, null,
-					null);
+			executing_activity.getContentResolver().update(imageUri, values, null,	null);
 		}
 	}
 }

@@ -171,7 +171,7 @@ public class Utils {
         return null;
     }
 
-	public static String getPath(Context context, Uri uri) throws URISyntaxException {
+	public static String getPath(Context context, Uri uri) {
 	    if ("content".equalsIgnoreCase(uri.getScheme())) {
 	        String[] projection = { "_data" };
 	        Cursor cursor = null;
@@ -183,7 +183,7 @@ public class Utils {
 	                return cursor.getString(column_index);
 	            }
 	        } catch (Exception e) {
-	            // Eat it
+	            e.printStackTrace();
 	        }
 	    }
 	    else if ("file".equalsIgnoreCase(uri.getScheme())) {

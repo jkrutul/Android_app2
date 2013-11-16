@@ -185,8 +185,7 @@ public class Storage {
 	}
 	
 	/* SHARED PREFERENCES ------------------------------------------------------------------------------------------*/
-	public static void saveToSharedPreferences(String prefName, String value,
-			String key, Context context, int mode) {
+	public static void saveToSharedPreferences(String prefName, String value, String key, Context context, int mode) {
 		SharedPreferences sharedPref = context.getSharedPreferences(prefName,
 				mode);
 		SharedPreferences.Editor editor = sharedPref.edit();
@@ -194,8 +193,7 @@ public class Storage {
 		editor.commit();
 	}
 
-	public static void saveToPreferences(String value, String key,
-			Activity activity, int mode) {
+	public static void saveToPreferences(String value, String key, Activity activity, int mode) {
 		SharedPreferences sharedPref = activity.getPreferences(mode);
 		SharedPreferences.Editor editor = sharedPref.edit();
 		editor.putString(key, value);
@@ -210,8 +208,7 @@ public class Storage {
 		return value;
 	}
 
-	public static String readFromPreferences(String defValue, String key,
-			Activity activity, int mode) {
+	public static String readFromPreferences(String defValue, String key,	Activity activity, int mode) {
 		SharedPreferences sharedPref = activity.getPreferences(mode);
 		String value = sharedPref.getString((key), defValue);
 		return value;

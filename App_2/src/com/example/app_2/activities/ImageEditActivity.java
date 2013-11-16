@@ -1,10 +1,16 @@
 package com.example.app_2.activities;
 
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 
+import android.app.Activity;
+import android.app.AlertDialog;
+import android.app.Dialog;
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Color;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentTransaction;
@@ -26,12 +32,19 @@ import com.example.app_2.adapters.MySpinnerAdapter;
 import com.example.app_2.contentprovider.ImageContract;
 import com.example.app_2.fragments.ImageDetailsFragment;
 import com.example.app_2.fragments.ImageListFragment;
+import com.example.app_2.intents.ImageIntents;
 import com.example.app_2.provider.SpinnerItem;
+import com.example.app_2.storage.Storage;
+import com.example.app_2.utils.ImageLoader;
+import com.example.app_2.utils.Utils;
 
 public class ImageEditActivity extends FragmentActivity{
 	private Spinner mSpinner;
 	ArrayList<SpinnerItem> items;
 	private ImageListFragment ilf;
+	private final static int TAKE_PIC_REQUEST = 86;
+	private final static int FILE_SELECT_REQUEST = 25;
+	
 
 	
     @Override
@@ -49,7 +62,7 @@ public class ImageEditActivity extends FragmentActivity{
         //final  com.example.app_2.fragments.ImageListFragment ilf = ( com.example.app_2.fragments.ImageListFragment) findViewById(R.id.titles);
         
     }
-    
+     
 	private void addItemsOnSpinner() {
 
 		mSpinner.setOnItemSelectedListener(new OnItemSelectedListener() {
@@ -103,8 +116,8 @@ public class ImageEditActivity extends FragmentActivity{
 	public boolean onOptionsItemSelected(MenuItem item) {
 		Intent i;
 		switch (item.getItemId()) {
-		case R.id.insert:
-			i = new Intent(this, AddNewImageActivity.class);
+		case R.id.take_pic:
+			i = new Intent(this, NewImgTemplateActivity.class);
 			startActivity(i);
 			return true;
 		case R.id.add_folder:
@@ -129,5 +142,48 @@ public class ImageEditActivity extends FragmentActivity{
 				    Toast.makeText(this, "Zmiany zosta³y zapisane", Toast.LENGTH_SHORT).show();				        			
 			}
 	  }
+	  
+		@Override
+		protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+			switch (requestCode) {
+			case FILE_SELECT_REQUEST:
+				if (resultCode == RESULT_OK) {
+					Intent i = new Intent(this, NewImgTemplateActivity.class);
+					startActivity(i);
+					/*
+					Uri uri = data.getData();
+					String path = null;
+					try {
+						if(uri != null){
+						path = Utils.getPath(this, uri);
+						ImageLoader.loadBitmap(path, mUserImage, true);
+						mHintText.setVisibility(View.INVISIBLE);
+						//Bitmap bitmap = BitmapCalc.decodeSampleBitmapFromFile(path,	150, 150);
+						// drawable = new BitmapDrawable(bitmap);
+						//mUserImage.setBackgroundDrawable(drawable);
+						}
+					} catch (URISyntaxException e) {
+						e.printStackTrace();
+					}
+					*/
+				}
+				break;
+			case TAKE_PIC_REQUEST:
+				if (resultCode == RESULT_OK) {
+					Intent i = new Intent(this, NewImgTemplateActivity.class);
+					startActivity(i);
+					
+					//String path_toIMG = Storage.readFromPreferences(null,"photoPath", this, Activity.MODE_PRIVATE);
+					//ImageLoader.loadBitmap(path_toIMG, mUserImage, true);
+					//mHintText.setVisibility(View.INVISIBLE);
+					//Bitmap bitmap = BitmapCalc.decodeSampleBitmapFromFile(path_toIMG, mUserImage.getWidth(), mUserImage.getHeight());
+					//Toast.makeText(this, path_toIMG, Toast.LENGTH_LONG).show();
+					//BitmapDrawable drawable = new BitmapDrawable(bitmap);
+					//mUserImage.setBackgroundDrawable(drawable);
+				}
+				break;
 
+			}
+			//super.onActivityResult(requestCode, resultCode, data);
+		}
 }

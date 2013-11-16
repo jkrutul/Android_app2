@@ -48,24 +48,28 @@ containing a value of this type.
     }
     public static final class drawable {
         public static final int action_search=0x7f020000;
-        public static final int add_person=0x7f020001;
-        public static final int bin=0x7f020002;
-        public static final int boy=0x7f020003;
-        public static final int camera_icon=0x7f020004;
-        public static final int content_new=0x7f020005;
-        public static final int dark_empty=0x7f020006;
-        public static final int drawer_shadow=0x7f020007;
-        public static final int empty_photo=0x7f020008;
-        public static final int girl=0x7f020009;
-        public static final int ic_drawer=0x7f02000a;
-        public static final int ic_launcher=0x7f02000b;
-        public static final int image_border=0x7f02000c;
-        public static final int indeks=0x7f02000d;
-        public static final int navigation_refresh=0x7f02000e;
-        public static final int remove_button=0x7f02000f;
-        public static final int sentence=0x7f020010;
-        public static final int speak=0x7f020011;
-        public static final int twitter_bird3_square_webtreatsetc=0x7f020012;
+        public static final int add_from_folder=0x7f020001;
+        public static final int add_new_image=0x7f020002;
+        public static final int add_person=0x7f020003;
+        public static final int bin=0x7f020004;
+        public static final int boy=0x7f020005;
+        public static final int camera_icon=0x7f020006;
+        public static final int content_new=0x7f020007;
+        public static final int dark_empty=0x7f020008;
+        public static final int drawer_shadow=0x7f020009;
+        public static final int empty_photo=0x7f02000a;
+        public static final int girl=0x7f02000b;
+        public static final int ic_drawer=0x7f02000c;
+        public static final int ic_launcher=0x7f02000d;
+        public static final int image_border=0x7f02000e;
+        public static final int imgorphoto=0x7f02000f;
+        public static final int indeks=0x7f020010;
+        public static final int navigation_refresh=0x7f020011;
+        public static final int new_image=0x7f020012;
+        public static final int remove_button=0x7f020013;
+        public static final int sentence=0x7f020014;
+        public static final int speak=0x7f020015;
+        public static final int twitter_bird3_square_webtreatsetc=0x7f020016;
     }
     public static final class id {
         public static final int OpenFileChooser=0x7f090019;
@@ -111,7 +115,6 @@ containing a value of this type.
         public static final int img_id=0x7f090032;
         public static final int import_button=0x7f09001b;
         public static final int import_db=0x7f09002c;
-        public static final int insert=0x7f09004b;
         public static final int label=0x7f090040;
         public static final int left_drawer=0x7f090012;
         public static final int main_activity=0x7f09001c;
@@ -139,6 +142,7 @@ containing a value of this type.
         public static final int send_button=0x7f090009;
         public static final int submit_button=0x7f09003b;
         public static final int swipe_activity=0x7f090020;
+        public static final int take_pic=0x7f09004b;
         public static final int upper_layout=0x7f090017;
         public static final int user_gender=0x7f090046;
         public static final int user_image=0x7f090000;

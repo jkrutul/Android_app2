@@ -1,6 +1,7 @@
 package com.example.app_2.activities;
 
 import java.io.File;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -26,17 +27,20 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.example.app_2.R;
 import com.example.app_2.contentprovider.ImageContract;
 import com.example.app_2.fragments.ImageDetailsFragment;
+import com.example.app_2.intents.ImageIntents;
 import com.example.app_2.provider.Images.AddingImageTask;
 import com.example.app_2.storage.Storage;
 import com.example.app_2.utils.BitmapCalc;
+import com.example.app_2.utils.ImageLoader;
 import com.example.app_2.utils.Utils;
 
 // za³adowawnie pustego ImageDetailsFragment
-public class AddNewImageActivity extends Activity implements OnClickListener {
+public class NewImgTemplateActivity extends Activity {
 	private TextView mId;
 	private EditText mCategory;
 	private TextView mTitleText;
@@ -45,8 +49,9 @@ public class AddNewImageActivity extends Activity implements OnClickListener {
 	private Button mButton;
 	public ImageView mImage;
 	private static Bitmap bitmap;
-	private CheckBox mParentCheckBox;
 	private CheckBox mCreateCategoryCheckBox;
+	private String pathToNewImage;
+	private String filename;
 
 	private String newFileName;
 
@@ -57,47 +62,44 @@ public class AddNewImageActivity extends Activity implements OnClickListener {
 	private Uri imageUri;
 	private static Long row_id;
 	public static final int TAKE_PIC_REQUEST = 2;
+	public static final int FILE_SELECT_REQUEST = 3;
 
-	public static final String TAG = "AddNewImageActivity";
+	public static final String TAG = "NewImgTemplateActivity";
 	ImageDetailsFragment details;
 
 	@Override
 	protected void onCreate(Bundle bundle) {
 		super.onCreate(bundle);
+		//pathToNewImage = Storage.readFromPreferences(null,"photoPath", this, Activity.MODE_WORLD_READABLE);
+		
 		getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
-		
-		//row_id = (bundle == null) ? null : (Long) bundle.getLong("row_id");
-		//imageUri = Uri.parse(ImageContract.CONTENT_URI + "/" + row_id);
-
-		
 		setContentView(R.layout.image_details);
-		// During initial setup, plug in the details fragment.
-
 		mId = (TextView) findViewById(R.id.img_id);
 		mImage = (ImageView) findViewById(R.id.img);
-		mImage.setOnClickListener(this);
 		mButton = (Button) findViewById(R.id.submit_button);
 		mTitleText = (TextView) findViewById(R.id.edit_name);
 		mCategory = (EditText) findViewById(R.id.edit_category);
 		mDescText = (EditText) findViewById(R.id.edit_description);
 		mParent = (EditText) findViewById(R.id.edit_parent);
-
 		mCreateCategoryCheckBox = (CheckBox) findViewById(R.id.create_category);
-		mCreateCategoryCheckBox
-				.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-
+		
+		mCreateCategoryCheckBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
 					@Override
-					public void onCheckedChanged(CompoundButton buttonView,
-							boolean isChecked) {
+					public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
 						if (isChecked)
 							mCategory.setVisibility(View.VISIBLE);
 						else
 							mCategory.setVisibility(View.INVISIBLE);
 					}
 				});
-
-		mImage.setClickable(true);
 		
+		//if(pathToNewImage!= null){
+		//	filename = Utils.getFilenameFromPath(pathToNewImage);
+		//	ImageLoader.loadBitmap(pathToNewImage, mImage, true);
+		//	mTitleText.setText(filename);
+		//	mDescText.setText(filename);
+		//}
+		/*
 		if(bitmap !=null){
 			mImage.setImageBitmap(bitmap);
 			showFields();
@@ -112,7 +114,7 @@ public class AddNewImageActivity extends Activity implements OnClickListener {
 		{
 			hideFields();
 		}
-		
+		*/
 
 	}
 
@@ -124,7 +126,6 @@ public class AddNewImageActivity extends Activity implements OnClickListener {
 		//mParent.setVisibility(View.VISIBLE);
 		mSpinner.setVisibility(View.VISIBLE);
 		mButton.setVisibility(View.VISIBLE);
-		mParentCheckBox.setVisibility(View.VISIBLE);
 		mCreateCategoryCheckBox.setVisibility(View.VISIBLE);
 	}
 	
@@ -136,51 +137,33 @@ public class AddNewImageActivity extends Activity implements OnClickListener {
 		mParent.setVisibility(View.GONE);
 		mSpinner.setVisibility(View.GONE);
 		mButton.setVisibility(View.GONE);
-		mParentCheckBox.setVisibility(View.GONE);
 		mCreateCategoryCheckBox.setVisibility(View.GONE);
 	}
 	
-	
-
-
-	@Override
-	public void onClick(View v) {
-		Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-		if (Utils.verifyResolves(takePictureIntent)) {
-			File f = Storage.createTempImageFile(); // tworzy tymczasowy plik
-			String mCurrentPhotoPath = f.getAbsolutePath();
-			Storage.saveToPreferences(mCurrentPhotoPath, "photoPath", this,
-					Activity.MODE_PRIVATE);
-			//Storage.galleryAddPic(this, mCurrentPhotoPath);
-			takePictureIntent
-					.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(f));
-			startActivityForResult(takePictureIntent, TAKE_PIC_REQUEST);
-		}
-	}
 
 	@Override
 	public void onActivityResult(int requestCode, int resultCode, Intent data) {
 		if (resultCode == Activity.RESULT_OK) {
-			switch (requestCode) {
-			case TAKE_PIC_REQUEST:
-				String path_toIMG = Storage.readFromPreferences(null,"photoPath", this, Activity.MODE_PRIVATE);
-				bitmap = BitmapCalc.decodeSampleBitmapFromFile(path_toIMG,	mImage.getWidth(), mImage.getHeight());
+			if(requestCode == TAKE_PIC_REQUEST || requestCode == FILE_SELECT_REQUEST){
+				Uri uri = data.getData();
+				if(uri != null)
+					pathToNewImage = Utils.getPath(this, uri);
+				else
+					pathToNewImage = Storage.readFromPreferences(null,"photoPath", this, Activity.MODE_PRIVATE);
+				
+				filename = Utils.getFilenameFromPath(pathToNewImage);
+				String title = Utils.cutExtention(filename);
+				mTitleText.setText(title);
+				mDescText.setText(title);
+				mCategory.setText(title);
+				bitmap = BitmapCalc.decodeSampleBitmapFromFile(pathToNewImage,	mImage.getWidth(), mImage.getHeight());
 				mImage.setImageBitmap(bitmap);
-				this.newFileName = new File(path_toIMG).getName();
-				mTitleText.setText(this.newFileName);
-				showFields();
-				saveState();
-				fillData(imageUri);
-			default:
-				break;
-
 			}
 		}
 	}
 	
 	@Override
 	public void onBackPressed() {
-		//super.onBackPressed();
 		final String photo_path = Storage.readFromPreferences(null, "photoPath", this, Activity.MODE_PRIVATE);
 		if(mButton.getVisibility()==View.VISIBLE){
 			DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
@@ -219,6 +202,24 @@ public class AddNewImageActivity extends Activity implements OnClickListener {
 
 	public void onButtonClick(View view) {
 		switch (view.getId()) {
+		case R.id.img:
+			final Activity a = this;
+			AlertDialog.Builder builder = new AlertDialog.Builder(this);	// Add the buttons
+			builder.setPositiveButton("zrób zdjêcie",
+					new DialogInterface.OnClickListener() {
+						public void onClick(DialogInterface dialog, int id) {
+							ImageIntents.cameraIntent(a, TAKE_PIC_REQUEST);
+						}
+					});
+			builder.setNegativeButton("wybierz obrazek",new DialogInterface.OnClickListener() {
+						public void onClick(DialogInterface dialog, int id) {
+							ImageIntents.selectImageIntent(a, FILE_SELECT_REQUEST);
+						}
+					});
+
+			AlertDialog dialog = builder.create();
+			dialog.show();
+			break;
 		case R.id.submit_button:
 			String path_toIMG = Storage.readFromPreferences(null, "photoPath", this, Activity.MODE_PRIVATE);
 			new AddingImageTask().execute(path_toIMG); // skalowanie obrazka, dodanie do 2 folderów
@@ -235,7 +236,7 @@ public class AddNewImageActivity extends Activity implements OnClickListener {
 	
 	private void saveState() {
 		String category = null;
-		String parent_fk = String.valueOf(-1);
+		String description = null;
 
 		if (mCreateCategoryCheckBox.isChecked()) {
 			category = mCategory.getText().toString();
@@ -243,16 +244,8 @@ public class AddNewImageActivity extends Activity implements OnClickListener {
 				category = null;
 			}
 		}
-
-		if (mParentCheckBox.isChecked()) {
-			if (mSpinner.getSelectedItemPosition() != Spinner.INVALID_POSITION) {
-				String key = mSpinner.getSelectedItem().toString();
-				if (categories_map.containsKey(key))
-					parent_fk = String.valueOf(categories_map.get(key));
-			}
-		}
-
-		String description = mDescText.getText().toString();
+		
+		description = mDescText.getText().toString();
 
 		ContentValues values = new ContentValues();
 		values.put(ImageContract.Columns.CATEGORY, category);
@@ -265,7 +258,7 @@ public class AddNewImageActivity extends Activity implements OnClickListener {
 			this.getContentResolver().update(imageUri, values, null,null);
 		}
 	}
-
+/*
 	@Override
 	public void onSaveInstanceState(Bundle outState) {
 		super.onSaveInstanceState(outState);
@@ -278,6 +271,7 @@ public class AddNewImageActivity extends Activity implements OnClickListener {
 		
 		// outState.putParcelable(ImageContract.CONTENT_ITEM_TYPE, imageUri);
 	}
+*/	
 	private void fillData(Uri uri) {
 		//Uri uri = Uri.parse(ImageContract.CONTENT_URI + "/" + id);
 		String[] projection = { ImageContract.Columns._ID,

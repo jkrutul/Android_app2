@@ -4,20 +4,20 @@
     <item 
         android:id = "@+id/adduser"
         android:showAsAction="always"
-        android:icon="@drawable/content_new"
+        android:icon="@drawable/add_person"
         android:title="Dodaj użytkownika">
 	</item>
     <item 
-        android:id = "@+id/insert"
+        android:id = "@+id/take_pic"
         android:showAsAction="always"
-        android:icon="@drawable/camera_icon"
+        android:icon="@drawable/add_new_image"
         android:title="Dodaj zdjęcie">
 	</item>
 	
     <item 
         android:id = "@+id/add_folder"
         android:showAsAction="always"
-        android:icon="@drawable/content_new"
+        android:icon="@drawable/add_from_folder"
         android:title="Dodaj folder">
 	</item>
 	
