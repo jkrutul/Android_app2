@@ -46,6 +46,7 @@
 
         <Button
             android:id="@+id/import_button"
+            android:enabled="false"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:layout_below="@id/parent_spinner"

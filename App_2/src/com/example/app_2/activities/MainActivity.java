@@ -9,9 +9,11 @@ import android.app.WallpaperManager;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -27,23 +29,35 @@ import com.example.app_2.storage.Storage;
 public class MainActivity extends Activity {
 	private final static String LOG_TAG = "MainActivity";
 	private ShareActionProvider mShareActionProvider;
+	private SharedPreferences prefs = null;
 
 	@SuppressLint("NewApi")
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-
 		setContentView(R.layout.activity_main);
-
+		PreferenceManager.setDefaultValues(this, R.xml.preferences, false);
+		
+		
 		LinearLayout ll = (LinearLayout) findViewById(R.id.main_activity);
 		ll.setBackgroundDrawable(App_2.wallpaperDrawable);
-		//ll.setBackground(wallpaperDrawable);
+
 
 		ActionBar actionBar = getActionBar();
-		actionBar.setSubtitle("mytest");
-		actionBar.setTitle("vogella.com"); 
+		actionBar.setSubtitle("G³owne menu");
+		//actionBar.setTitle("vogella.com"); 
+		prefs = getSharedPreferences("com.example.app_2", MODE_PRIVATE);
 	}
-
+	
+	@Override
+	protected void onResume() {
+		super.onResume();
+	       if (prefs.getBoolean("firstrun", true)) {
+	            // Do first run stuff here then set 'firstrun' as false
+	            // using the following line to edit/commit prefs
+	            prefs.edit().putBoolean("firstrun", false).commit();
+	        }
+	}
 	@TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
@@ -75,6 +89,7 @@ public class MainActivity extends Activity {
 						Images.addImagesToDatabase(Storage.getThumbsMaxDir().getAbsolutePath(), "-1");
 					}
 		        }).create().show();
+			 break;
 		}
 		return true;
 	}
@@ -88,11 +103,6 @@ public class MainActivity extends Activity {
 			startActivity(intent);
 			overridePendingTransition(R.anim.right_slide_in,
 					R.anim.right_slide_out);
-			break;
-
-		case R.id.db_test_activity:
-			intent = new Intent(this, DatabaseTestActivity.class);
-			startActivity(intent);
 			break;
 
 		case R.id.client_activity:
@@ -113,7 +123,13 @@ public class MainActivity extends Activity {
 		case R.id.users_activity:
 			intent = new Intent(this, UsersActivity.class);
 			startActivity(intent);
-
+			break;
+			
+		case R.id.settings_activity:
+			intent = new Intent(this, SettingsActivity.class);
+			startActivity(intent);
+			break;
+			
 		default:
 			intent = null;
 			break;

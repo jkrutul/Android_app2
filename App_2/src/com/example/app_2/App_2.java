@@ -17,6 +17,7 @@ public class App_2 extends Application{
 	public static Bitmap mPlaceHolderBitmap;
 	public static Bitmap mDarkPlaceHolderBitmap;
 	public static Drawable wallpaperDrawable;
+	public static Bitmap wallpaperBitmap;
 	public static int maxWidth;
 	public static int maxHeight; 
 
@@ -24,14 +25,14 @@ public class App_2 extends Application{
 	public void onCreate(){
 		super.onCreate();
 		App_2.context = getApplicationContext();
-		mPlaceHolderBitmap = BitmapCalc.decodeSampleBitmapFromResources(App_2.getAppContext().getResources(), R.drawable.empty_photo, 100, 100);
-		mDarkPlaceHolderBitmap = BitmapCalc.decodeSampleBitmapFromResources(App_2.getAppContext().getResources(), R.drawable.dark_empty, 100, 100);
-		WallpaperManager wallpaperManager = WallpaperManager.getInstance(this);
-		wallpaperDrawable = wallpaperManager.getDrawable();
 		WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
 		Display display = wm.getDefaultDisplay();
 		maxWidth = display.getWidth();
 		maxHeight = display.getHeight();
+		mPlaceHolderBitmap = BitmapCalc.decodeSampleBitmapFromResources(App_2.getAppContext().getResources(), R.drawable.empty_photo, 100, 100);
+		mDarkPlaceHolderBitmap = BitmapCalc.decodeSampleBitmapFromResources(App_2.getAppContext().getResources(), R.drawable.dark_empty, 100, 100);
+		WallpaperManager wallpaperManager = WallpaperManager.getInstance(this);
+		wallpaperDrawable = wallpaperManager.getDrawable();
 	}
 	
 	public static Context getAppContext(){

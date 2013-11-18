@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
+
+    <PreferenceCategory
+        android:key="pref_thumbs"
+        android:title="Miniaturki" >
+        <EditTextPreference
+            android:defaultValue="100"
+            android:summary="100"
+            android:key="pref_img_size"
+            android:title="wielkość miniatur" />
+        <EditTextPreference
+            android:defaultValue="@dimen/desc_font_size"
+            android:summary="@dimen/desc_font_size"
+            android:key="pref_img_desc_font_size"
+            android:title="rozmiar czcionki" />
+    </PreferenceCategory>
+
+</PreferenceScreen>

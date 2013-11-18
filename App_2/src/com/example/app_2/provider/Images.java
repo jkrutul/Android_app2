@@ -102,10 +102,14 @@ public class Images {
 		
 	}
 	
-	public static void addImagesToDatabase(String path, String parent_id) {
+	public static void addImageToDatabase(String pathToImage, String parent_id){
+		
+	}
+	
+	public static void addImagesToDatabase(String images_dir, String parent_id) {
 		List<String> fileNames = new LinkedList<String>();
 		ContentProviderResult[] opResults = null;
-		fileNames = getImagesFileNames(Storage.getFilesNamesFromDir(new File(path)));
+		fileNames = getImagesFileNames(Storage.getFilesNamesFromDir(new File(images_dir)));
 
 		ArrayList<ContentProviderOperation> batchOps = new ArrayList<ContentProviderOperation>();
 		/* DODANIE OBRAZKA DO BAZY I POWI¥ZANIE ZE S£OWNIKIEM */
@@ -125,56 +129,11 @@ public class Images {
 		} catch (OperationApplicationException e) {
 			e.printStackTrace();
 		}
-/*
-		Uri[] imageUris = null;
-		if (opResults != null) {
-			imageUris = new Uri[opResults.length];
-			for (int index = 0; index < opResults.length; index++)
-				imageUris[index] = opResults[index].uri;
-		}
 
-		Long image_fks[] = new Long[imageUris.length];
-		int i = 0;
-		for (Uri image : imageUris)
-			image_fks[i++] = Long.valueOf(image.getLastPathSegment());
-*/
 		Long parents[] = new Long[1];
 		parents[0]=Long.valueOf(parent_id);
 		addToDict(getIdsFromContentProviderResult(opResults), parents);
-		/*
-		for (Long image_fk : getIdsFromContentProviderResult(opResults)) { // dodanie obrazków do s³ownika o identyfikatorze -1
-			batchOps.add(ContentProviderOperation
-					.newInsert(ParentContract.CONTENT_URI)
-					.withValue(ParentContract.Columns.IMAGE_FK, image_fk)
-					.withValue(ParentContract.Columns.PARENT_FK, -1).build());
-		}
-		try {
-			opResults = App_2.getAppContext().getContentResolver().applyBatch(ParentContract.AUTHORITY, batchOps);
-			batchOps.clear();
-		} catch (RemoteException e) {
-			e.printStackTrace();
-		} catch (OperationApplicationException e) {
-			e.printStackTrace();
-		}
-		
-		if(parent_id != null){
-			for (Long image_fk : getIdsFromContentProviderResult(opResults)) {
-				batchOps.add(ContentProviderOperation
-						.newInsert(ParentContract.CONTENT_URI)
-						.withValue(ParentContract.Columns.IMAGE_FK, image_fk)
-						.withValue(ParentContract.Columns.PARENT_FK, parent_id).build());
-			}
-			try {
-				opResults = App_2.getAppContext().getContentResolver().applyBatch(ParentContract.AUTHORITY, batchOps);
-				batchOps.clear();
-			} catch (RemoteException e) {
-				e.printStackTrace();
-			} catch (OperationApplicationException e) {
-				e.printStackTrace();
-			}
-		}
-		*/
-
+	
 		/* DODANIE OBRAZKA DO WYBRANYCH KATEGORII */
 		if (parent_id != null) {// TODO zmieniæ na for i dodawaæ obrazki po tablicy rodziców
 			for (String filename : fileNames) {
@@ -193,7 +152,7 @@ public class Images {
 				e.printStackTrace();
 			}
 			
-				for (Long image_fk :getIdsFromContentProviderResult(opResults)) { // dodanie do wybranego drzewa
+				for (Long image_fk : getIdsFromContentProviderResult(opResults)) { // dodanie do wybranego drzewa
 					batchOps.add(ContentProviderOperation
 							.newInsert(ParentContract.CONTENT_URI)
 							.withValue(ParentContract.Columns.IMAGE_FK, image_fk)
@@ -366,8 +325,8 @@ public class Images {
 
 			}
 
-			img_dir_last_read = Storage.getImagesDir().lastModified();
-			Storage.saveToSharedPreferences("imgDirLastRead", Long.toString(img_dir_last_read), "imgDirLastRead",App_2.getAppContext(), Context.MODE_PRIVATE);
+			//img_dir_last_read = Storage.getImagesDir().lastModified();
+			//Storage.saveToSharedPreferences("imgDirLastRead", Long.toString(img_dir_last_read), "imgDirLastRead",App_2.getAppContext(), Context.MODE_PRIVATE);
 			addImagesToDatabase(path, parent_id);
 
 			// cursor.close();
@@ -398,6 +357,8 @@ public class Images {
 		@Override
 		protected Void doInBackground(String... params) {
 			String path_toIMG = params[0];
+			String parent_id = params[1];
+			
 			String filename = Utils.getFilenameFromPath(path_toIMG);
 
 			// GENERUJ MINIATURKI
@@ -426,24 +387,19 @@ public class Images {
 					maxWidth, maxHeight);
 			Log.w(LOG_TAG, bitmap.getHeight() + " " + bitmap.getWidth());
 			try {
-				FileOutputStream out = new FileOutputStream(
-						path_toFullScreenTHUMB);
+				FileOutputStream out = new FileOutputStream(path_toFullScreenTHUMB);
 				bitmap.compress(Bitmap.CompressFormat.PNG, 100, out);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
 
-			bitmap = BitmapCalc.decodeSampleBitmapFromFile(
-					path_toFullScreenTHUMB, thumbWidth, thumbHeight);
+			bitmap = BitmapCalc.decodeSampleBitmapFromFile(path_toFullScreenTHUMB, thumbWidth, thumbHeight);
 			try {
 				FileOutputStream out = new FileOutputStream(path_toTHUMB);
 				bitmap.compress(Bitmap.CompressFormat.PNG, 100, out);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
-
-			File f = new File(path_toIMG);
-			f.delete();
 
 			return null;
 		}

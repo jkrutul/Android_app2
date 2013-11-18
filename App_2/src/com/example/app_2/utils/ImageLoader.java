@@ -31,6 +31,8 @@ import com.example.app_2.App_2;
 import com.example.app_2.R;
 import com.example.app_2.storage.DiskLruImageCache;
 import com.example.app_2.storage.Storage;
+import com.sonyericsson.util.ScalingUtilities;
+import com.sonyericsson.util.ScalingUtilities.ScalingLogic;
 
 
 public class ImageLoader {
@@ -41,7 +43,6 @@ public class ImageLoader {
 	private static boolean mDiskCacheStarting = true;
 	private static final int DISK_CACHE_SIZE = 1024 * 1024 * 10; // 10MB
 	public static int  mWidth=100;
-
 	public static int mHeight=100;
 	int maxWidth;
 	int maxHeight;
@@ -110,7 +111,7 @@ public class ImageLoader {
 				asyncDrawable = new AsyncDrawable(App_2.getAppContext().getResources(), App_2.mPlaceHolderBitmap, task);
 			imageView.setImageDrawable(asyncDrawable);
 			//if(Utils.hasHoneycomb())
-				task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, path);
+				task.executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, path);
 			//else			
 				//task.execute(path);
 		//}
@@ -166,8 +167,16 @@ public class ImageLoader {
 	        Bitmap bitmap = mMemoryCache.get(imageKey);
 	        if(bitmap ==null){	// Not found in disk cache
 	        	//bitmap = BitmapCalc.decodeSampleBitmapFromFile(path, mWidth, mHeight);
-	        	
-	    		bitmap = BitmapFactory.decodeFile(path, options);
+	            // Part 1: Decode image
+	            Bitmap unscaledBitmap = ScalingUtilities.decodeFile(path, mWidth, mHeight, ScalingLogic.FIT);
+
+	            // Part 2: Scale image
+	            bitmap = ScalingUtilities.createScaledBitmap(unscaledBitmap, mWidth, mHeight, ScalingLogic.FIT);
+	            unscaledBitmap.recycle();
+
+	            //scaledBitmap.recycle();
+
+	    		//bitmap = BitmapFactory.decodeFile(path, options);
 	        	//bitmap = BitmapFactory.decodeFile(path);
 	    		//if((maxHeight != -1 &&  maxWidth !=-1)&&(bitmap.getHeight()> maxHeight*1.5 || bitmap.getWidth()> maxWidth*1.5 )){
 		        	//bitmap = BitmapCalc.decodeSampleBitmapFromFile(path, maxWidth, maxHeight);
@@ -179,8 +188,9 @@ public class ImageLoader {
 		        	addBitmapToCache(imageKey,bitmap);
 	        }
 	        	//Log.i(LOG_TAG, bitmap.toString()+" read from cache");
-	        return BitmapCalc.getRoundedCornerBitmap(bitmap);
-	        //return bitmap;
+	        //return BitmapCalc.getRoundedCornerBitmap(bitmap);
+	        
+	        return bitmap;
 	    }
 	    public void addBitmapToCache(String key, Bitmap bitmap) {
 	    	if(key !=null && bitmap != null){

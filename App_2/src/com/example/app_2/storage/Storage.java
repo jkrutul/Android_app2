@@ -95,14 +95,14 @@ public class Storage {
 			return null;
 	}
 
-	public static File isfileExist(String path) {
-		File file = new File(Environment.getExternalStorageDirectory(), path);
+	public static File isfileExist(String name) {
+		File file = new File(Environment.getExternalStorageDirectory(), name);
 		if (file.exists())
 			return file;
 		else
 			return null;
 	}
-
+	
 	public static File getImagesDir(){
 		return getsDir(IMG_DIR);
 		}

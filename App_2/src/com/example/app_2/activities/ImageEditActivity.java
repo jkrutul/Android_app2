@@ -1,20 +1,13 @@
 package com.example.app_2.activities;
 
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 
-import android.app.Activity;
-import android.app.AlertDialog;
-import android.app.Dialog;
-import android.app.ProgressDialog;
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Color;
-import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentTransaction;
-import android.support.v4.app.ListFragment;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -22,7 +15,6 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemSelectedListener;
-import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -32,11 +24,7 @@ import com.example.app_2.adapters.MySpinnerAdapter;
 import com.example.app_2.contentprovider.ImageContract;
 import com.example.app_2.fragments.ImageDetailsFragment;
 import com.example.app_2.fragments.ImageListFragment;
-import com.example.app_2.intents.ImageIntents;
 import com.example.app_2.provider.SpinnerItem;
-import com.example.app_2.storage.Storage;
-import com.example.app_2.utils.ImageLoader;
-import com.example.app_2.utils.Utils;
 
 public class ImageEditActivity extends FragmentActivity{
 	private Spinner mSpinner;

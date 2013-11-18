@@ -17,12 +17,6 @@
             android:onClick="onClick"
             android:text="goto Image Grid Activity" />
 
-        <Button
-            android:id="@+id/db_test_activity"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:onClick="onClick"
-            android:text="Test DB" />
 
         <Button
             android:id="@+id/client_activity"
@@ -51,6 +45,12 @@
             android:layout_height="wrap_content"
             android:onClick="onClick"
             android:text="users_activity" />
+        <Button
+            android:id="@+id/settings_activity"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="onClick"
+            android:text="ustawienia" />
     </LinearLayout>
 
 </ScrollView>

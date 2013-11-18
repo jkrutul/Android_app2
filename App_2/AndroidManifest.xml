@@ -7,50 +7,47 @@
     <uses-sdk
         android:minSdkVersion="11"
         android:targetSdkVersion="17" />
-    
-    
+
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_CONTACTS" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    
+
     <uses-feature
         android:name="android.hardware.camera"
         android:required="false" />
-        
 
     <application
-        android:name = "com.example.app_2.App_2"
+        android:name="com.example.app_2.App_2"
         android:allowBackup="true"
+        android:hardwareAccelerated="true"
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
         android:theme="@style/AppBaseTheme"
-        android:windowSoftInputMode="stateHidden"
-        android:hardwareAccelerated="true" >
-        
+        android:windowSoftInputMode="stateHidden" >
         <activity
             android:name="com.example.app_2.activities.MainActivity"
             android:label="@string/app_name" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        
         <activity
             android:name="com.example.app_2.activities.ImageGridActivity"
             android:label="ImageGridActivity"
-            android:parentActivityName="com.example.app_2.activities.MainActivity">
-            <!-- android:theme="@android:style/Theme.Wallpaper">  -->
+            android:parentActivityName="com.example.app_2.activities.MainActivity" >
+
+            <!-- android:theme="@android:style/Theme.Wallpaper"> -->
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.examples.app_2.activities.MainActivity" />
-            <meta-data 
+            <meta-data
                 android:name="android.support.UI_OPTIONS"
-                android:value="splitActionBarWhenNarrow"/>
+                android:value="splitActionBarWhenNarrow" />
         </activity>
-        
         <activity
             android:name="com.example.app_2.activities.DatabaseTestActivity"
             android:label="DB_test_activity"
@@ -59,8 +56,7 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.example.app_2.activities.MainActivity" />
         </activity>
-        
-       <activity
+        <activity
             android:name="com.example.app_2.activities.SimpleClientActivity"
             android:label="simple_client_activity"
             android:parentActivityName="com.example.app_2.activities.MainActivity" >
@@ -68,109 +64,103 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.example.app_2.activities.MainActivity" />
         </activity>
-                
         <activity
             android:name="com.example.app_2.activities.ProgressActivity"
-            android:label="ProgressActivity">
+            android:label="ProgressActivity" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.example.app_2.activities.MainActivity" />
         </activity>
-        
         <activity
             android:name="com.example.app_2.activities.SwipeActivity"
-            android:label="SwipeActivity">
+            android:label="SwipeActivity" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.example.app_2.activities.MainActivity" />
         </activity>
-        
         <activity
             android:name="com.example.app_2.activities.ImageEditActivity"
-            android:label="ImageEditActivity">
+            android:label="ImageEditActivity" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.example.app_2.activities.MainActivity" />
         </activity>
-        
         <activity
             android:name="com.example.app_2.activities.ImageDetailsActivity"
-            android:label="ImageEditActivity">
+            android:label="ImageEditActivity" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.example.app_2.activities.MainActivity" />
         </activity>
-        
         <activity
             android:name="com.example.app_2.activities.NewImgTemplateActivity"
-            android:label="AddNewImageActivity">
+            android:label="AddNewImageActivity" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.example.app_2.activities.ImageEditActivity" />
         </activity>
-        
         <activity
             android:name="com.example.app_2.activities.AddImagesFromFolderActivity"
-            android:label="AddImagesFromFolderActivity">
+            android:label="AddImagesFromFolderActivity" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.example.app_2.activities.ImageEditActivity" />
         </activity>
-        
         <activity
             android:name="com.example.app_2.activities.ParentMultiselectActivity"
-            android:label="ParentMultiselectActivity">
+            android:label="ParentMultiselectActivity" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.example.app_2.activities.ImageEditActivity" />
         </activity>
-       
         <activity
             android:name="com.example.app_2.activities.AddUserActivity"
-            android:label="AddUserActivity">
+            android:label="AddUserActivity" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.example.app_2.activities.MainActivity" />
         </activity>
-        
         <activity
             android:name="com.example.app_2.activities.UsersActivity"
-            android:label="UsersActivity">
+            android:label="UsersActivity" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.example.app_2.activities.MainActivity" />
         </activity>
-        
-        
-       <provider 
-           android:name= "com.example.app_2.contentprovider.ImageContentProvider"
-           android:authorities="com.example.app_2.contentprovider">
-       </provider>
-       <provider 
-           android:name= "com.example.app_2.contentprovider.ParentContentProvider"
-           android:authorities="com.example.app_2.contentprovider.parent">
-       </provider>
-       <provider 
-           android:name= "com.example.app_2.contentprovider.ImagesOfParentContentProvider"
-           android:authorities="com.example.app_2.contentprovider.imagesofparent">
-       </provider>
-       
-       <provider 
-           android:name= "com.example.app_2.contentprovider.ParentsOfImageContentProvider"
-           android:authorities="com.example.app_2.contentprovider.parentsofimage">
-       </provider>
-       
-      <provider 
-           android:name= "com.example.app_2.contentprovider.UserContentProvider"
-           android:authorities="com.example.app_2.contentprovider.user">
-       </provider>
-       
-       <service
-		  android:name="com.example.app_2.services.ImageAddingService"
-		  android:icon="@drawable/ic_launcher"
-		  android:label="service_name">
-		</service> 
-        
+        <activity
+            android:name="com.example.app_2.activities.SettingsActivity"
+            android:label="SettingsActivity" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.example.app_2.activities.MainActivity" />
+        </activity>
+
+        <provider
+            android:name="com.example.app_2.contentprovider.ImageContentProvider"
+            android:authorities="com.example.app_2.contentprovider" >
+        </provider>
+        <provider
+            android:name="com.example.app_2.contentprovider.ParentContentProvider"
+            android:authorities="com.example.app_2.contentprovider.parent" >
+        </provider>
+        <provider
+            android:name="com.example.app_2.contentprovider.ImagesOfParentContentProvider"
+            android:authorities="com.example.app_2.contentprovider.imagesofparent" >
+        </provider>
+        <provider
+            android:name="com.example.app_2.contentprovider.ParentsOfImageContentProvider"
+            android:authorities="com.example.app_2.contentprovider.parentsofimage" >
+        </provider>
+        <provider
+            android:name="com.example.app_2.contentprovider.UserContentProvider"
+            android:authorities="com.example.app_2.contentprovider.user" >
+        </provider>
+
+        <service
+            android:name="com.example.app_2.services.ImageAddingService"
+            android:icon="@drawable/ic_launcher"
+            android:label="service_name" >
+        </service>
     </application>
 
 </manifest>

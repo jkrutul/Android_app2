@@ -32,6 +32,8 @@ import com.example.app_2.utils.BitmapCalc;
 import com.example.app_2.utils.ImageLoader;
 import com.example.app_2.utils.Utils;
 import com.example.app_2.intents.ImageIntents;
+import com.sonyericsson.util.ScalingUtilities;
+import com.sonyericsson.util.ScalingUtilities.ScalingLogic;
 
 public class AddUserActivity extends Activity {
 	EditText mUserName;
@@ -39,8 +41,10 @@ public class AddUserActivity extends Activity {
 	RadioButton mMaleRB, mFemaleRB;
 	private Button mSubmit_button;
 	private ImageView mUserImage;
+
 	private final int FILE_SELECT_REQUEST = 12;
 	private final int TAKE_PIC_REQUEST = 24;
+	
 	private String pathToNewImage;
 	private Bitmap bitmap;
 
@@ -48,30 +52,32 @@ public class AddUserActivity extends Activity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_adduser);
-		getWindow().setSoftInputMode(
-				WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
-		mUserName = (EditText) findViewById(R.id.user_name);
+
+		getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
+		
 		mMaleRB = (RadioButton) findViewById(R.id.radioMale);
 		mUserImage = (ImageView) findViewById(R.id.user_image);
 		mSubmit_button = (Button) findViewById(R.id.adduser_button);
 		mHintText = (TextView) findViewById(R.id.user_img_hint);
-
+		mUserName = (EditText) findViewById(R.id.user_name);
 		mUserName.addTextChangedListener(new TextWatcher() {
-			public void afterTextChanged(Editable s) {
-			}
-
-			public void beforeTextChanged(CharSequence s, int start, int count,
-					int after) {
-			}
-
-			public void onTextChanged(CharSequence s, int start, int before,
-					int count) {
+			public void afterTextChanged(Editable s) {}
+			public void beforeTextChanged(CharSequence s, int start, int count,	int after) {}
+			public void onTextChanged(CharSequence s, int start, int before, int count) {
 				if (s.length() == 0)
 					mSubmit_button.setEnabled(false);
 				else
 					mSubmit_button.setEnabled(true);
 			}
 		});
+		if(savedInstanceState!= null){
+			pathToNewImage = (String) savedInstanceState.get("photoPath");
+			if(pathToNewImage!= null){
+				mHintText.setVisibility(View.INVISIBLE);
+				mUserImage.setImageBitmap(ScalingUtilities.decodeFile(pathToNewImage, 150, 150, ScalingLogic.FIT));
+			}
+		}
+	
 	}
 
 	public void onButtonClick(View view) {
@@ -79,47 +85,24 @@ public class AddUserActivity extends Activity {
 		case R.id.adduser_button:
 			String username = mUserName.getText().toString();
 			String filename = null;
+			int ismale = mMaleRB.isChecked() == true ? 1 : 0;
 			if (pathToNewImage != null) {
 				filename = Utils.getFilenameFromPath(pathToNewImage);
-				AddingImageTask ait = new AddingImageTask();
+				AddingImageTask ait = new AddingImageTask();		// dodanie obrazka do katalogu aplikacji
 				ait.execute(pathToNewImage);
 			}
-			int ismale = mMaleRB.isChecked() == true ? 1 : 0;
-
-			ContentValues img_val = new ContentValues();
-			img_val.put(ImageContract.Columns.PATH, filename);
-			img_val.put(ImageContract.Columns.CATEGORY, username + " - G³ówna");
-			Uri img_uri = getContentResolver().insert(
-					ImageContract.CONTENT_URI, img_val);
-			Long user_root_fk = Long.valueOf(img_uri.getLastPathSegment());
-			ContentValues user_val = new ContentValues();
-			user_val.put(UserContract.Columns.USERNAME, username);
-			user_val.put(UserContract.Columns.ISMALE, ismale);
-			user_val.put(UserContract.Columns.IMG_FILENAME, filename);
-			user_val.put(UserContract.Columns.ROOT_FK, user_root_fk);
-			Uri user_uri = getContentResolver().insert(
-					UserContract.CONTENT_URI, user_val);
-
-			img_val.put(ImageContract.Columns.AUTHOR_FK,
-					user_uri.getLastPathSegment()); // ustawienie autora
-													// korzenia
-			getContentResolver().update(img_uri, img_val, null, null);
-			Storage.saveToPreferences(null, "photoPath", this,
-					Activity.MODE_PRIVATE); // clear preferences
+			addNewUserToDb(username, ismale, filename);
 			finish();
 			break;
 
 		case R.id.cancel_adduser_button:
-			Storage.saveToPreferences(null, "photoPath", this,
-					Activity.MODE_PRIVATE); // clear preferences
+			Storage.saveToPreferences(null, "photoPath", this, Activity.MODE_PRIVATE); // clear preferences
 			finish();
 			break;
 
 		case R.id.user_image:
 			final Activity a = this;
-			AlertDialog.Builder builder = new AlertDialog.Builder(this); // Add
-																			// the
-																			// buttons
+			AlertDialog.Builder builder = new AlertDialog.Builder(this); // Add the buttons
 			builder.setPositiveButton("zrób zdjêcie",
 					new DialogInterface.OnClickListener() {
 						public void onClick(DialogInterface dialog, int id) {
@@ -129,8 +112,7 @@ public class AddUserActivity extends Activity {
 			builder.setNegativeButton("wybierz obrazek",
 					new DialogInterface.OnClickListener() {
 						public void onClick(DialogInterface dialog, int id) {
-							ImageIntents.selectImageIntent(a,
-									FILE_SELECT_REQUEST);
+							ImageIntents.selectImageIntent(a,FILE_SELECT_REQUEST);
 						}
 					});
 
@@ -153,12 +135,7 @@ public class AddUserActivity extends Activity {
 				else
 					pathToNewImage = Storage.readFromPreferences(null,"photoPath", this, Activity.MODE_PRIVATE);
 				
-				mHintText.setVisibility(View.INVISIBLE);
-				int w, h;
-				w = mUserImage.getWidth();
-				h = mUserImage.getHeight();
-				bitmap = BitmapCalc.decodeSampleBitmapFromFile(pathToNewImage,	w, h);
-				mUserImage.setImageBitmap(bitmap);
+				mUserImage.setImageBitmap(ScalingUtilities.decodeFile(pathToNewImage, mUserImage.getWidth(), mUserImage.getHeight(), ScalingLogic.FIT));
 				mHintText.setVisibility(View.INVISIBLE);
 				Toast.makeText(this, pathToNewImage, Toast.LENGTH_LONG).show();		
 				
@@ -166,4 +143,29 @@ public class AddUserActivity extends Activity {
 		}
 	}
 
+	@Override
+	protected void onSaveInstanceState(Bundle outState) {
+		super.onSaveInstanceState(outState);
+		if(pathToNewImage!= null)
+			outState.putString("photoPath", pathToNewImage);
+	}
+	
+	private void addNewUserToDb(String username, int ismale, String user_img){
+		ContentValues img_val = new ContentValues();								// stworzenie nowego korzenia dla u¿ytkownika
+		img_val.put(ImageContract.Columns.PATH, user_img);
+		img_val.put(ImageContract.Columns.CATEGORY, username + " - G³ówna");
+		Uri img_uri = getContentResolver().insert(ImageContract.CONTENT_URI, img_val);
+		
+		Long user_root_fk = Long.valueOf(img_uri.getLastPathSegment()); 			// dodanie nowego u¿ytkownika do bazy
+		ContentValues user_val = new ContentValues();
+		user_val.put(UserContract.Columns.USERNAME, username);
+		user_val.put(UserContract.Columns.ISMALE, ismale);
+		user_val.put(UserContract.Columns.IMG_FILENAME, user_img);
+		user_val.put(UserContract.Columns.ROOT_FK, user_root_fk);
+		Uri user_uri = getContentResolver().insert(UserContract.CONTENT_URI, user_val);
+
+		img_val.put(ImageContract.Columns.AUTHOR_FK,user_uri.getLastPathSegment()); // powi¹zanie u¿ytkownika z jego korzeniem
+		getContentResolver().update(img_uri, img_val, null, null);
+		Storage.saveToPreferences(null, "photoPath", this, Activity.MODE_PRIVATE); 	// clear preferences
+	}
 }

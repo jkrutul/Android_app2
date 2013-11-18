@@ -258,6 +258,7 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 		if (tts != null) {
 			tts.stop();
 			tts.shutdown();
+			Log.i("TTS", "tts shutdown");
 		}
 		super.onDestroy();
 	}
@@ -267,14 +268,13 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 		int result;
 		if (status == TextToSpeech.SUCCESS) {			
 			Locale pol_loc = new Locale("pl", "pl_PL");
-			if(TextToSpeech.LANG_AVAILABLE ==tts.isLanguageAvailable(Locale.ENGLISH)){
+			if(TextToSpeech.LANG_AVAILABLE ==tts.isLanguageAvailable(pol_loc)){
 				result = tts.setLanguage(pol_loc);
 			}else{
 				result=tts.setLanguage(Locale.ENGLISH);
 			}
 				
-			if (result == TextToSpeech.LANG_MISSING_DATA
-					|| result == TextToSpeech.LANG_NOT_SUPPORTED) {
+			if (result == TextToSpeech.LANG_MISSING_DATA|| result == TextToSpeech.LANG_NOT_SUPPORTED) {
 				Log.e("TTS", "LANG_NOT_SUPPORTED");
 			} else {
 				//btnSpeak.setEnabled(true);
@@ -297,8 +297,7 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 			} else {
 				// missing data, install it
 				Intent installIntent = new Intent();
-				installIntent
-						.setAction(TextToSpeech.Engine.ACTION_INSTALL_TTS_DATA);
+				installIntent.setAction(TextToSpeech.Engine.ACTION_INSTALL_TTS_DATA);
 				startActivity(installIntent);
 			}
 		}
@@ -354,24 +353,11 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
         	mCategoryTitles.add(category);
         	c.moveToNext();
         }
-        //c.close();
-        
-        /*
-        rootCategory = db.getRootCategory();
-        if(rootCategory!=null){
-	        subCategories = db.getSubcategories(rootCategory.getId());
-	        
-	        for(ImageObject i: subCategories){
-	        	mCategoryTitles.add(i.getCategory());
-	        }
-        }
-        */
-        
+       
 		String[] from = new String[] {
 				   ImageContract.Columns._ID, 
 				   ImageContract.Columns.PATH,
 				   ImageContract.Columns.CATEGORY};
-				// Fields on the UI to which we map
 		int[] to = new int[] { 0, R.id.icon, R.id.category };
 		
         SimpleCursorAdapter adapter = new SimpleCursorAdapter(getApplicationContext(), R.layout.image_row /*drawer_row */, c, from,to, 0);

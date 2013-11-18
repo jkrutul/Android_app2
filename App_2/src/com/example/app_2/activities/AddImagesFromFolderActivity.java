@@ -1,19 +1,24 @@
 package com.example.app_2.activities;
 
-import java.net.URISyntaxException;
+import java.io.File;
 import java.util.ArrayList;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ProgressDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.DialogInterface.OnClickListener;
 import android.database.Cursor;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
@@ -29,8 +34,11 @@ import com.example.app_2.R;
 import com.example.app_2.adapters.MySpinnerAdapter;
 import com.example.app_2.contentprovider.ImageContract;
 import com.example.app_2.contentprovider.UserContract;
+import com.example.app_2.provider.Images;
 import com.example.app_2.provider.Images.ProcessBitmapsTask;
 import com.example.app_2.provider.SpinnerItem;
+import com.example.app_2.storage.Database;
+import com.example.app_2.storage.Storage;
 import com.example.app_2.utils.Utils;
 
 public class AddImagesFromFolderActivity  extends Activity{
@@ -58,10 +66,22 @@ public class AddImagesFromFolderActivity  extends Activity{
 		setContentView(R.layout.activity_import);
 		pathEditText = (EditText) findViewById(R.id.path_to_folder);
 		import_button= (Button) findViewById(R.id.import_button);
-		//mUserSpinner = (Spinner) findViewById(R.id.user_spinner);
+		pathEditText.addTextChangedListener(new TextWatcher() {
+			public void afterTextChanged(Editable s) {
+			}
+
+			public void beforeTextChanged(CharSequence s, int start, int count,
+					int after) {
+			}
+
+			public void onTextChanged(CharSequence s, int start, int before, int count) {
+				if (s.length() == 0)
+					import_button.setEnabled(false);
+				else
+					import_button.setEnabled(true);
+			}
+		});
 		mCatSpinner = (Spinner) findViewById(R.id.parent_spinner);
-		
-		//addItemsOnUserSpinner();
 		addItemsOnCategorySpinner();
 	}
 
@@ -75,7 +95,8 @@ public class AddImagesFromFolderActivity  extends Activity{
 				SpinnerItem data = categoryItems.get(position);
 				if(data.isHint()){
 					TextView tv = (TextView)selectedItemView;
-					tv.setTextColor(Color.rgb(148, 150, 148));
+					if(tv != null)
+						tv.setTextColor(Color.rgb(148, 150, 148));
 				}
 				import_to_parent_id = data.getItemId();
 			}
@@ -144,18 +165,8 @@ public class AddImagesFromFolderActivity  extends Activity{
 	
 	
 	public void showFileChooser(View view) {
-		
-		//Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-		//Uri uri = Uri.parse(Environment.getExternalStorageDirectory().getPath()
-		//    + "/myFolder/");
-		//intent.setDataAndType(uri, "text/csv");
-		//startActivity(Intent.createChooser(intent, "Open folder"));
-		
-		
 	    Intent intent = new Intent(Intent.ACTION_GET_CONTENT); 
 	    intent.setType("*/*"); 
-	    //intent.addCategory(Intent.CATEGORY_OPENABLE);
-
 	    try {
 	        startActivityForResult( Intent.createChooser(intent, "Wybierz folder z obrazkami"), FILE_SELECT_CODE);
 	    } catch (android.content.ActivityNotFoundException ex) {
@@ -174,7 +185,6 @@ public class AddImagesFromFolderActivity  extends Activity{
 	            Log.d(TAG, "File Uri: " + uri.toString());
 	            // Get the path
 	            String path = null;
-
 					path = Utils.getPath(this, uri);
 					String[] fn = path.split("\\/");
 			    	if(fn.length>1)
@@ -195,35 +205,37 @@ public class AddImagesFromFolderActivity  extends Activity{
 
 	@TargetApi(Build.VERSION_CODES.HONEYCOMB)
 	public void onImportClick(View view){
-		if(!pathEditText.getText().equals("")){
-			String parent_fk= null;
-			int spinnerSelectedPos = mCatSpinner.getSelectedItemPosition();
-			if (spinnerSelectedPos != Spinner.INVALID_POSITION)
-				parent_fk = String.valueOf(categoryItems.get(spinnerSelectedPos).getItemId());
-			
-			ProcessBitmapsTask processBitmapsTask = new ProcessBitmapsTask(this);
-			//AddToDatabaseTask addToDbTask = new AddToDatabaseTask(this);
-			
-			//if(processBitmapsTask.getStatus() == android.os.AsyncTask.Status.PENDING)
-				processBitmapsTask.executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, pathEditText.getText().toString(), parent_fk);
-				//finish();
-			//else if(processBitmapsTask.getStatus() == android.os.AsyncTask.Status.FINISHED)
-			//	addToDbTask.executeOnExecutor(AsyncTask.SERIAL_EXECUTOR,  pathEditText.getText().toString(), parent_fk);
-			
-			//else
-			//	;
-			/*
-			finish();
-			 if (asynclass.getStatus() == android.os.AsyncTask.Status.PENDING) {
-	             asynclass.execute();
-	         } else if (RF.getStatus() == android.os.AsyncTask.Status.FINISHED) {
-	             asynclass = new asyncclass();
-	             asynclass.execute();
-	         } else {
-	             Toast.maketoast(this, "Plz wait", 1).show();
-	         }
-	         */
+		String importPath = pathEditText.getText().toString();
+		if(!importPath.equals("")){
+			File f = new File(importPath);
+			if(f.exists()){
+				final Activity a = this;
+				 new AlertDialog.Builder(this)
+			        .setTitle("Znaleziono "+Images.getImagesFileNames(Storage.getFilesNamesFromDir( f)).size()+" obrazków")
+			        .setMessage("Dodaæ do aplikacji?")
+			        .setNegativeButton(android.R.string.no,  new OnClickListener() {
+						@Override
+						public void onClick(DialogInterface dialog, int which) {
+							return;
+						}
+			        })
+			        .setPositiveButton(android.R.string.yes, new OnClickListener() {
+						@Override
+						public void onClick(DialogInterface dialog, int which) {
+						String parent_fk= null;
+						int spinnerSelectedPos = mCatSpinner.getSelectedItemPosition();
+						if (spinnerSelectedPos != Spinner.INVALID_POSITION)
+							parent_fk = String.valueOf(categoryItems.get(spinnerSelectedPos).getItemId());
+						
+						ProcessBitmapsTask processBitmapsTask = new ProcessBitmapsTask(a);
+						processBitmapsTask.executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, pathEditText.getText().toString(), parent_fk);
+						}
+			        }).create().show();
 			}
+			else{
+				Toast.makeText(this, "Folder o podanej œcie¿ce nie istnieje!", Toast.LENGTH_LONG).show();
+			}
+		}
 	}
 	
 	@Override
