@@ -132,7 +132,7 @@
             android:label="SettingsActivity" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.example.app_2.activities.MainActivity" />
+                android:value="com.example.app_2.activities.ImageGridActivity" />
         </activity>
 
         <provider

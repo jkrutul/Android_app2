@@ -264,12 +264,12 @@ public class Images {
 		@Override
 		protected Void doInBackground(String... arg0) {
 			int count;
-			String path = arg0[0];
+			String path_to_dir = arg0[0];
 			String parent_id = arg0[1];
 
 			imgLastModified = Storage.getImagesDir().lastModified();
 
-			List<String> fileNames = getImagesFileNames(Storage.getFilesNamesFromDir(new File(path)));
+			List<String> fileNames = getImagesFileNames(Storage.getFilesNamesFromDir(new File(path_to_dir)));
 
 			// GENERUJ MINIATURKI
 			String path_toIMG, path_toTHUMB, path_toFullScreenTHUMB, app_thumb_dir, app_fc_thumb_dir;
@@ -282,28 +282,40 @@ public class Images {
 			maxWidth = App_2.getMaxWidth();
 			maxHeight = App_2.getMaxHeight();
 
-			Log.i(LOG_TAG, "thumbs will be w:" + thumbWidth + " h:"
-					+ thumbHeight);
-			Log.i(LOG_TAG, "max thumbs will be w:" + maxWidth + " h:"
-					+ maxHeight);
-
+			Log.i(LOG_TAG, "thumbs will be w:" + thumbWidth + " h:"	+ thumbHeight);
+			Log.i(LOG_TAG, "max thumbs will be w:" + maxWidth + " h:"	+ maxHeight);
 			count = fileNames.size();
 			int i = 0;
 
 			app_thumb_dir = Storage.getThumbsDir() + File.separator;
 			app_fc_thumb_dir = Storage.getThumbsMaxDir() + File.separator;
 			
+			int min_scale = 8; // oczekiwana maxymalna iloœæ obrazków na ekranie 
+			
+			int citems = 0;
+			while(min_scale>=1){
+				min_scale/=2;
+				citems++;
+			}
+			int[] scaleTab = new int[citems]; //1, 2, 4, 8, 
+
+			for(int k = 1, j=0; j<scaleTab.length; k*=2){
+				scaleTab[j++]=k;
+			}
+			
 			for (String filename : fileNames) {
 				publishProgress((int) ((i / (float) count) * 100));
-				path_toIMG = path + File.separator + filename;
+				Storage.scaleAndSaveBitmapFromPath(path_to_dir + File.separator + filename, scaleTab, Bitmap.CompressFormat.PNG,100);
+
+				/*
+				path_toIMG = path_to_dir + File.separator + filename;
 				path_toTHUMB = app_thumb_dir+ filename;
 				path_toFullScreenTHUMB = app_fc_thumb_dir + filename;
 
 				bitmap = BitmapCalc.decodeSampleBitmapFromFile(path_toIMG, maxWidth, maxHeight); // mo¿e byæ null
 
 				try {
-					FileOutputStream out = new FileOutputStream(
-							path_toFullScreenTHUMB);
+					FileOutputStream out = new FileOutputStream(path_toFullScreenTHUMB);
 					bitmap.compress(Bitmap.CompressFormat.PNG, 100, out);
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -318,7 +330,7 @@ public class Images {
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
-
+				*/
 				i++;
 				if (isCancelled())
 					break;
@@ -327,7 +339,7 @@ public class Images {
 
 			//img_dir_last_read = Storage.getImagesDir().lastModified();
 			//Storage.saveToSharedPreferences("imgDirLastRead", Long.toString(img_dir_last_read), "imgDirLastRead",App_2.getAppContext(), Context.MODE_PRIVATE);
-			addImagesToDatabase(path, parent_id);
+			addImagesToDatabase(path_to_dir, parent_id);
 
 			// cursor.close();
 			return null;
@@ -383,8 +395,7 @@ public class Images {
 			path_toFullScreenTHUMB = Storage.getThumbsMaxDir() + File.separator
 					+ filename;
 
-			bitmap = BitmapCalc.decodeSampleBitmapFromFile(path_toIMG,
-					maxWidth, maxHeight);
+			bitmap = BitmapCalc.decodeSampleBitmapFromFile(path_toIMG,		maxWidth, maxHeight);
 			Log.w(LOG_TAG, bitmap.getHeight() + " " + bitmap.getWidth());
 			try {
 				FileOutputStream out = new FileOutputStream(path_toFullScreenTHUMB);

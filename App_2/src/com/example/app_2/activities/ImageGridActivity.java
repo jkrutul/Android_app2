@@ -33,6 +33,7 @@ import android.database.MatrixCursor;
 import android.database.MergeCursor;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.speech.tts.TextToSpeech;
 import android.support.v4.app.ActionBarDrawerToggle;
 import android.support.v4.app.Fragment;
@@ -41,15 +42,14 @@ import android.support.v4.app.FragmentTransaction;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v4.widget.SimpleCursorAdapter;
 import android.util.Log;
-import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.View.OnKeyListener;
 import android.widget.AdapterView;
 import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import com.example.app_2.R;
 import com.example.app_2.contentprovider.ImageContract;
@@ -65,11 +65,15 @@ import com.example.app_2.utils.Utils;
  */
 public class ImageGridActivity extends FragmentActivity implements TextToSpeech.OnInitListener{
     private static final String TAG = "ImageGridActivity";
-    private static final String GRID_FRAGMENT_TAG = "FragmentGrid";
+
+    public static final String GRID_FRAGMENT_TAG = "FragmentGrid";
     private static final String EXPRESSION_FRAGMENT_TAG = "FragmentExpression";
     public static final int PLEASE_WAIT_DIALOG = 1;
     public static ProgressDialog dialog;
+    private static boolean doubleBackToExitPressedOnce = false;
+	public static int actual_category_fk;
     
+    public static List<Integer> fragmentsHistory = new LinkedList<Integer>();
     private List<String> mCategoryTitles = new LinkedList<String>();
     private DrawerLayout mDrawerLayout;
     private ActionBarDrawerToggle mDrawerToggle;
@@ -84,7 +88,8 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
     
     private ImageGridFragment igf;
     
-	public static final int MY_DATA_CHECK_CODE = 1;
+	private static final int TTS_REQUEST_CODE = 1;
+    private static final int SETTINGS_REQUEST_CODE = 37;
     
     
     
@@ -106,7 +111,7 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
         // pobranie syntezatora mowy
 		Intent checkIntent = new Intent();
 		checkIntent.setAction(TextToSpeech.Engine.ACTION_CHECK_TTS_DATA);
-		startActivityForResult(checkIntent, MY_DATA_CHECK_CODE);
+		startActivityForResult(checkIntent, TTS_REQUEST_CODE);
         
 		// ustawienie drawera
         //expandedImageView = (ImageView) findViewById(R.id.expanded_image);
@@ -182,11 +187,11 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 
         // Handle presses on the action bar items
         switch (item.getItemId()) {
-            case R.id.action_search:
-                //openSearch();
-                return true;
             case R.id.action_settings:
-                //openSettings();
+    			Intent intent = new Intent(this, SettingsActivity.class);
+    			startActivity(intent);
+    			overridePendingTransition(R.anim.right_slide_in, R.anim.right_slide_out);
+    			finish();
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -215,29 +220,30 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 
 		@Override
 		public void onItemClick(AdapterView parent, View view, int position, long id) {
-			selectItem(position);		
-			
+			if(actual_category_fk != id)
+				selectItem(position);
+			else{
+				Toast.makeText(getApplicationContext(), "Jesteœ ju¿ w tej kategorii", Toast.LENGTH_SHORT ).show();
+			    mDrawerLayout.closeDrawers();
+			}
 		}
 		
 		private void selectItem(int position){
-            //expandedImageView.setVisibility(View.GONE);
-			
 			Fragment fragment = new ImageGridFragment();
 			Bundle args = new Bundle();
 			Long cat_id = mCategoryMap.get(mCategoryTitles.get(position));
 			Log.i("info", "parent " + Utils.getKeyByValue(mCategoryMap, cat_id));
-			
-			
 			args.putLong("CATEGORY_ID", cat_id);
 			fragment.setArguments(args);
 			
 			//Insert the fragment by replacing an existing fragment
-			if(getSupportFragmentManager().findFragmentByTag(GRID_FRAGMENT_TAG)!=null){
-				final FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
-	            ft.replace(R.id.content_frame, fragment, GRID_FRAGMENT_TAG);
-	            ft.addToBackStack(null);
-	            ft.commit();				
-			}
+			
+			final FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+	        ft.replace(R.id.content_frame, fragment, GRID_FRAGMENT_TAG);
+
+
+		    ImageGridActivity.fragmentsHistory.add(actual_category_fk);
+            ft.commit();				
 			
 			 // Highlight the selected item, update the title, and close the drawer
 		    mDrawerList.setItemChecked(position, true);
@@ -290,10 +296,9 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 	}
 	
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-		if (requestCode == MY_DATA_CHECK_CODE) {
+		if (requestCode == TTS_REQUEST_CODE) {
 			if (resultCode == TextToSpeech.Engine.CHECK_VOICE_DATA_PASS) {
-				// success, crate the TTS instance
-				tts = new TextToSpeech(this, this);
+				tts = new TextToSpeech(this, this); // success, crate the TTS instance
 			} else {
 				// missing data, install it
 				Intent installIntent = new Intent();
@@ -302,8 +307,6 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 			}
 		}
 	}
-	
-
 
 	@SuppressLint("NewApi")
 	@TargetApi(Build.VERSION_CODES.HONEYCOMB)
@@ -381,20 +384,40 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
         mDrawerList.setOnItemClickListener(new DrawerItemClickListener());
 	}
 	
-	/*
+	
 	@Override
 	public void onBackPressed() {
-		super.onBackPressed();
-		igf.getView().setOnKeyListener( new OnKeyListener(){
-		    @Override
-		    public boolean onKey( View v, int keyCode, KeyEvent event ){
-		        if( keyCode == KeyEvent.KEYCODE_BACK )
-		            return true;
-		        return false;
-		    }
-		} );
+		if(fragmentsHistory.size()>0){
+	        Fragment fragment = new ImageGridFragment();
+			Bundle args = new Bundle();			
+			args.putLong("CATEGORY_ID", fragmentsHistory.get(fragmentsHistory.size()-1));
+			fragment.setArguments(args);
+			 
+			final FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+			ft.setCustomAnimations(android.R.anim.slide_in_left, android.R.anim.slide_out_right);
+			 //ft.setCustomAnimations(R.anim.slide_in_right, R.anim.slide_out_left);
+		     ft.replace(R.id.content_frame, fragment, GRID_FRAGMENT_TAG);
+		     fragmentsHistory.remove(fragmentsHistory.size()-1);
+		     ft.commit();		
+		}
+		else{ // opuszczam aplikacje
+			if (doubleBackToExitPressedOnce) {
+	            super.onBackPressed();
+	            return;
+	        }
+	        this.doubleBackToExitPressedOnce = true;
+	        Toast.makeText(this, "Naciœnij jeszcze raz aby wyjœæ", Toast.LENGTH_SHORT).show();
+	        new Handler().postDelayed(new Runnable() {
+
+	            @Override
+	            public void run() {
+	             doubleBackToExitPressedOnce=false;   
+
+	            }
+	        }, 2000);
+		}
 	}
-	 */
+	 
 	
 	
 }

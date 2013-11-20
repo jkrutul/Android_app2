@@ -1,6 +1,7 @@
 package com.example.app_2.storage;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -11,6 +12,9 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.graphics.Bitmap.CompressFormat;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Environment;
 import android.provider.MediaStore.Images;
@@ -18,6 +22,8 @@ import android.util.Log;
 
 
 import com.example.app_2.App_2;
+import com.example.app_2.utils.BitmapCalc;
+import com.example.app_2.utils.Utils;
 
 
 public class Storage {
@@ -28,6 +34,8 @@ public class Storage {
 	public static final String IMG_THUMBS_MAX = "thumbs_max";	// miniatury obrazków które siê mieszcz¹ na ca³ym ekranie tablety/smartfona
 	public static final String TEMP = "temp";
 	public static final int IO_BUFFER_SIZE = 8 * 1024;
+	public static final int dev_width = App_2.getMaxWidth();
+	public static final int dev_height = App_2.getMaxHeight();
 	
 	/**
 	 * AppRootDirecotory is /Android/data/[packageName]/files/
@@ -112,6 +120,23 @@ public class Storage {
 	public static File getThumbsDir(){
 		return getsDir(IMG_THUBS);
 		}
+	
+	
+	public static File getScaledThumbsDir(String scale, boolean createIfNotExist){
+		File file = new File(getAppRootDir().getAbsolutePath() + File.separator	+ scale);
+		if(file.exists())
+			return file;
+		else
+			if(createIfNotExist){
+				if (!file.mkdir())
+					Log.e(LOG_TAG, "Directory:"+file.getAbsolutePath()+" not created");
+				else
+					return file;
+			}
+		return null;
+	}
+	
+
 	
 	public static File getThumbsMaxDir(){
 		return getsDir(IMG_THUMBS_MAX);
@@ -213,5 +238,74 @@ public class Storage {
 		String value = sharedPref.getString((key), defValue);
 		return value;
 	}
+
+	
+	public static void scaleAndSaveBitmapFromPath(String path_toIMG, int[] scaleTab, Bitmap.CompressFormat compressformat, int quality ){
+		Bitmap bitmap;
+		String last_saved_img_path = null;
+		String filename = Utils.getFilenameFromPath(path_toIMG);
+		
+		for(int scale : scaleTab){
+			File app_thumb_dir = Storage.getScaledThumbsDir(String.valueOf(scale),true);
+			int new_w, new_h;
+			new_w = (int) Math.floor(dev_width / scale);
+			new_h = (int) Math.floor(dev_height / scale);
+			if(last_saved_img_path==null)
+				bitmap = BitmapCalc.decodeSampleBitmapFromFile(path_toIMG, new_w, new_h); // mo¿e byæ null
+			else
+				bitmap = BitmapCalc.decodeSampleBitmapFromFile(last_saved_img_path, new_w, new_h);
+			try {
+				last_saved_img_path = app_thumb_dir+ File.separator+filename;
+				FileOutputStream out = new FileOutputStream(last_saved_img_path);
+				bitmap.compress(compressformat, quality, out);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+		
+	}
+
+	public static Bitmap getScaledBitmap(String filename, int width){
+		if( width == 0 )
+			return null;
+		
+		
+		File img_f;	
+		int scale = (int) Math.floor(dev_width/width);
+		do{
+			String dir_to_scaled = Storage.getScaledThumbsDir(String.valueOf(scale), false).getAbsolutePath();
+			if(dir_to_scaled!= null){										//sprawdzam czy istnieje ju¿ skalowany obrazek
+				img_f = new File(dir_to_scaled + File.separator + filename);
+				if(img_f.exists())
+					return BitmapFactory.decodeFile(img_f.getAbsolutePath());
+			}else
+				scale/=2;
+		}while(scale!=1);
+		//barak obrazka!!!
+		return null;
+	}
+	
+	
+	public static String getPathToScaledBitmap(String filename, int width){
+		if( width == 0 )
+			return null;
+		
+		File img_f = null;
+		int scale = (int) Math.floor(dev_width/width);
+		scale  = (scale >= 8) ? 8: scale;
+		do{
+			File f = Storage.getScaledThumbsDir(String.valueOf(scale), false);
+			if(f!= null){											//sprawdzam czy istnieje ju¿ skalowany obrazek
+				String dir_to_scaled = f.getAbsolutePath();
+				img_f = new File(dir_to_scaled + File.separator + filename);
+				if(img_f.exists())
+					return img_f.getAbsolutePath();
+			}else
+				scale = (int) Math.ceil(scale/2d);
+		}while(!(scale<1));
+
+		return null;
+	}
+
 
 }

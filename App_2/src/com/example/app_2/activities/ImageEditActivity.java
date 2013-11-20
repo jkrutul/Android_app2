@@ -60,7 +60,8 @@ public class ImageEditActivity extends FragmentActivity{
 				SpinnerItem data = items.get(position);
 				if(data.isHint()){
 					TextView tv = (TextView)selectedItemView;
-					tv.setTextColor(Color.rgb(148, 150, 148));
+					if(tv!=null)
+						tv.setTextColor(Color.rgb(148, 150, 148));
 				}
 				bundle.putLong("cat_id", data.getItemId());
 				getSupportLoaderManager().restartLoader(0, bundle, ilf);

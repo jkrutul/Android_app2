@@ -16,6 +16,14 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		addPreferencesFromResource(R.xml.preferences);
+		
+		SharedPreferences sp = getPreferenceScreen().getSharedPreferences();
+		Preference pref = findPreference("pref_img_size");
+		pref.setSummary(sp.getString("pref_img_size", ""));
+		pref = findPreference("pref_img_desc_font_size");
+		pref.setSummary(sp.getString("pref_img_desc_font_size", ""));
+		
+		sp.registerOnSharedPreferenceChangeListener(this);
 	}
 
 	@Override
@@ -23,14 +31,12 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
 		if(key.equals("pref_img_size")){
 			Preference pref = findPreference(key);
 			pref.setSummary(sharedPreferences.getString(key, ""));
-
-			//getActivity().startService(service);
-			
 		}
 		else if(key.equals("pref_img_desc_font_size")){
 			Preference pref = findPreference(key);
 			pref.setSummary(sharedPreferences.getString(key, ""));
 		}
+
 	}
 
 }

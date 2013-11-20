@@ -18,9 +18,9 @@ package com.example.app_2.utils;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.net.URISyntaxException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
@@ -33,12 +33,15 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.Bitmap.CompressFormat;
 import android.net.Uri;
 import android.os.Build;
 import android.os.StrictMode;
 
 import com.example.app_2.App_2;
 import com.example.app_2.activities.ImageGridActivity;
+import com.example.app_2.storage.Storage;
 
 /**
  * Class containing some static utility methods.
@@ -192,4 +195,7 @@ public class Utils {
 
 	    return null;
 	} 
+
+
+
 }
