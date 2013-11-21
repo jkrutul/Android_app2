@@ -91,8 +91,8 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
     		    // Load the high-resolution "zoomed-in" image.
     			if(expandedImageView!=null){
     				expandedImageView.bringToFront();
-    				 String path = Images.getImageFullScreenThumbsPath(img_object.getImageName());
-
+    				//0 String path = Images.getImageFullScreenThumbsPath(img_object.getImageName());
+    				 String path = Storage.getPathToScaledBitmap(img_object.getImageName(), dev_w);
     				 //Bitmap b = BitmapFactory.decodeFile(path);
     				 //Drawable verticalImage = new BitmapDrawable(getResources(), b);
     		         Bitmap unscaledBitmap = ScalingUtilities.decodeFile(path, App_2.getMaxWidth(), App_2.getMaxHeight(), ScalingLogic.FIT);

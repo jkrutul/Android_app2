@@ -240,7 +240,7 @@ public class Storage {
 	}
 
 	
-	public static void scaleAndSaveBitmapFromPath(String path_toIMG, int[] scaleTab, Bitmap.CompressFormat compressformat, int quality ){
+	public static String scaleAndSaveBitmapFromPath(String path_toIMG, int[] scaleTab, Bitmap.CompressFormat compressformat, int quality,Database db ){
 		Bitmap bitmap;
 		String last_saved_img_path = null;
 		String filename = Utils.getFilenameFromPath(path_toIMG);
@@ -255,13 +255,22 @@ public class Storage {
 			else
 				bitmap = BitmapCalc.decodeSampleBitmapFromFile(last_saved_img_path, new_w, new_h);
 			try {
+				// sprawdzam czy plik o podanej nazwie nie istnieje w bazie 
+				while(db.filenameVerification(filename)){
+					String ext = ".";
+					ext+= Utils.getExtention(filename);
+					filename = Utils.cutExtention(filename);
+					filename+=("_"+ext);
+				}
 				last_saved_img_path = app_thumb_dir+ File.separator+filename;
 				FileOutputStream out = new FileOutputStream(last_saved_img_path);
 				bitmap.compress(compressformat, quality, out);
+				return filename;
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
 		}
+		return null;
 		
 	}
 
@@ -289,7 +298,6 @@ public class Storage {
 	public static String getPathToScaledBitmap(String filename, int width){
 		if( width == 0 )
 			return null;
-		
 		File img_f = null;
 		int scale = (int) Math.floor(dev_width/width);
 		scale  = (scale >= 8) ? 8: scale;
@@ -300,9 +308,11 @@ public class Storage {
 				img_f = new File(dir_to_scaled + File.separator + filename);
 				if(img_f.exists())
 					return img_f.getAbsolutePath();
-			}else
-				scale = (int) Math.ceil(scale/2d);
-		}while(!(scale<1));
+			}
+			if(scale == 1)
+				break;
+			scale = (int) Math.ceil(scale/2d);
+		}while(true);
 
 		return null;
 	}

@@ -27,6 +27,7 @@ import com.example.app_2.activities.ImageDetailsActivity;
 import com.example.app_2.contentprovider.ImageContract;
 import com.example.app_2.contentprovider.ImagesOfParentContract;
 import com.example.app_2.provider.Images;
+import com.example.app_2.storage.Storage;
 import com.example.app_2.utils.ImageLoader;
 
 public class ImageListFragment extends ListFragment implements LoaderCallbacks<Cursor> {
@@ -57,7 +58,8 @@ public class ImageListFragment extends ListFragment implements LoaderCallbacks<C
 		adapter.setViewBinder(new SimpleCursorAdapter.ViewBinder() {
 			public boolean setViewValue(View view, Cursor cursor,int columnIndex) {
 				if (view.getId() == R.id.icon) {
-					String path = Images.getImageThumbsPath(cursor.getString(cursor.getColumnIndex(ImageContract.Columns.PATH)));
+					String path = Storage.getPathToScaledBitmap(cursor.getString(cursor.getColumnIndex(ImageContract.Columns.PATH)), 100);
+					//String path = Images.getImageThumbsPath(cursor.getString(1));
 					ImageLoader.loadBitmap(path, (ImageView) view, false);
 					return true; // true because the data was bound to the view
 				}

@@ -57,6 +57,7 @@ import com.example.app_2.fragments.ExpressionListFragment;
 import com.example.app_2.fragments.ImageGridFragment;
 import com.example.app_2.models.ImageObject;
 import com.example.app_2.provider.Images;
+import com.example.app_2.storage.Storage;
 import com.example.app_2.utils.ImageLoader;
 import com.example.app_2.utils.Utils;
 
@@ -368,7 +369,7 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 			   /** Binds the Cursor column defined by the specified index to the specified view */
 			   public boolean setViewValue(View view, Cursor cursor, int columnIndex){
 			       if(view.getId() == R.id.icon/*category_image*/){
-						 String path = Images.getImageThumbsPath(cursor.getString(cursor.getColumnIndex(ImageContract.Columns.PATH)));
+						 String path = Storage.getPathToScaledBitmap(cursor.getString(cursor.getColumnIndex(ImageContract.Columns.PATH)),50);
 						 ImageLoader.loadBitmap(path, (ImageView) view, true);
 			           return true; //true because the data was bound to the view
 			       }

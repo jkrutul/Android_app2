@@ -130,6 +130,23 @@ public class Database {
 	}
 	
 	
+	public boolean filenameVerification(String _filename){
+		int count = -1;
+		Cursor c = null;
+		try{
+			String query = "select count(*) from "+ImageContract.TABLE_IMAGE+" where " + ImageContract.Columns.PATH+" =?";
+			c = db.rawQuery(query, new String[]{_filename});
+			if(c.moveToFirst()){
+				count = c.getInt(0);
+			}
+			return count > 0;
+		}finally{
+			if(c!=null){
+				c.close();
+			}
+		}
+	}
+	
 	/* I M A G E */
 	/* image - insert */
 	/***
@@ -156,6 +173,22 @@ public class Database {
 		mio = cursorToImage(c);
 		c.close();
 		return mio;
+	}
+	
+	public Long insertImage(String _filename){
+		/*
+		while(filenameVerification(_filename)){
+			String ext = ".";
+			ext+= Utils.getExtention(_filename);
+			_filename = Utils.cutExtention(_filename);
+			_filename+=("_"+ext);
+		}*/
+		
+		ContentValues cv = new ContentValues();
+		cv.put(ImageContract.Columns.PATH, _filename );
+		cv.put(ImageContract.Columns.DESC,  Utils.cutExtention(_filename));
+		cv.put(ImageContract.Columns.MODIFIED, dateFormat.format(date));
+		return db.insert(ImageContract.TABLE_IMAGE, null, cv);
 	}
 	
 	/* image - remove */

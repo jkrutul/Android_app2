@@ -228,7 +228,10 @@ public class AddImagesFromFolderActivity  extends Activity{
 							parent_fk = String.valueOf(categoryItems.get(spinnerSelectedPos).getItemId());
 						
 						ProcessBitmapsTask processBitmapsTask = new ProcessBitmapsTask(a);
-						processBitmapsTask.executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, pathEditText.getText().toString(), parent_fk);
+						ArrayList<String> lArgs = new ArrayList<String>();
+						lArgs.add(pathEditText.getText().toString());
+						lArgs.add("-1");
+						processBitmapsTask.executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, lArgs);
 						}
 			        }).create().show();
 			}

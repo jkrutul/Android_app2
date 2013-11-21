@@ -305,8 +305,8 @@ public class ImageDetailsFragment extends Fragment{
 					.getColumnIndexOrThrow(ImageContract.Columns.DESC)));
 
 			cursor.close();
-			ImageLoader.loadBitmap(Storage.getThumbsMaxDir() + File.separator
-					+ imgName, mImage, false);
+			
+			ImageLoader.loadBitmap(Storage.getPathToScaledBitmap(imgName, 300), mImage, false);
 			
 			setImageParents(id);
 		}

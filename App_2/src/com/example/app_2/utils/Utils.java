@@ -105,7 +105,15 @@ public class Utils {
     
     public static String cutExtention(String filename){
     	String[] fn = filename.split("\\.");
-    	return fn[0];
+    	return fn[0].replace("_", "");
+    }
+    
+    public static String getExtention(String filename){
+    	String[] fn = filename.split("\\.");
+    	if(fn.length>1)
+    		return fn[1];
+    	else
+    		return "";
     }
     
     public static String getFilenameFromPath(String path){

@@ -171,7 +171,10 @@ public class ImageLoader {
 	            Bitmap unscaledBitmap = ScalingUtilities.decodeFile(path, mWidth, mHeight, ScalingLogic.FIT);
 
 	            // Part 2: Scale image
-	            bitmap = ScalingUtilities.createScaledBitmap(unscaledBitmap, mWidth, mHeight, ScalingLogic.FIT);
+	            if(unscaledBitmap != null)
+	            	bitmap = ScalingUtilities.createScaledBitmap(unscaledBitmap, mWidth, mHeight, ScalingLogic.FIT);
+	            else
+	            	Log.e(LOG_TAG, "bitmap missing, path:" + path);
 	            unscaledBitmap.recycle();
 
 	            //scaledBitmap.recycle();

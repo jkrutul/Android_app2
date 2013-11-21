@@ -7,19 +7,20 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
+import android.R.string;
 import android.app.Activity;
 import android.content.ContentProviderOperation;
 import android.content.ContentProviderResult;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.OperationApplicationException;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.hardware.Camera.Size;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.RemoteException;
 import android.util.Log;
-import android.view.Display;
-import android.view.WindowManager;
 
 import com.example.app_2.App_2;
 import com.example.app_2.R;
@@ -28,6 +29,7 @@ import com.example.app_2.activities.ImageGridActivity;
 import com.example.app_2.contentprovider.ImageContract;
 import com.example.app_2.contentprovider.ParentContract;
 import com.example.app_2.models.ImageObject;
+import com.example.app_2.storage.Database;
 import com.example.app_2.storage.Storage;
 import com.example.app_2.utils.BitmapCalc;
 import com.example.app_2.utils.ImageLoader;
@@ -106,6 +108,29 @@ public class Images {
 		
 	}
 	
+	public static void addNewEntriesToImageTable(List<String> filenames, int categories[]){
+		Database db = Database.getInstance(App_2.getAppContext());
+		db.open();
+		int cvSize = categories.length;
+		
+		for(String filename: filenames){
+			Long inserted_id = db.insertImage(filename);
+			if(inserted_id!= -1){
+				ContentValues[] cvArray  = new ContentValues[cvSize];
+				int i =0;
+				for(int category_fk :categories){
+					category_fk = categories[i];
+					ContentValues cv = new ContentValues();
+					cv.put(ParentContract.Columns.IMAGE_FK, inserted_id);
+					cv.put(ParentContract.Columns.PARENT_FK, category_fk);
+					cvArray[i++] = cv;
+				}
+				App_2.getAppContext().getContentResolver().bulkInsert(ParentContract.CONTENT_URI, cvArray);
+			}
+		}
+		
+	}
+	
 	public static void addImagesToDatabase(String images_dir, String parent_id) {
 		List<String> fileNames = new LinkedList<String>();
 		ContentProviderResult[] opResults = null;
@@ -133,24 +158,29 @@ public class Images {
 		Long parents[] = new Long[1];
 		parents[0]=Long.valueOf(parent_id);
 		addToDict(getIdsFromContentProviderResult(opResults), parents);
-	
+		ContentValues[] cvArray  = new ContentValues[fileNames.size()];
 		/* DODANIE OBRAZKA DO WYBRANYCH KATEGORII */
 		if (parent_id != null) {// TODO zmieniæ na for i dodawaæ obrazki po tablicy rodziców
+			 
+			int itr=0;
 			for (String filename : fileNames) {
+				ContentValues cv = new ContentValues();
+				cv.put(ImageContract.Columns.PATH, filename);
+				cv.put(ImageContract.Columns.DESC,Utils.cutExtention(filename));
+				cvArray[itr++] = cv;
+				/*
 				batchOps.add(ContentProviderOperation
 						.newInsert(ImageContract.CONTENT_URI)
 						.withValue(ImageContract.Columns.PATH, filename)
 						.withValue(ImageContract.Columns.DESC,
 								Utils.cutExtention(filename)).build());
+				*/
 			}
-			try {
-				opResults = App_2.getAppContext().getContentResolver().applyBatch(ImageContract.AUTHORITY, batchOps);
-				batchOps.clear();
-			} catch (RemoteException e) {
-				e.printStackTrace();
-			} catch (OperationApplicationException e) {
-				e.printStackTrace();
-			}
+			
+			
+			//opResults = App_2.getAppContext().getContentResolver().applyBatch(ImageContract.AUTHORITY, batchOps);
+			 App_2.getAppContext().getContentResolver().bulkInsert(ImageContract.CONTENT_URI, cvArray);
+			//batchOps.clear();
 			
 				for (Long image_fk : getIdsFromContentProviderResult(opResults)) { // dodanie do wybranego drzewa
 					batchOps.add(ContentProviderOperation
@@ -215,7 +245,7 @@ public class Images {
 		return null;
 	}
 
-	public static String getImageThubms(int number) {
+	public static String getImageThubm(int number) {
 		if (number < images.size())
 			return Storage.getThumbsDir() + File.separator
 					+ images.get(number).getImageName();
@@ -243,12 +273,14 @@ public class Images {
 	/*
 	 * Dodawanie obrazków z wybranego folderu, do s³ownika i wybranej kategorii
 	 */
-	public static class ProcessBitmapsTask extends
-			AsyncTask<String, Integer, Void> {
+	public static class ProcessBitmapsTask extends	AsyncTask<ArrayList<String>, Integer, Void> {
 		Activity executing_activity;
+		Database db;
 
 		public ProcessBitmapsTask(Activity activity) {
 			this.executing_activity = activity;
+			db = Database.getInstance(activity);
+			db.open();
 		}
 
 		@Override
@@ -262,12 +294,25 @@ public class Images {
 		}
 
 		@Override
-		protected Void doInBackground(String... arg0) {
-			int count;
-			String path_to_dir = arg0[0];
-			String parent_id = arg0[1];
+		protected Void doInBackground(ArrayList<String>... arg) {
+			int count;		
+			ArrayList argsList = arg[0];
+			
+			int parents_count = argsList.size();
+			parents_count--;
+			String path_to_dir = (String) argsList.get(0);
+			int parents_fk[] = new int[parents_count];
+			
+			for(int i=1, j=0; i<argsList.size(); i++, j++){
+				try{
+					parents_fk[j] = Integer.parseInt((String) argsList.get(i));
+				}catch(NumberFormatException e){
+					e.printStackTrace();
+				}
+			}
 
-			imgLastModified = Storage.getImagesDir().lastModified();
+
+			//imgLastModified = Storage.getImagesDir().lastModified();
 
 			List<String> fileNames = getImagesFileNames(Storage.getFilesNamesFromDir(new File(path_to_dir)));
 
@@ -289,7 +334,7 @@ public class Images {
 
 			app_thumb_dir = Storage.getThumbsDir() + File.separator;
 			app_fc_thumb_dir = Storage.getThumbsMaxDir() + File.separator;
-			
+			/*
 			int min_scale = 8; // oczekiwana maxymalna iloœæ obrazków na ekranie 
 			
 			int citems = 0;
@@ -297,15 +342,20 @@ public class Images {
 				min_scale/=2;
 				citems++;
 			}
-			int[] scaleTab = new int[citems]; //1, 2, 4, 8, 
+			--citems;
+			int[] scaleTab = new int[citems]; //1, [2], 4, 8, 
 
 			for(int k = 1, j=0; j<scaleTab.length; k*=2){
-				scaleTab[j++]=k;
+				if(k!=2)
+					scaleTab[j++]=k;
 			}
-			
+			*/
+			int[] scaleTab = {1,4,8};
+			LinkedList<String> uniqueFilenames = new LinkedList<String>();
 			for (String filename : fileNames) {
 				publishProgress((int) ((i / (float) count) * 100));
-				Storage.scaleAndSaveBitmapFromPath(path_to_dir + File.separator + filename, scaleTab, Bitmap.CompressFormat.PNG,100);
+				
+				uniqueFilenames.add(Storage.scaleAndSaveBitmapFromPath(path_to_dir + File.separator + filename, scaleTab, Bitmap.CompressFormat.PNG,100,db));
 
 				/*
 				path_toIMG = path_to_dir + File.separator + filename;
@@ -339,7 +389,8 @@ public class Images {
 
 			//img_dir_last_read = Storage.getImagesDir().lastModified();
 			//Storage.saveToSharedPreferences("imgDirLastRead", Long.toString(img_dir_last_read), "imgDirLastRead",App_2.getAppContext(), Context.MODE_PRIVATE);
-			addImagesToDatabase(path_to_dir, parent_id);
+			//addImagesToDatabase(path_to_dir, parent_id);
+			addNewEntriesToImageTable(uniqueFilenames, parents_fk);
 
 			// cursor.close();
 			return null;

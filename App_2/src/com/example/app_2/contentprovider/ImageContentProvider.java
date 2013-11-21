@@ -10,6 +10,7 @@ import android.content.UriMatcher;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteQueryBuilder;
+import android.database.sqlite.SQLiteStatement;
 import android.net.Uri;
 import android.text.TextUtils;
 
@@ -138,6 +139,34 @@ public class ImageContentProvider extends ContentProvider{
 		if(rowsUpdated > 0)
 			getContext().getContentResolver().notifyChange(uri, null);
 		return rowsUpdated;
+	}
+	
+	@Override
+	public int bulkInsert(Uri uri, ContentValues[] values) {
+		final SQLiteDatabase db = mOpenHelper.getWritableDatabase();
+		final int match = sURIMatcher.match(uri);
+		switch(match){
+		case IMAGE:
+			int numInserted = 0;
+			db.beginTransaction();
+			try{
+				SQLiteStatement insert = db.compileStatement("insert into "+ImageContract.TABLE_IMAGE
+						+ " ("+ImageContract.Columns.PATH+","+ImageContract.Columns.DESC+")"
+						+ " values "+"(?,?)");
+				for(ContentValues value : values){
+					insert.bindString(1, value.getAsString(ImageContract.Columns.PATH));
+					insert.bindString(2, value.getAsString(ImageContract.Columns.DESC));
+					insert.execute();
+				}
+				db.setTransactionSuccessful();
+				numInserted= values.length;
+			}finally{
+				db.endTransaction();
+			}
+			return numInserted;
+			default:
+				throw new UnsupportedOperationException("unsupported uri:" +uri);
+		}
 	}
 	
 	private void checkColumns(String[] projection){
