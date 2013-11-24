@@ -15,6 +15,7 @@ import android.widget.TextView;
 import com.example.app_2.R;
 import com.example.app_2.provider.Images;
 import com.example.app_2.provider.SpinnerItem;
+import com.example.app_2.storage.Storage;
 import com.example.app_2.utils.ImageLoader;
 
 public class MySpinnerAdapter extends ArrayAdapter<SpinnerItem> {
@@ -69,8 +70,10 @@ public class MySpinnerAdapter extends ArrayAdapter<SpinnerItem> {
 				ImageView imageView = (ImageView) row.findViewById(R.id.icon);
 				
 				categoryName.setText(item.getItemString());
-				if(item.getPath()!=null)
-					ImageLoader.loadBitmap(Images.getImageThumbsPath(item.getPath()), imageView, false);
+				if(item.getFilename()!=null){
+					String path = Storage.getPathToScaledBitmap(item.getFilename(), 100);
+					ImageLoader.loadBitmap(path, imageView,false);
+				}
     		}
     	}
     	return row;    	

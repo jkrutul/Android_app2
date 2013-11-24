@@ -141,7 +141,7 @@ public class Images {
 		for (String filename : fileNames) {
 			batchOps.add(ContentProviderOperation
 					.newInsert(ImageContract.CONTENT_URI)
-					.withValue(ImageContract.Columns.PATH, filename)
+					.withValue(ImageContract.Columns.FILENAME, filename)
 					.withValue(ImageContract.Columns.DESC,
 							Utils.cutExtention(filename)).build());
 		}
@@ -165,7 +165,7 @@ public class Images {
 			int itr=0;
 			for (String filename : fileNames) {
 				ContentValues cv = new ContentValues();
-				cv.put(ImageContract.Columns.PATH, filename);
+				cv.put(ImageContract.Columns.FILENAME, filename);
 				cv.put(ImageContract.Columns.DESC,Utils.cutExtention(filename));
 				cvArray[itr++] = cv;
 				/*
@@ -199,16 +199,33 @@ public class Images {
 				}
 		}
 	}
-
-	public static List<String> getImagesFileNames(List<String> fileNames) {
-		Iterator<String> li = fileNames.iterator();
+// TODO
+	public static List<String> getImagesFileNames(List<String> paths) {
+		Iterator<String> li = paths.iterator();
 		while (li.hasNext()) { // sprawdŸ czy pliki s¹ obrazkami
-			if (!(isImgFile(Storage.getImagesDir() + File.separator + li.next()))) {
+			if (isImgFile(li.next()) == false)
 				li.remove();
-			}
 		}
-		return fileNames;
+		return paths;
 	}
+	/** Returns list of paths to image files
+	 * @param directory containing image files
+	 * @return list of image files
+	 */
+	public static List<File> getListOfImageFiles(String dir) {
+		List<File> files_from_dir = Storage.getFilesListFromDir(new File(dir));
+		List<File> images_from_dir = new LinkedList<File>();
+		
+		if(files_from_dir != null){	
+			for(File f:files_from_dir){
+				if(isImgFile(dir+File.separator+f.getName()))
+					images_from_dir.add(f);
+			}
+			return images_from_dir;
+		}else
+			return null;
+	}
+
 
 	public static String getImageThumbsPath(String imageName) {
 		String path = Storage.getThumbsDir() + File.separator + imageName;
@@ -259,6 +276,11 @@ public class Images {
 		return null;
 	}
 
+	/**
+	 * checks if a file with the specified path is a picture
+	 * @param path to file
+	 * @return true - is file is image else false
+	 */
 	private static boolean isImgFile(String path) {
 		BitmapFactory.Options options = new BitmapFactory.Options();
 		options.inJustDecodeBounds = true;
@@ -296,7 +318,8 @@ public class Images {
 		@Override
 		protected Void doInBackground(ArrayList<String>... arg) {
 			int count;		
-			ArrayList argsList = arg[0];
+			boolean filenameVerification = true;
+			ArrayList<String> argsList = arg[0];
 			
 			int parents_count = argsList.size();
 			parents_count--;
@@ -313,27 +336,28 @@ public class Images {
 
 
 			//imgLastModified = Storage.getImagesDir().lastModified();
-
-			List<String> fileNames = getImagesFileNames(Storage.getFilesNamesFromDir(new File(path_to_dir)));
+			List<File> img_files = getListOfImageFiles(path_to_dir);
+			//List<String> fileNames = getImagesFileNames(Storage.getFilesNamesFromDir(new File(path_to_dir)));
 
 			// GENERUJ MINIATURKI
-			String path_toIMG, path_toTHUMB, path_toFullScreenTHUMB, app_thumb_dir, app_fc_thumb_dir;
-			Bitmap bitmap = null;
+			//String path_toIMG, path_toTHUMB, path_toFullScreenTHUMB, app_thumb_dir, app_fc_thumb_dir;
+			//Bitmap bitmap = null;
 
-			int thumbWidth, thumbHeight, maxWidth, maxHeight;
-			thumbWidth = App_2.getAppContext().getResources().getDimensionPixelSize(R.dimen.image_thumbnail_size);
-			thumbHeight = App_2.getAppContext().getResources().getDimensionPixelSize(R.dimen.image_thumbnail_size);
+			//int thumbWidth, thumbHeight, maxWidth, maxHeight;
+			//thumbWidth = App_2.getAppContext().getResources().getDimensionPixelSize(R.dimen.image_thumbnail_size);
+			//thumbHeight = App_2.getAppContext().getResources().getDimensionPixelSize(R.dimen.image_thumbnail_size);
 
-			maxWidth = App_2.getMaxWidth();
-			maxHeight = App_2.getMaxHeight();
+			//maxWidth = App_2.getMaxWidth();
+			//maxHeight = App_2.getMaxHeight();
 
-			Log.i(LOG_TAG, "thumbs will be w:" + thumbWidth + " h:"	+ thumbHeight);
-			Log.i(LOG_TAG, "max thumbs will be w:" + maxWidth + " h:"	+ maxHeight);
-			count = fileNames.size();
+			//Log.i(LOG_TAG, "thumbs will be w:" + thumbWidth + " h:"	+ thumbHeight);
+			//Log.i(LOG_TAG, "max thumbs will be w:" + maxWidth + " h:"	+ maxHeight);
+			//count = fileNames.size();
+			count = img_files.size();
 			int i = 0;
 
-			app_thumb_dir = Storage.getThumbsDir() + File.separator;
-			app_fc_thumb_dir = Storage.getThumbsMaxDir() + File.separator;
+			//app_thumb_dir = Storage.getThumbsDir() + File.separator;
+			//app_fc_thumb_dir = Storage.getThumbsMaxDir() + File.separator;
 			/*
 			int min_scale = 8; // oczekiwana maxymalna iloœæ obrazków na ekranie 
 			
@@ -350,12 +374,11 @@ public class Images {
 					scaleTab[j++]=k;
 			}
 			*/
-			int[] scaleTab = {1,4,8};
 			LinkedList<String> uniqueFilenames = new LinkedList<String>();
-			for (String filename : fileNames) {
+			for (File image_file : img_files) {
 				publishProgress((int) ((i / (float) count) * 100));
 				
-				uniqueFilenames.add(Storage.scaleAndSaveBitmapFromPath(path_to_dir + File.separator + filename, scaleTab, Bitmap.CompressFormat.PNG,100,db));
+				uniqueFilenames.add(Storage.scaleAndSaveBitmapFromPath(image_file.getAbsolutePath(), new int[]{1,4,8}, Bitmap.CompressFormat.PNG,100,db, filenameVerification));
 
 				/*
 				path_toIMG = path_to_dir + File.separator + filename;
@@ -414,37 +437,34 @@ public class Images {
 	}
 
 	/* dodanie jednego obrazka do bazy */
-	public static class AddingImageTask extends
-			AsyncTask<String, Integer, Void> {
-
+	public static class AddingImageTask extends AsyncTask<String, Integer, Void> {
+		Database db;
+		public boolean filenameVerification = false;
+		public AddingImageTask(Activity activity) {
+			db = Database.getInstance(activity);
+			db.open();
+		}
 		@Override
 		protected Void doInBackground(String... params) {
-			String path_toIMG = params[0];
-			String parent_id = params[1];
-			
-			String filename = Utils.getFilenameFromPath(path_toIMG);
-
+			String path_toIMG= params[0];
+						
+/*
 			// GENERUJ MINIATURKI
 			String path_toTHUMB, path_toFullScreenTHUMB;
 			Bitmap bitmap = null;
 
 			int thumbWidth, thumbHeight;
-			thumbWidth = App_2.getAppContext().getResources()
-					.getDimensionPixelSize(R.dimen.image_thumbnail_size);
-			thumbHeight = App_2.getAppContext().getResources()
-					.getDimensionPixelSize(R.dimen.image_thumbnail_size);
+			thumbWidth = App_2.getAppContext().getResources().getDimensionPixelSize(R.dimen.image_thumbnail_size);
+			thumbHeight = App_2.getAppContext().getResources().getDimensionPixelSize(R.dimen.image_thumbnail_size);
 
 			// full screen thumbs
 			int maxWidth = App_2.getMaxWidth();
 			int maxHeight = App_2.getMaxHeight();
 
-			Log.i(LOG_TAG, "thumbs will be w:" + thumbWidth + " h:"
-					+ thumbHeight);
-			Log.i(LOG_TAG, "max thumbs will be w:" + maxWidth + " h:"
-					+ maxHeight);
+			//Log.i(LOG_TAG, "thumbs will be w:" + thumbWidth + " h:"		+ thumbHeight);
+			//Log.i(LOG_TAG, "max thumbs will be w:" + maxWidth + " h:"		+ maxHeight);
 			path_toTHUMB = Storage.getThumbsDir() + File.separator + filename;
-			path_toFullScreenTHUMB = Storage.getThumbsMaxDir() + File.separator
-					+ filename;
+			path_toFullScreenTHUMB = Storage.getThumbsMaxDir() + File.separator		+ filename;
 
 			bitmap = BitmapCalc.decodeSampleBitmapFromFile(path_toIMG,		maxWidth, maxHeight);
 			Log.w(LOG_TAG, bitmap.getHeight() + " " + bitmap.getWidth());
@@ -464,12 +484,16 @@ public class Images {
 			}
 
 			return null;
+			*/
+			ArrayList<String> uniqueFilename = new ArrayList<String>();
+			uniqueFilename.add(Storage.scaleAndSaveBitmapFromPath(path_toIMG, new int[]{1,4,8}, Bitmap.CompressFormat.PNG,100,db, filenameVerification));
+			addNewEntriesToImageTable(uniqueFilename, new int[]{-1});
+			return null;
 		}
 	}
 
 	/* dodanie wpisów do bazy danych */
-	public static class AddToDatabaseTask extends
-			AsyncTask<String, Integer, Void> {
+	public static class AddToDatabaseTask extends AsyncTask<String, Integer, Void> {
 		Activity executing_activity;
 
 		public AddToDatabaseTask(Activity activity) {
@@ -501,7 +525,7 @@ public class Images {
 			for (String filename : fileNames) {
 				batchOps.add(ContentProviderOperation
 						.newInsert(ImageContract.CONTENT_URI)
-						.withValue(ImageContract.Columns.PATH, filename)
+						.withValue(ImageContract.Columns.FILENAME, filename)
 						.withValue(ImageContract.Columns.DESC,
 								Utils.cutExtention(filename)).build());
 			}

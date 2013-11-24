@@ -80,7 +80,6 @@ public class NewImgTemplateActivity extends Activity {
 		mTitleText = (TextView) findViewById(R.id.edit_name);
 		mCategory = (EditText) findViewById(R.id.edit_category);
 		mDescText = (EditText) findViewById(R.id.edit_description);
-		mParent = (EditText) findViewById(R.id.edit_parent);
 		mCreateCategoryCheckBox = (CheckBox) findViewById(R.id.create_category);
 		
 		mCreateCategoryCheckBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
@@ -164,6 +163,7 @@ public class NewImgTemplateActivity extends Activity {
 	
 	@Override
 	public void onBackPressed() {
+		final Activity a = this;
 		final String photo_path = Storage.readFromPreferences(null, "photoPath", this, Activity.MODE_PRIVATE);
 		if(mButton.getVisibility()==View.VISIBLE){
 			DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
@@ -171,7 +171,7 @@ public class NewImgTemplateActivity extends Activity {
 			    public void onClick(DialogInterface dialog, int which) {
 			        switch (which){
 			        case DialogInterface.BUTTON_POSITIVE:
-			        	new AddingImageTask().execute(photo_path); // skalowanie obrazka, dodanie do 2 folderów
+			        	new AddingImageTask(a).execute(photo_path); // skalowanie obrazka, dodanie do 2 folderów
 						saveState();
 						bitmap=null;
 						finish();
@@ -222,7 +222,7 @@ public class NewImgTemplateActivity extends Activity {
 			break;
 		case R.id.submit_button:
 			String path_toIMG = Storage.readFromPreferences(null, "photoPath", this, Activity.MODE_PRIVATE);
-			new AddingImageTask().execute(path_toIMG); // skalowanie obrazka, dodanie do 2 folderów
+			new AddingImageTask(this).execute(path_toIMG); // skalowanie obrazka, dodanie do 2 folderów
 			saveState();
 			bitmap=null;
 			this.finish();
@@ -250,7 +250,7 @@ public class NewImgTemplateActivity extends Activity {
 		ContentValues values = new ContentValues();
 		values.put(ImageContract.Columns.CATEGORY, category);
 		values.put(ImageContract.Columns.DESC, description);
-		values.put(ImageContract.Columns.PATH, this.newFileName);
+		values.put(ImageContract.Columns.FILENAME, this.newFileName);
 		
 		if (imageUri.getLastPathSegment().equals("null")){
 			imageUri = this.getContentResolver().insert(ImageContract.CONTENT_URI, values);
@@ -275,7 +275,7 @@ public class NewImgTemplateActivity extends Activity {
 	private void fillData(Uri uri) {
 		//Uri uri = Uri.parse(ImageContract.CONTENT_URI + "/" + id);
 		String[] projection = { ImageContract.Columns._ID,
-				ImageContract.Columns.PATH, ImageContract.Columns.DESC,
+				ImageContract.Columns.FILENAME, ImageContract.Columns.DESC,
 				ImageContract.Columns.CATEGORY};
 		Cursor cursor = getContentResolver().query(uri,	projection, null, null, null);
 		cursor.moveToFirst();
@@ -309,7 +309,7 @@ public class NewImgTemplateActivity extends Activity {
 				}
 
 			String imgName = cursor.getString(cursor
-					.getColumnIndexOrThrow(ImageContract.Columns.PATH));
+					.getColumnIndexOrThrow(ImageContract.Columns.FILENAME));
 			mTitleText.setText(imgName);
 			mDescText.setText(cursor.getString(cursor
 					.getColumnIndexOrThrow(ImageContract.Columns.DESC)));

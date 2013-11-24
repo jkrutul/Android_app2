@@ -31,7 +31,7 @@ public class ImageCursorAdapter extends CursorAdapter {
     @Override
         public void bindView(View view, Context context, Cursor cursor) {
             //String pos = cursor.getString(cursor.getColumnIndex(ImageContract.Columns._ID));
-            String path = cursor.getString(cursor.getColumnIndex(ImageContract.Columns.PATH));
+            String path = cursor.getString(cursor.getColumnIndex(ImageContract.Columns.FILENAME));
         	//String textToDraw = Utils.cutExtention(cursor.getString(cursor.getColumnIndex(ImageContract.Columns.PATH)));
             RecyclingImageView image = (RecyclingImageView)view;
             image.setLayoutParams(params);

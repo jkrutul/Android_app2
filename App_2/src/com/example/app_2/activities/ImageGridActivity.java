@@ -340,12 +340,12 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
         getActionBar().setDisplayHomeAsUpEnabled(true);
 
         mDrawerList  = (ListView) findViewById(R.id.left_drawer);
-        String[] projection= {ImageContract.Columns._ID, ImageContract.Columns.PATH, ImageContract.Columns.CATEGORY};
+        String[] projection= {ImageContract.Columns._ID, ImageContract.Columns.FILENAME, ImageContract.Columns.CATEGORY};
         String selection = ImageContract.Columns.CATEGORY + " IS NOT NULL AND ("+ImageContract.Columns.CATEGORY +" <> ?)";
         String[] selectionArgs ={""};
         Cursor cursor = getContentResolver().query(ImageContract.CONTENT_URI, projection, selection, selectionArgs, null);
         
-        MatrixCursor extras = new MatrixCursor(new String[] {ImageContract.Columns._ID, ImageContract.Columns.PATH, ImageContract.Columns.CATEGORY});
+        MatrixCursor extras = new MatrixCursor(new String[] {ImageContract.Columns._ID, ImageContract.Columns.FILENAME, ImageContract.Columns.CATEGORY});
         extras.addRow(new String[]{"-1","1.jpg", "HOME"});
         Cursor[] cursors = {extras, cursor};
         Cursor c = new MergeCursor(cursors);
@@ -360,7 +360,7 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
        
 		String[] from = new String[] {
 				   ImageContract.Columns._ID, 
-				   ImageContract.Columns.PATH,
+				   ImageContract.Columns.FILENAME,
 				   ImageContract.Columns.CATEGORY};
 		int[] to = new int[] { 0, R.id.icon, R.id.category };
 		
@@ -369,7 +369,7 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 			   /** Binds the Cursor column defined by the specified index to the specified view */
 			   public boolean setViewValue(View view, Cursor cursor, int columnIndex){
 			       if(view.getId() == R.id.icon/*category_image*/){
-						 String path = Storage.getPathToScaledBitmap(cursor.getString(cursor.getColumnIndex(ImageContract.Columns.PATH)),50);
+						 String path = Storage.getPathToScaledBitmap(cursor.getString(cursor.getColumnIndex(ImageContract.Columns.FILENAME)),50);
 						 ImageLoader.loadBitmap(path, (ImageView) view, true);
 			           return true; //true because the data was bound to the view
 			       }
@@ -400,6 +400,12 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 		     ft.replace(R.id.content_frame, fragment, GRID_FRAGMENT_TAG);
 		     fragmentsHistory.remove(fragmentsHistory.size()-1);
 		     ft.commit();		
+		     String title = (String) getActionBar().getTitle();
+		     if(title!=null){
+			     String last_category = Utils.getFilenameFromPath(title);
+			     title = title.replace("/"+last_category, "");
+			     getActionBar().setTitle(title);
+		     }
 		}
 		else{ // opuszczam aplikacje
 			if (doubleBackToExitPressedOnce) {

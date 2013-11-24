@@ -51,12 +51,16 @@ public class ParentMultiselectFragment extends ListFragment implements LoaderCal
 	public void onCreate(Bundle bundle){
 		super.onCreate(bundle);
 		Intent intent =  getActivity().getIntent();
-		row_id  = getArguments().getLong("row_id");
+		if(getArguments()!=null)
+			row_id  = getArguments().getLong("row_id");
 		if(bundle != null)
 			row_id = bundle.getLong("row_id");
 		else
-			if(row_id == null)
-				row_id = (Long) intent.getExtras().get("row_id");		
+			if(intent != null && row_id == null){
+				Bundle b = intent.getExtras();
+				if(b!=null)
+					row_id = (Long)b.get("row_id");	
+			}
 	} 
 	@Override
 	public void onActivityCreated(Bundle savedInstanceState) {
@@ -65,10 +69,10 @@ public class ParentMultiselectFragment extends ListFragment implements LoaderCal
 		selectedItemsOnCreate = new ArrayList<Long>();
 		
 		String[] from = new String[] { ImageContract.Columns._ID,ImageContract.Columns.CATEGORY};
-		int[] to = new int[] { 0, android.R.id.text1}; 		// Fields on the UI to which we map
+		int[] to = new int[] { 0, android.R.id.text1}; 		
 		String[] projection3 = { 
 				ImageContract.Columns._ID,
-				ImageContract.Columns.PATH,
+				ImageContract.Columns.FILENAME,
 				ImageContract.Columns.CATEGORY
 				};
         String selection2 = ImageContract.Columns.CATEGORY + " IS NOT NULL AND ("+ImageContract.Columns.CATEGORY +" <> ?)";
@@ -78,7 +82,7 @@ public class ParentMultiselectFragment extends ListFragment implements LoaderCal
 		adapter.setViewBinder(new SimpleCursorAdapter.ViewBinder() {
 			public boolean setViewValue(View view, Cursor cursor,int columnIndex) {
 				if (view.getId() == R.id.icon) {
-					String path = Images.getImageThumbsPath(cursor.getString(cursor.getColumnIndex(ImageContract.Columns.PATH)));
+					String path = Images.getImageThumbsPath(cursor.getString(cursor.getColumnIndex(ImageContract.Columns.FILENAME)));
 					ImageLoader.loadBitmap(path, (ImageView) view, false);
 					return true;
 				}
@@ -96,24 +100,25 @@ public class ParentMultiselectFragment extends ListFragment implements LoaderCal
 		for(int i=0; i<sca.getCount(); i++)
 			posMapOfAllItems.put(sca.getItemId(i), i);
 
-		
-		// zaznaczenie kategorii do których nale¿a³ wczeœniej obrazek
-		Uri imageUri = Uri.parse(ParentsOfImageContract.CONTENT_URI + "/" + row_id);
-		String [] projection ={"p."+ParentContract.Columns.PARENT_FK};
-		Cursor c= getActivity().getContentResolver().query(imageUri, projection , null, null, null);
-		c.moveToFirst();
-		ListView lv = getListView();
-		while(!c.isAfterLast()){
-			String l = c.getString(c.getColumnIndex(ParentContract.Columns.PARENT_FK));
-			c.moveToNext();
-			Long lo = Long.valueOf(l);
-			if(posMapOfAllItems.containsKey(lo)){
-				int position = posMapOfAllItems.get(lo);
-				selectedItemsOnCreate.add(lo);
-				lv.setItemChecked(position, true);
+		if(row_id != null){
+			// zaznaczenie kategorii do których nale¿a³ wczeœniej obrazek
+			Uri imageUri = Uri.parse(ParentsOfImageContract.CONTENT_URI + "/" + row_id);
+			String [] projection ={"p."+ParentContract.Columns.PARENT_FK};
+			Cursor c= getActivity().getContentResolver().query(imageUri, projection , null, null, null);
+			c.moveToFirst();
+			ListView lv = getListView();
+			while(!c.isAfterLast()){
+				String l = c.getString(c.getColumnIndex(ParentContract.Columns.PARENT_FK));
+				c.moveToNext();
+				Long lo = Long.valueOf(l);
+				if(posMapOfAllItems.containsKey(lo)){
+					int position = posMapOfAllItems.get(lo);
+					selectedItemsOnCreate.add(lo);
+					lv.setItemChecked(position, true);
+				}
 			}
+			c.close();
 		}
-		c.close();
 
 	}
 
@@ -128,7 +133,7 @@ public class ParentMultiselectFragment extends ListFragment implements LoaderCal
 	public Loader<Cursor> onCreateLoader(int arg0, Bundle bundle) {
 		String[] projection = { 
 				ImageContract.Columns._ID,
-				ImageContract.Columns.PATH,
+				ImageContract.Columns.FILENAME,
 				ImageContract.Columns.CATEGORY
 				};
         String selection = ImageContract.Columns.CATEGORY + " IS NOT NULL AND ("+ImageContract.Columns.CATEGORY +" <> ?)";

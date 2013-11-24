@@ -117,14 +117,17 @@ public class Utils {
     }
     
     public static String getFilenameFromPath(String path){
-    	String[] fn = path.split("\\/");
-    	if(fn.length>1)
-    		return fn[fn.length-1];
-    	else
-    		if(fn.length>0)
-    			return fn[0];
-    		else
-    			return null;
+    	if(path != null){
+	    	String[] fn = path.split("\\/");
+	    	if(fn.length>1)
+	    		return fn[fn.length-1];
+	    	else
+	    		if(fn.length>0)
+	    			return fn[0];
+	    		else
+	    			return null;
+    	}else
+    		return null;
     	//File f = new File(path);
     	//return f.getName();
     }

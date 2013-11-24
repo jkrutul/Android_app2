@@ -51,7 +51,7 @@ public class Database {
 	private static final String TABLE_IMAGES_CREATE = "CREATE TABLE "+
 			ImageContract.TABLE_IMAGE+" ("+
 			ImageContract.Columns._ID+" INTEGER PRIMARY KEY AUTOINCREMENT,"+
-			ImageContract.Columns.PATH+ " TEXT, "+
+			ImageContract.Columns.FILENAME+ " TEXT, "+
 			ImageContract.Columns.AUDIO_PATH + " TEXT, "+
 			ImageContract.Columns.DESC+ " TEXT, "+
 			ImageContract.Columns.MODIFIED+ " DATETIME, "+
@@ -134,7 +134,7 @@ public class Database {
 		int count = -1;
 		Cursor c = null;
 		try{
-			String query = "select count(*) from "+ImageContract.TABLE_IMAGE+" where " + ImageContract.Columns.PATH+" =?";
+			String query = "select count(*) from "+ImageContract.TABLE_IMAGE+" where " + ImageContract.Columns.FILENAME+" =?";
 			c = db.rawQuery(query, new String[]{_filename});
 			if(c.moveToFirst()){
 				count = c.getInt(0);
@@ -156,7 +156,7 @@ public class Database {
 	 */
 	public ImageObject insertImage(ImageObject mio){
 		ContentValues cv = new ContentValues();
-		cv.put(ImageContract.Columns.PATH, mio.getImageName() );
+		cv.put(ImageContract.Columns.FILENAME, mio.getImageName() );
 		cv.put(ImageContract.Columns.CATEGORY, mio.getCategory());
 		cv.put(ImageContract.Columns.DESC, mio.getDescription());
 		cv.put(ImageContract.Columns.MODIFIED, dateFormat.format(date));
@@ -185,7 +185,7 @@ public class Database {
 		}*/
 		
 		ContentValues cv = new ContentValues();
-		cv.put(ImageContract.Columns.PATH, _filename );
+		cv.put(ImageContract.Columns.FILENAME, _filename );
 		cv.put(ImageContract.Columns.DESC,  Utils.cutExtention(_filename));
 		cv.put(ImageContract.Columns.MODIFIED, dateFormat.format(date));
 		return db.insert(ImageContract.TABLE_IMAGE, null, cv);
@@ -207,19 +207,19 @@ public class Database {
 		whereArgs[0] = String.valueOf(_rowIndex);
 		ContentValues cv = new ContentValues();
 		cv.put(ImageContract.Columns._ID,mio.getId());
-		cv.put(ImageContract.Columns.PATH, mio.getImageName() );
+		cv.put(ImageContract.Columns.FILENAME, mio.getImageName() );
 		cv.put(ImageContract.Columns.CATEGORY, mio.getCategory());
 		cv.put(ImageContract.Columns.DESC, mio.getDescription());
 		return db.update(ImageContract.TABLE_IMAGE, cv, where, whereArgs);
 	}
 	
 	public int updateImage(String imageName, ImageObject mio){
-		String where = ImageContract.Columns.PATH + "=?";
+		String where = ImageContract.Columns.FILENAME + "=?";
 		String[] whereArgs = {""};
 		whereArgs[0] = imageName;
 		ContentValues cv = new ContentValues();
 		//cv.put(ImageContract.Columns._ID,mio.getId());
-		cv.put(ImageContract.Columns.PATH, mio.getImageName() );
+		cv.put(ImageContract.Columns.FILENAME, mio.getImageName() );
 		cv.put(ImageContract.Columns.CATEGORY, mio.getCategory());
 		cv.put(ImageContract.Columns.DESC, mio.getDescription());
 		Log.i(LOG_TAG, "updating image:"+mio);
@@ -237,7 +237,7 @@ public class Database {
 	}
 	
 	public ImageObject isImageAlreadyExist(String imageName){
-		String selection =ImageContract.Columns.PATH+" = ?";
+		String selection =ImageContract.Columns.FILENAME+" = ?";
 		String[] selectionArgs = {""};
 		selectionArgs[0] = imageName;
 		Cursor c = db.query(ImageContract.TABLE_IMAGE,  null, selection, selectionArgs,null, null,null);
@@ -278,7 +278,7 @@ public class Database {
 	public ImageObject getRootCategory(){
 		ImageObject category =null;
 
-		String[] columns = {ImageContract.Columns._ID, ImageContract.Columns.PATH, ImageContract.Columns.CATEGORY};
+		String[] columns = {ImageContract.Columns._ID, ImageContract.Columns.FILENAME, ImageContract.Columns.CATEGORY};
 		String selection =ImageContract.Columns.CATEGORY+"=\'ROOT\'";
 		//String[] selectionArgs = {""};
 		//selectionArgs[0] = "\'ROOT\'";
@@ -345,7 +345,7 @@ public class Database {
 	public List<ImageObject> getAllCategories(){
 		ImageObject category;
 		List<ImageObject> categories = new LinkedList<ImageObject>();
-		String[] columns = {ImageContract.Columns._ID, ImageContract.Columns.PATH, ImageContract.Columns.CATEGORY};
+		String[] columns = {ImageContract.Columns._ID, ImageContract.Columns.FILENAME, ImageContract.Columns.CATEGORY};
 		String selection = ImageContract.Columns.CATEGORY + " IS NOT NULL ";
 		try{
 			Cursor c = db.query(ImageContract.TABLE_IMAGE, columns,selection, null,null, null,null);
@@ -436,7 +436,7 @@ public class Database {
 	private static ImageObject cursorToImage(Cursor cursor){
 		ImageObject mio = new ImageObject();
 		mio.setId(			cursor.getLong(		cursor.getColumnIndex(ImageContract.Columns._ID)));
-		mio.setImageName(	cursor.getString(	cursor.getColumnIndex(ImageContract.Columns.PATH)));
+		mio.setImageName(	cursor.getString(	cursor.getColumnIndex(ImageContract.Columns.FILENAME)));
 		mio.setAudioPath(	cursor.getString(	cursor.getColumnIndex(ImageContract.Columns.AUDIO_PATH)));
 		mio.setDescription(	cursor.getString(	cursor.getColumnIndex(ImageContract.Columns.DESC)));
 		mio.setModified(	cursor.getString(	cursor.getColumnIndex(ImageContract.Columns.MODIFIED)));
@@ -449,7 +449,7 @@ public class Database {
 	private static ImageObject cursorToCategory(Cursor cursor){
 		ImageObject mio = new ImageObject();
 		mio.setId(			cursor.getLong(		cursor.getColumnIndex(ImageContract.Columns._ID)));
-		mio.setImageName(	cursor.getString(	cursor.getColumnIndex(ImageContract.Columns.PATH)));
+		mio.setImageName(	cursor.getString(	cursor.getColumnIndex(ImageContract.Columns.FILENAME)));
 		mio.setCategory(	cursor.getString(	cursor.getColumnIndex(ImageContract.Columns.CATEGORY)));
 		return mio;
 	}

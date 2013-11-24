@@ -76,7 +76,7 @@ public class ImageEditActivity extends FragmentActivity{
 		
 		items =  new ArrayList<SpinnerItem>();
 		items.add(new SpinnerItem(null,"Wybierz kategoriê", Long.valueOf(-1), true));
-		String[] projection = { ImageContract.Columns._ID, ImageContract.Columns.CATEGORY, ImageContract.Columns.PATH };
+		String[] projection = { ImageContract.Columns._ID, ImageContract.Columns.CATEGORY, ImageContract.Columns.FILENAME };
 		String selection = ImageContract.Columns.CATEGORY + " IS NOT NULL";
 		Cursor c = getContentResolver().query(ImageContract.CONTENT_URI, projection, selection, null, null);
 		c.moveToFirst();

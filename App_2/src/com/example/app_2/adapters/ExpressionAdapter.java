@@ -85,7 +85,8 @@ public class ExpressionAdapter extends BaseAdapter{
             imageView.setClickable(true);
         }
 	*/
-		ImageLoader.loadBitmap(Storage.getThumbsDir()+File.separator+dataObjects.get(position).getImageName(), iv, true);
+		String path = Storage.getPathToScaledBitmap(dataObjects.get(position).getImageName(), 100);
+		ImageLoader.loadBitmap(path, iv, true);
         return convertView;
 		//return null;
 	}

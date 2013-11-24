@@ -17,7 +17,7 @@ public class ImageContract {
 		
 	public final static class Columns implements BaseColumns{
 		private Columns() {}
-		public static final String PATH = "path";
+		public static final String FILENAME = "filename";
 		public static final String AUDIO_PATH = "audio";
 		public static final String DESC = "description";
 		public static final String TIME_USED = "used";

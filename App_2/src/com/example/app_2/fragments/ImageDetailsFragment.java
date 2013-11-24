@@ -113,7 +113,6 @@ public class ImageDetailsFragment extends Fragment{
 		mTitleText = (TextView) view.findViewById(R.id.edit_name);
 		mCategory = (EditText) view.findViewById(R.id.edit_category);
 		mDescText = (EditText) view.findViewById(R.id.edit_description);
-		mParent = (EditText) view.findViewById(R.id.edit_parent);
 		mParents = (TextView) view.findViewById(R.id.parents);
 
 		mCreateCategoryCheckBox = (CheckBox) view
@@ -279,7 +278,7 @@ public class ImageDetailsFragment extends Fragment{
 	private void fillData(Long id) {
 		Uri uri = Uri.parse(ImageContract.CONTENT_URI + "/" + id);
 		String[] projection = { ImageContract.Columns._ID,
-				ImageContract.Columns.PATH, ImageContract.Columns.DESC,
+				ImageContract.Columns.FILENAME, ImageContract.Columns.DESC,
 				ImageContract.Columns.CATEGORY};
 		Cursor cursor = executing_activity.getContentResolver().query(uri,	projection, null, null, null);
 		if (cursor != null) {
@@ -299,7 +298,7 @@ public class ImageDetailsFragment extends Fragment{
 				}
 
 			String imgName = cursor.getString(cursor
-					.getColumnIndexOrThrow(ImageContract.Columns.PATH));
+					.getColumnIndexOrThrow(ImageContract.Columns.FILENAME));
 			mTitleText.setText(imgName);
 			mDescText.setText(cursor.getString(cursor
 					.getColumnIndexOrThrow(ImageContract.Columns.DESC)));
@@ -368,7 +367,7 @@ public class ImageDetailsFragment extends Fragment{
 		values.put(ImageContract.Columns.DESC, description);
 
 		if (row_id == null && this.filename!=null) {
-			values.put(ImageContract.Columns.PATH, this.filename);
+			values.put(ImageContract.Columns.FILENAME, this.filename);
 			imageUri = executing_activity.getContentResolver().insert(ImageContract.CONTENT_URI, values);
 		} else {
 			executing_activity.getContentResolver().update(imageUri, values, null,	null);

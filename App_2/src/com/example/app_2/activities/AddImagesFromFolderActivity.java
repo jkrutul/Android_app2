@@ -17,6 +17,8 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.FragmentTransaction;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -34,6 +36,8 @@ import com.example.app_2.R;
 import com.example.app_2.adapters.MySpinnerAdapter;
 import com.example.app_2.contentprovider.ImageContract;
 import com.example.app_2.contentprovider.UserContract;
+import com.example.app_2.fragments.ImageListFragment;
+import com.example.app_2.fragments.ParentMultiselectFragment;
 import com.example.app_2.provider.Images;
 import com.example.app_2.provider.Images.ProcessBitmapsTask;
 import com.example.app_2.provider.SpinnerItem;
@@ -41,7 +45,7 @@ import com.example.app_2.storage.Database;
 import com.example.app_2.storage.Storage;
 import com.example.app_2.utils.Utils;
 
-public class AddImagesFromFolderActivity  extends Activity{
+public class AddImagesFromFolderActivity  extends FragmentActivity{
 	Button import_button;
 	EditText pathEditText;
 	private Spinner mCatSpinner, mUserSpinner;
@@ -51,6 +55,7 @@ public class AddImagesFromFolderActivity  extends Activity{
 	public static final int ADD_TO_DB_WAIT_DIALOG = 2;
 	public static ProgressDialog dialog;
 	Long import_to_parent_id, user_id;
+	ParentMultiselectFragment pmf;
 	
 	private MySpinnerAdapter category_adapter;
 	private MySpinnerAdapter user_adapter;
@@ -81,11 +86,17 @@ public class AddImagesFromFolderActivity  extends Activity{
 					import_button.setEnabled(true);
 			}
 		});
-		mCatSpinner = (Spinner) findViewById(R.id.parent_spinner);
-		addItemsOnCategorySpinner();
+		
+        pmf = new ParentMultiselectFragment();
+        
+    	final FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+   	 	ft.add(R.id.choose_list, pmf);
+        ft.commit();
+		//mCatSpinner = (Spinner) findViewById(R.id.parent_spinner);
+		//addItemsOnCategorySpinner();
 	}
 
-
+/*
 
 	private void addItemsOnCategorySpinner() {
 
@@ -109,7 +120,7 @@ public class AddImagesFromFolderActivity  extends Activity{
 		
 		categoryItems =  new ArrayList<SpinnerItem>();
 		categoryItems.add(new SpinnerItem(null,"Wybierz kategoriê", Long.valueOf(-1), true));
-		String[] projection = { ImageContract.Columns._ID, ImageContract.Columns.CATEGORY, ImageContract.Columns.PATH };
+		String[] projection = { ImageContract.Columns._ID, ImageContract.Columns.CATEGORY, ImageContract.Columns.FILENAME };
 		String selection = ImageContract.Columns.CATEGORY + " IS NOT NULL";
 		Cursor c = getContentResolver().query(ImageContract.CONTENT_URI, projection, selection, null, null);
 		c.moveToFirst();
@@ -124,7 +135,8 @@ public class AddImagesFromFolderActivity  extends Activity{
 		mCatSpinner.setAdapter(category_adapter);
 		mCatSpinner.setSelection(0);
 	}
-
+	*/
+/*
 	private void addItemsOnUserSpinner() {
 
 		mUserSpinner.setOnItemSelectedListener(new OnItemSelectedListener() {
@@ -162,7 +174,7 @@ public class AddImagesFromFolderActivity  extends Activity{
 		mUserSpinner.setSelection(0);
 	}
 	
-	
+*/
 	
 	public void showFileChooser(View view) {
 	    Intent intent = new Intent(Intent.ACTION_GET_CONTENT); 
@@ -211,7 +223,7 @@ public class AddImagesFromFolderActivity  extends Activity{
 			if(f.exists()){
 				final Activity a = this;
 				 new AlertDialog.Builder(this)
-			        .setTitle("Znaleziono "+Images.getImagesFileNames(Storage.getFilesNamesFromDir( f)).size()+" obrazków")
+			        .setTitle("Znaleziono "+Images.getListOfImageFiles(f.getAbsolutePath()).size()+" obrazków")
 			        .setMessage("Dodaæ do aplikacji?")
 			        .setNegativeButton(android.R.string.no,  new OnClickListener() {
 						@Override
@@ -222,16 +234,19 @@ public class AddImagesFromFolderActivity  extends Activity{
 			        .setPositiveButton(android.R.string.yes, new OnClickListener() {
 						@Override
 						public void onClick(DialogInterface dialog, int which) {
-						String parent_fk= null;
-						int spinnerSelectedPos = mCatSpinner.getSelectedItemPosition();
-						if (spinnerSelectedPos != Spinner.INVALID_POSITION)
-							parent_fk = String.valueOf(categoryItems.get(spinnerSelectedPos).getItemId());
-						
-						ProcessBitmapsTask processBitmapsTask = new ProcessBitmapsTask(a);
-						ArrayList<String> lArgs = new ArrayList<String>();
-						lArgs.add(pathEditText.getText().toString());
-						lArgs.add("-1");
-						processBitmapsTask.executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, lArgs);
+							String parent_fk= null;
+							//int spinnerSelectedPos = mCatSpinner.getSelectedItemPosition();
+							//if (spinnerSelectedPos != Spinner.INVALID_POSITION)
+							//	parent_fk = String.valueOf(categoryItems.get(spinnerSelectedPos).getItemId());
+							
+							ProcessBitmapsTask processBitmapsTask = new ProcessBitmapsTask(a);
+							ArrayList<String> lArgs = new ArrayList<String>();
+							lArgs.add(pathEditText.getText().toString());
+							lArgs.add("-1");
+							for(Long l :  pmf.getCheckedItemIds())
+								lArgs.add(String.valueOf(l));
+							
+							processBitmapsTask.executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, lArgs);
 						}
 			        }).create().show();
 			}

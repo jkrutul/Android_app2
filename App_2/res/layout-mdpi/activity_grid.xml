@@ -38,7 +38,7 @@
                 android:layout_height="match_parent"
                 android:background="@drawable/speak"
                 android:onClick="onButtonClick"
-                android:text="powiedz" />
+                android:text="mdpi" />
         </LinearLayout>
 
         <FrameLayout

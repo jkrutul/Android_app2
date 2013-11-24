@@ -88,7 +88,8 @@ public class AddUserActivity extends Activity {
 			int ismale = mMaleRB.isChecked() == true ? 1 : 0;
 			if (pathToNewImage != null) {
 				filename = Utils.getFilenameFromPath(pathToNewImage);
-				AddingImageTask ait = new AddingImageTask();		// dodanie obrazka do katalogu aplikacji
+				AddingImageTask ait = new AddingImageTask(this);		// dodanie obrazka do katalogu aplikacji
+				ait.filenameVerification = false;
 				ait.execute(pathToNewImage);
 			}
 			addNewUserToDb(username, ismale, filename);
@@ -152,7 +153,7 @@ public class AddUserActivity extends Activity {
 	
 	private void addNewUserToDb(String username, int ismale, String user_img){
 		ContentValues img_val = new ContentValues();								// stworzenie nowego korzenia dla u¿ytkownika
-		img_val.put(ImageContract.Columns.PATH, user_img);
+		img_val.put(ImageContract.Columns.FILENAME, user_img);
 		img_val.put(ImageContract.Columns.CATEGORY, username + " - G³ówna");
 		Uri img_uri = getContentResolver().insert(ImageContract.CONTENT_URI, img_val);
 		

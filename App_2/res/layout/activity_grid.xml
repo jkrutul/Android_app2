@@ -38,7 +38,7 @@
                 android:layout_height="match_parent"
                 android:background="@drawable/speak"
                 android:onClick="onButtonClick"
-                android:text="powiedz" />
+                android:text="layout" />
         </LinearLayout>
 
         <FrameLayout
@@ -51,6 +51,7 @@
                 android:id="@+id/expanded_image"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
+                android:padding="15dp"
                 android:background="#a0000000"
                 android:clickable="true"
                 android:contentDescription="description_zoom_touch_close"

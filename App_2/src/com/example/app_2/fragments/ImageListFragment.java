@@ -49,8 +49,8 @@ public class ImageListFragment extends ListFragment implements LoaderCallbacks<C
 
 		String[] from = new String[] { 
 				ImageContract.Columns._ID,
-				ImageContract.Columns.PATH,
-				ImageContract.Columns.PATH,
+				ImageContract.Columns.FILENAME,
+				ImageContract.Columns.FILENAME,
 				ImageContract.Columns.CATEGORY};
 		int[] to = new int[] { 0, R.id.label, R.id.icon, R.id.category}; 		// Fields on the UI to which we map
 
@@ -58,7 +58,7 @@ public class ImageListFragment extends ListFragment implements LoaderCallbacks<C
 		adapter.setViewBinder(new SimpleCursorAdapter.ViewBinder() {
 			public boolean setViewValue(View view, Cursor cursor,int columnIndex) {
 				if (view.getId() == R.id.icon) {
-					String path = Storage.getPathToScaledBitmap(cursor.getString(cursor.getColumnIndex(ImageContract.Columns.PATH)), 100);
+					String path = Storage.getPathToScaledBitmap(cursor.getString(cursor.getColumnIndex(ImageContract.Columns.FILENAME)), 100);
 					//String path = Images.getImageThumbsPath(cursor.getString(1));
 					ImageLoader.loadBitmap(path, (ImageView) view, false);
 					return true; // true because the data was bound to the view
@@ -171,7 +171,7 @@ public class ImageListFragment extends ListFragment implements LoaderCallbacks<C
 
 		String[] projection = { 
 				"i."+ImageContract.Columns._ID,
-				"i."+ImageContract.Columns.PATH,
+				"i."+ImageContract.Columns.FILENAME,
 				"i."+ImageContract.Columns.CATEGORY,
 				};
 		uri = Uri.parse(ImagesOfParentContract.CONTENT_URI+"/"+cat_id);

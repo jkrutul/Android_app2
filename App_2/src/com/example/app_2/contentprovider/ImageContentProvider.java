@@ -151,10 +151,10 @@ public class ImageContentProvider extends ContentProvider{
 			db.beginTransaction();
 			try{
 				SQLiteStatement insert = db.compileStatement("insert into "+ImageContract.TABLE_IMAGE
-						+ " ("+ImageContract.Columns.PATH+","+ImageContract.Columns.DESC+")"
+						+ " ("+ImageContract.Columns.FILENAME+","+ImageContract.Columns.DESC+")"
 						+ " values "+"(?,?)");
 				for(ContentValues value : values){
-					insert.bindString(1, value.getAsString(ImageContract.Columns.PATH));
+					insert.bindString(1, value.getAsString(ImageContract.Columns.FILENAME));
 					insert.bindString(2, value.getAsString(ImageContract.Columns.DESC));
 					insert.execute();
 				}
@@ -171,7 +171,7 @@ public class ImageContentProvider extends ContentProvider{
 	
 	private void checkColumns(String[] projection){
 		if(projection !=null){
-			String[] available = {ImageContract.Columns._ID, ImageContract.Columns.PATH, ImageContract.Columns.AUDIO_PATH, ImageContract.Columns.DESC, ImageContract.Columns.CATEGORY};
+			String[] available = {ImageContract.Columns._ID, ImageContract.Columns.FILENAME, ImageContract.Columns.AUDIO_PATH, ImageContract.Columns.DESC, ImageContract.Columns.CATEGORY};
 			HashSet<String> requestedColumns = new HashSet<String>(Arrays.asList(projection));
 			HashSet<String> avaliableColumns = new HashSet<String>(Arrays.asList(available));
 			if((avaliableColumns.contains(requestedColumns))==false){

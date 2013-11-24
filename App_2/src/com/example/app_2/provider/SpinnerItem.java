@@ -24,7 +24,7 @@ public class SpinnerItem {
      public boolean isHint() {
          return isHint;
      }
-     public String getPath() {
+     public String getFilename() {
          return filename;
      }
 }

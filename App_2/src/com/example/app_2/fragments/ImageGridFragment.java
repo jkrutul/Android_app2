@@ -3,6 +3,7 @@ package com.example.app_2.fragments;
 import android.animation.Animator;
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
+import android.app.ActionBar;
 import android.app.Activity;
 import android.content.SharedPreferences;
 import android.database.Cursor;
@@ -85,7 +86,7 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
 		public boolean onItemLongClick(AdapterView<?> parent, final  View thumbView, int position, long i) {
     		Cursor c = (Cursor) adapter.getItem(position);						
     		ImageObject img_object= new ImageObject();
-    		img_object.setImageName(c.getString(c.getColumnIndex(ImageContract.Columns.PATH)));
+    		img_object.setImageName(c.getString(c.getColumnIndex(ImageContract.Columns.FILENAME)));
     		img_object.setDescription( c.getString(c.getColumnIndex(ImageContract.Columns.DESC)));
     		img_object.setCategory(c.getString(c.getColumnIndex(ImageContract.Columns.CATEGORY)));
     		    // Load the high-resolution "zoomed-in" image.
@@ -182,7 +183,7 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
     	
     	String[] from = new String[] {
 				   ImageContract.Columns._ID, 
-				   ImageContract.Columns.PATH,
+				   ImageContract.Columns.FILENAME,
 				   ImageContract.Columns.DESC,
 				   ImageContract.Columns.CATEGORY};
 		int[] to = new int[] { 0, R.id.recycling_image, R.id.image_desc };
@@ -240,7 +241,7 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
 	public void onItemClick(AdapterView<?> parent, final  View thumbView, int position, long id) {
 		Cursor c = (Cursor) adapter.getItem(position);						
 		ImageObject img_object= new ImageObject();
-		img_object.setImageName(c.getString(c.getColumnIndex(ImageContract.Columns.PATH)));
+		img_object.setImageName(c.getString(c.getColumnIndex(ImageContract.Columns.FILENAME)));
 		img_object.setDescription( c.getString(c.getColumnIndex(ImageContract.Columns.DESC)));
 		img_object.setCategory(c.getString(c.getColumnIndex(ImageContract.Columns.CATEGORY)));
 	
@@ -251,8 +252,8 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
 		if (mCurrentAnimator != null) {
 	        mCurrentAnimator.cancel();
 	    }
-		 
-		 if(img_object.getCategory()!=null){
+		 String category = img_object.getCategory();
+		 if(category!=null){
 			Fragment fragment = new ImageGridFragment();
 			Bundle args = new Bundle();			
 			args.putLong("CATEGORY_ID", c.getLong(c.getColumnIndex(ImageContract.Columns._ID)));
@@ -262,7 +263,11 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
 			 ft.setCustomAnimations(R.anim.slide_in_right, R.anim.slide_out_left);
 		     ft.replace(R.id.content_frame, fragment, ImageGridActivity.GRID_FRAGMENT_TAG);
 		     ImageGridActivity.fragmentsHistory.add(ImageGridActivity.actual_category_fk);
-		     ft.commit();				
+		     ft.commit();		
+		     ActionBar actionBar = getActivity().getActionBar();
+		     String title = (String) actionBar.getTitle();
+		     title+="/"+category;
+		     actionBar.setTitle(title);
 		 }
 		 
 
@@ -282,7 +287,7 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
 		ImageGridActivity.actual_category_fk = (bundle!= null) ? (int) bundle.getLong("CATEGORY_ID", -1)	: -1;
 		Uri uri = Uri.parse(ImagesOfParentContract.CONTENT_URI + "/" + ImageGridActivity.actual_category_fk);
 		
-		String[] projection = new String[] { "i."+ImageContract.Columns._ID,  "i."+ImageContract.Columns.PATH,  "i."+ImageContract.Columns.DESC,  "i."+ImageContract.Columns.CATEGORY};	
+		String[] projection = new String[] { "i."+ImageContract.Columns._ID,  "i."+ImageContract.Columns.FILENAME,  "i."+ImageContract.Columns.DESC,  "i."+ImageContract.Columns.CATEGORY};	
 		String selection = "p."+ParentContract.Columns.PARENT_FK +" = ?";
 		String[] selectionArgs = new String[]{String.valueOf(ImageGridActivity.actual_category_fk)};
 		cursorLoader = new CursorLoader(getActivity().getApplicationContext(),uri, projection, selection, selectionArgs ,null);
