@@ -134,7 +134,14 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.example.app_2.activities.ImageGridActivity" />
         </activity>
-
+        <activity
+            android:name="com.example.app_2.activities.BindImagesToCategory"
+            android:label="BindImagesToCategory" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.example.app_2.activities.ImageGridActivity" />
+        </activity>
+
         <provider
             android:name="com.example.app_2.contentprovider.ImageContentProvider"
             android:authorities="com.example.app_2.contentprovider" >

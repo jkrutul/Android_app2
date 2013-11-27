@@ -188,6 +188,12 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 
         // Handle presses on the action bar items
         switch (item.getItemId()) {
+	        case R.id.action_add_image:
+	        	Intent bind_intent = new Intent(this, BindImagesToCategory.class);
+	        	bind_intent.putExtra("executing_category_id", fragmentsHistory.get(fragmentsHistory.size() - 1));
+	        	startActivity(bind_intent);
+	        	return true;
+	        	
             case R.id.action_settings:
     			Intent intent = new Intent(this, SettingsActivity.class);
     			startActivity(intent);
@@ -362,13 +368,13 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 				   ImageContract.Columns._ID, 
 				   ImageContract.Columns.FILENAME,
 				   ImageContract.Columns.CATEGORY};
-		int[] to = new int[] { 0, R.id.icon, R.id.category };
+		int[] to = new int[] { 0, R.id.drawer_category_icon, R.id.category };
 		
-        SimpleCursorAdapter adapter = new SimpleCursorAdapter(getApplicationContext(), R.layout.image_row /*drawer_row */, c, from,to, 0);
+        SimpleCursorAdapter adapter = new SimpleCursorAdapter(getApplicationContext(), R.layout.drawer_row, c, from,to, 0);
     	adapter.setViewBinder(new SimpleCursorAdapter.ViewBinder(){
 			   /** Binds the Cursor column defined by the specified index to the specified view */
 			   public boolean setViewValue(View view, Cursor cursor, int columnIndex){
-			       if(view.getId() == R.id.icon/*category_image*/){
+			       if(view.getId() == R.id.drawer_category_icon/*category_image*/){
 						 String path = Storage.getPathToScaledBitmap(cursor.getString(cursor.getColumnIndex(ImageContract.Columns.FILENAME)),50);
 						 ImageLoader.loadBitmap(path, (ImageView) view, true);
 			           return true; //true because the data was bound to the view

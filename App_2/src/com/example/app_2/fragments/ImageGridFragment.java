@@ -1,5 +1,7 @@
 package com.example.app_2.fragments;
 
+import java.security.spec.MGF1ParameterSpec;
+
 import android.animation.Animator;
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
@@ -68,7 +70,7 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
     //private ImageCursorAdapter adapter;
     private SimpleCursorAdapter adapter;
     private Animator mCurrentAnimator;
-    private GridView mGridView;
+    public  GridView mGridView;
     private RelativeLayout.LayoutParams mImageViewLayoutParams;
     private int mItemHeight = 0;
     private boolean mChangeNumColumns = false;
@@ -234,7 +236,7 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
         adapter.notifyDataSetChanged();
     }
 
-
+ 
 
 	@TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
 	@Override
@@ -288,9 +290,9 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
 		Uri uri = Uri.parse(ImagesOfParentContract.CONTENT_URI + "/" + ImageGridActivity.actual_category_fk);
 		
 		String[] projection = new String[] { "i."+ImageContract.Columns._ID,  "i."+ImageContract.Columns.FILENAME,  "i."+ImageContract.Columns.DESC,  "i."+ImageContract.Columns.CATEGORY};	
-		String selection = "p."+ParentContract.Columns.PARENT_FK +" = ?";
-		String[] selectionArgs = new String[]{String.valueOf(ImageGridActivity.actual_category_fk)};
-		cursorLoader = new CursorLoader(getActivity().getApplicationContext(),uri, projection, selection, selectionArgs ,null);
+		//String selection = "p."+ParentContract.Columns.PARENT_FK +" = ?";
+		//String[] selectionArgs = new String[]{String.valueOf(ImageGridActivity.actual_category_fk)};
+		cursorLoader = new CursorLoader(getActivity().getApplicationContext(),uri, projection, null, null ,null);
 		return cursorLoader;
 	}
 

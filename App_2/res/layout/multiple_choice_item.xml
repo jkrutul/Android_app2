@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.example.app_2.widget.CheckableLinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/mc_layout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_marginRight="10dp"
+    android:orientation="horizontal"
+    android:paddingBottom="5dp"
+    android:paddingTop="5dp" >
+
+    <ImageView
+        android:id="@+id/mc_icon"
+        android:layout_width="0dp"
+        android:layout_weight="2"
+        android:layout_height="match_parent"
+        android:layout_alignParentLeft="true"
+        android:layout_centerVertical="true"
+        android:layout_marginLeft="20dp"
+        android:focusable="false" />
+
+    <TextView
+        android:id="@+id/mc_text"
+        android:layout_width="0dp"
+        android:layout_weight="3"
+        android:layout_height="match_parent"
+        android:layout_centerVertical="true"
+        android:layout_marginLeft="20dp"
+        android:layout_toRightOf="@id/mc_icon"
+        android:gravity="center"
+        android:text="mc_text"
+        android:textColor="@android:color/black"
+        android:textSize="20sp"
+        android:textStyle="bold|italic"
+        android:focusable="false" />
+
+    <com.example.app_2.widget.InertCheckBox
+        android:id="@+id/mc_chceck_box"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_alignParentRight="true"
+        android:layout_centerVertical="true"
+        android:layout_margin="5dp"
+        android:focusable="false" />
+
+</com.example.app_2.widget.CheckableLinearLayout>

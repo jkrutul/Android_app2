@@ -90,7 +90,7 @@ public class AddImagesFromFolderActivity  extends FragmentActivity{
         pmf = new ParentMultiselectFragment();
         
     	final FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
-   	 	ft.add(R.id.choose_list, pmf);
+   	 	ft.replace(R.id.choose_list, pmf);
         ft.commit();
 		//mCatSpinner = (Spinner) findViewById(R.id.parent_spinner);
 		//addItemsOnCategorySpinner();
