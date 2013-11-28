@@ -242,7 +242,7 @@ public class AddImagesFromFolderActivity  extends FragmentActivity{
 							ProcessBitmapsTask processBitmapsTask = new ProcessBitmapsTask(a);
 							ArrayList<String> lArgs = new ArrayList<String>();
 							lArgs.add(pathEditText.getText().toString());
-							lArgs.add("-1");
+							//lArgs.add("-1");
 							for(Long l :  pmf.getCheckedItemIds())
 								lArgs.add(String.valueOf(l));
 							

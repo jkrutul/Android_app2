@@ -16,6 +16,7 @@
 
 package com.example.app_2.activities;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -24,8 +25,12 @@ import java.util.Map;
 
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
+import android.app.ActionBar;
+import android.app.ActionBar.OnNavigationListener;
 import android.app.Dialog;
 import android.app.ProgressDialog;
+import android.app.SearchManager;
+import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.database.Cursor;
@@ -39,6 +44,7 @@ import android.support.v4.app.ActionBarDrawerToggle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentTransaction;
+import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v4.widget.SimpleCursorAdapter;
 import android.util.Log;
@@ -49,14 +55,16 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.SearchView;
 import android.widget.Toast;
 
 import com.example.app_2.R;
+import com.example.app_2.actionbar.adapter.TitleNavigationAdapter;
+import com.example.app_2.actionbar.model.SpinnerNavItem;
 import com.example.app_2.contentprovider.ImageContract;
 import com.example.app_2.fragments.ExpressionListFragment;
 import com.example.app_2.fragments.ImageGridFragment;
 import com.example.app_2.models.ImageObject;
-import com.example.app_2.provider.Images;
 import com.example.app_2.storage.Storage;
 import com.example.app_2.utils.ImageLoader;
 import com.example.app_2.utils.Utils;
@@ -64,7 +72,7 @@ import com.example.app_2.utils.Utils;
 /**
  * Simple FragmentActivity to hold the main {@link ImageGridFragment} and not much else.
  */
-public class ImageGridActivity extends FragmentActivity implements TextToSpeech.OnInitListener{
+public class ImageGridActivity extends FragmentActivity implements TextToSpeech.OnInitListener, OnNavigationListener{
     private static final String TAG = "ImageGridActivity";
 
     public static final String GRID_FRAGMENT_TAG = "FragmentGrid";
@@ -72,12 +80,17 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
     public static final int PLEASE_WAIT_DIALOG = 1;
     public static ProgressDialog dialog;
     private static boolean doubleBackToExitPressedOnce = false;
-	public static int actual_category_fk;
+	public static Long actual_category_fk;
     
-    public static List<Integer> fragmentsHistory = new LinkedList<Integer>();
+    public static List<Long> fragmentsHistory = new LinkedList<Long>();
     private List<String> mCategoryTitles = new LinkedList<String>();
     private DrawerLayout mDrawerLayout;
+    
+    private ActionBar actionBar;
     private ActionBarDrawerToggle mDrawerToggle;
+    private ArrayList<SpinnerNavItem> navSpinner;
+    private TitleNavigationAdapter title_nav_adapter;
+    
     private  ListView mDrawerList;
 
     private Map<String, Long> mCategoryMap;
@@ -87,7 +100,7 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
     public ImageLoader imageLoader;
     public ExpressionListFragment elf;
     
-    private ImageGridFragment igf;
+    public ImageGridFragment igf;
     
 	private static final int TTS_REQUEST_CODE = 1;
     private static final int SETTINGS_REQUEST_CODE = 37;
@@ -100,8 +113,18 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
        
+
+        actionBar = getActionBar();
+		//actionBar.setDisplayShowTitleEnabled(false);
+		actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_LIST);
+		navSpinner = new ArrayList<SpinnerNavItem>();
+		navSpinner.add(new SpinnerNavItem("Alfabetycznie", R.drawable.ic_launcher));
+		navSpinner.add(new SpinnerNavItem("Ostatnio zmodyfikowane", R.drawable.ic_launcher));
+		navSpinner.add(new SpinnerNavItem("Najczêœciej u¿ywane", R.drawable.ic_launcher));
+		
+		title_nav_adapter = new TitleNavigationAdapter(getApplicationContext(), navSpinner);
+		actionBar.setListNavigationCallbacks(title_nav_adapter, this);
         igf = new ImageGridFragment();
-       
         
         //getWindow().requestFeature(Window.FEATURE_ACTION_BAR_OVERLAY);
         //getActionBar().setBackgroundDrawable(new ColorDrawable(Color.parseColor("#330000ff")));
@@ -122,7 +145,7 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
         // za³adowanie do content_frame ImageGridFragment
         if (getSupportFragmentManager().findFragmentByTag(GRID_FRAGMENT_TAG) == null) {
             final FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
-            ft.add(R.id.content_frame, igf, GRID_FRAGMENT_TAG);
+            ft.replace(R.id.content_frame, igf, GRID_FRAGMENT_TAG);
             ft.commit();
         }
         
@@ -200,6 +223,12 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
     			overridePendingTransition(R.anim.right_slide_in, R.anim.right_slide_out);
     			finish();
                 return true;
+                
+                
+            case R.id.action_search:
+            	
+            	return true;
+            	
             default:
                 return super.onOptionsItemSelected(item);
         }
@@ -210,6 +239,13 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
         // Inflate the menu items for use in the action bar
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.grid_activity_actions, menu);
+        
+        
+        // Associate searchable configuration with the SearchView
+        SearchManager searchManager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
+        SearchView searchView = (SearchView) menu.findItem(R.id.action_search).getActionView();
+        searchView.setSearchableInfo(searchManager.getSearchableInfo(getComponentName()));
+ 
         return super.onCreateOptionsMenu(menu);
     }
     
@@ -236,22 +272,25 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 		}
 		
 		private void selectItem(int position){
-			Fragment fragment = new ImageGridFragment();
-			Bundle args = new Bundle();
 			Long cat_id = mCategoryMap.get(mCategoryTitles.get(position));
+			replaceGridFragment(cat_id, false);
+			
+			/*igf = new ImageGridFragment();
+			Bundle args = new Bundle();
+			
 			Log.i("info", "parent " + Utils.getKeyByValue(mCategoryMap, cat_id));
 			args.putLong("CATEGORY_ID", cat_id);
-			fragment.setArguments(args);
+			igf.setArguments(args);
 			
 			//Insert the fragment by replacing an existing fragment
 			
 			final FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
-	        ft.replace(R.id.content_frame, fragment, GRID_FRAGMENT_TAG);
+	        ft.replace(R.id.content_frame, igf, GRID_FRAGMENT_TAG);
 
 
 		    ImageGridActivity.fragmentsHistory.add(actual_category_fk);
             ft.commit();				
-			
+			*/
 			 // Highlight the selected item, update the title, and close the drawer
 		    mDrawerList.setItemChecked(position, true);
 		    //setTitle(subCategories.get(position).getCategory());
@@ -395,15 +434,18 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 	@Override
 	public void onBackPressed() {
 		if(fragmentsHistory.size()>0){
-	        Fragment fragment = new ImageGridFragment();
+			Long previousFragmentId = fragmentsHistory.get(fragmentsHistory.size()-1);
+			replaceGridFragment(previousFragmentId, true);
+			/*
+	        igf = new ImageGridFragment();
 			Bundle args = new Bundle();			
 			args.putLong("CATEGORY_ID", fragmentsHistory.get(fragmentsHistory.size()-1));
-			fragment.setArguments(args);
+			igf.setArguments(args);
 			 
 			final FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
 			ft.setCustomAnimations(android.R.anim.slide_in_left, android.R.anim.slide_out_right);
 			 //ft.setCustomAnimations(R.anim.slide_in_right, R.anim.slide_out_left);
-		     ft.replace(R.id.content_frame, fragment, GRID_FRAGMENT_TAG);
+		     ft.replace(R.id.content_frame, igf, GRID_FRAGMENT_TAG);
 		     fragmentsHistory.remove(fragmentsHistory.size()-1);
 		     ft.commit();		
 		     String title = (String) getActionBar().getTitle();
@@ -412,6 +454,7 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 			     title = title.replace("/"+last_category, "");
 			     getActionBar().setTitle(title);
 		     }
+		     */
 		}
 		else{ // opuszczam aplikacje
 			if (doubleBackToExitPressedOnce) {
@@ -430,7 +473,55 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 	        }, 2000);
 		}
 	}
-	 
+	@Override
+	public boolean onNavigationItemSelected(int itemPosition, long itemId) {
+		Bundle args = new Bundle();		
+		if(igf.getActivity() != null){
+			switch (itemPosition) {
 	
+			case 0: // alfabetycznie 
+				ImageGridFragment.sortOrder = "i."+ImageContract.Columns.DESC + " ASC";			
+				args.putLong("CATEGORY_ID", actual_category_fk);
+				igf.getLoaderManager().restartLoader(1, args, (LoaderCallbacks<Cursor>) igf);
+				break;
+			case 1: // ostatnio zmodyfikowane
+				ImageGridFragment.sortOrder = "i."+ImageContract.Columns.MODIFIED + " DESC";
+				args.putLong("CATEGORY_ID", actual_category_fk);
+				igf.getLoaderManager().restartLoader(1, args, (LoaderCallbacks<Cursor>) igf);
+				break;
+			case 2: // najczêœciej u¿ywane
+				ImageGridFragment.sortOrder = "i."+ImageContract.Columns.TIME_USED + " DESC";
+				args.putLong("CATEGORY_ID", actual_category_fk);
+				igf.getLoaderManager().restartLoader(1, args, (LoaderCallbacks<Cursor>) igf);
+				break;
 	
+			default:
+				break;
+			}
+		}
+		
+		return false;
+	}
+	
+	public void replaceGridFragment(Long category_id, boolean gotoPreviousFragment){
+		igf = new ImageGridFragment();
+		Bundle args = new Bundle();			
+		args.putLong("CATEGORY_ID", category_id);
+		igf.setArguments(args);
+		
+
+		final FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+		ft.setCustomAnimations(R.anim.slide_in_right, R.anim.slide_out_left);
+	    ft.replace(R.id.content_frame, igf, ImageGridActivity.GRID_FRAGMENT_TAG);
+	    ft.commit();	
+	     
+	    if(gotoPreviousFragment){
+	    	fragmentsHistory.remove(fragmentsHistory.size()-1);
+	    }
+	    else{
+	    	fragmentsHistory.add(actual_category_fk);
+	    }
+        
+	}
+
 }

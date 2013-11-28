@@ -80,6 +80,7 @@ public class Database {
 		    "FOREIGN KEY("+UserContract.Columns.ROOT_FK+") REFERENCES "+ImageContract.TABLE_IMAGE+"("+ImageContract.Columns._ID+") "+
 	");";
 	
+	private static final String TABLE_METADATA_CREATE = "CREATE TABLE metadata(_id INTEGER PRIMARY KEY AUTOINCREMENT,  dict_fk INTEGER DEFAULT 1)";
 		
 	private static final String CREATE_UNIQUE_INDEX_ON_PARENT = "CREATE UNIQUE INDEX "+
 			"parent_idx ON "+ParentContract.TABLE_PARENT+"("+ParentContract.Columns._ID+","+ParentContract.Columns.IMAGE_FK+","+ParentContract.Columns.PARENT_FK+");";
@@ -87,7 +88,7 @@ public class Database {
 	public static void recreateDB(){
 		open();
 		String drop_table = "DROP TABLE IF EXISTS ";
-		
+		db.execSQL(drop_table+"metadata");
 		db.execSQL(drop_table+ParentContract.TABLE_PARENT);
 		db.execSQL(drop_table+ImageContract.TABLE_IMAGE);
 		db.execSQL(drop_table+UserContract.TABLE_USER);
@@ -325,6 +326,15 @@ public class Database {
 		return images;
 	}
 	
+	public Long getMainDictFk(){
+		Cursor c = db.query("metadata", null, null ,null,null, null, "_id");
+		c.moveToFirst();
+		if(!c.isAfterLast()){
+			return c.getLong(1);
+		}
+		else
+			return null;
+	}
 	
 	public static Cursor getCursorOfAllImages(){
 		String selection =ImageContract.Columns.CATEGORY+" NOT LIKE \'ROOT\'";
@@ -524,7 +534,19 @@ public class Database {
 				_db.execSQL(TABLE_IMAGES_CREATE);
 				_db.execSQL(TABLE_PARENT_CREATE);
 				_db.execSQL(TABLE_USER_CREATE);
+				_db.execSQL(TABLE_METADATA_CREATE);
 				//_db.execSQL(CREATE_UNIQUE_INDEX_ON_PARENT);
+				
+				ContentValues cv = new ContentValues();
+				cv.put(ImageContract.Columns.CATEGORY, "MAIN_DICT");
+				cv.put(ImageContract.Columns.DESC,  "MAIN_DICT");
+				cv.put(ImageContract.Columns.MODIFIED, dateFormat.format(date));
+				long l =  db.insert(ImageContract.TABLE_IMAGE, null, cv);
+				if(l!= -1){
+					cv = new ContentValues();
+					cv.put("dict_fk", l);
+					db.insert("metadata", null, cv);
+				}
 		
 			}catch(SQLException ex){
 				Log.w(LOG_TAG, ex);
@@ -537,10 +559,12 @@ public class Database {
 			String drop_table = "DROP TABLE IF EXISTS ";
 			// Log the version upgrade/
 			Log.w("TaskDBAdapter", "Upgrading from version "+	oldVersion + " to "+ newVersion + ", witch will destroy all old data");
+			db.execSQL(drop_table+"metadata");
 			db.execSQL(drop_table+ImageContract.TABLE_IMAGE);
 			//db.execSQL("drop index if exists parent_idx");
 			db.execSQL(drop_table+ParentContract.TABLE_PARENT);
 			db.execSQL(drop_table+UserContract.TABLE_USER);
+			
 			onCreate(db);
 			
 		}

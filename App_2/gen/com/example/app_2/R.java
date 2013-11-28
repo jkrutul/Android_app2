@@ -78,11 +78,12 @@ containing a value of this type.
     public static final class id {
         public static final int OpenFileChooser=0x7f0a001c;
         public static final int TableLayout01=0x7f0a0037;
-        public static final int action_add_image=0x7f0a0055;
-        public static final int action_settings=0x7f0a0054;
+        public static final int action_add_image=0x7f0a0059;
+        public static final int action_search=0x7f0a0057;
+        public static final int action_settings=0x7f0a0056;
         public static final int add=0x7f0a002c;
-        public static final int add_folder=0x7f0a0058;
-        public static final int adduser=0x7f0a0056;
+        public static final int add_folder=0x7f0a005c;
+        public static final int adduser=0x7f0a005a;
         public static final int adduser_button=0x7f0a0006;
         public static final int author=0x7f0a004b;
         public static final int bi_cancel_button=0x7f0a000a;
@@ -96,7 +97,7 @@ containing a value of this type.
         public static final int category=0x7f0a0039;
         public static final int category_select_spinner=0x7f0a0016;
         public static final int choose_list=0x7f0a001e;
-        public static final int clear_cache=0x7f0a005b;
+        public static final int clear_cache=0x7f0a005f;
         public static final int clear_ex_button=0x7f0a0010;
         public static final int client_activity=0x7f0a0022;
         public static final int content_frame=0x7f0a0012;
@@ -113,6 +114,7 @@ containing a value of this type.
         public static final int expanded_image=0x7f0a0013;
         public static final int export_db=0x7f0a002f;
         public static final int fcontainer=0x7f0a0017;
+        public static final int filter1=0x7f0a0058;
         public static final int gridView=0x7f0a003a;
         public static final int grid_activity=0x7f0a0021;
         public static final int group=0x7f0a002b;
@@ -121,6 +123,7 @@ containing a value of this type.
         public static final int image_desc=0x7f0a0046;
         public static final int image_list_view=0x7f0a0047;
         public static final int img=0x7f0a003b;
+        public static final int imgIcon=0x7f0a004c;
         public static final int img_id=0x7f0a003c;
         public static final int import_button=0x7f0a001f;
         public static final int import_db=0x7f0a0030;
@@ -130,12 +133,12 @@ containing a value of this type.
         public static final int list_fragment_container=0x7f0a0008;
         public static final int main_activity=0x7f0a0020;
         public static final int main_grid=0x7f0a000e;
-        public static final int mc_chceck_box=0x7f0a004f;
-        public static final int mc_icon=0x7f0a004d;
-        public static final int mc_layout=0x7f0a004c;
-        public static final int mc_text=0x7f0a004e;
-        public static final int menu_item_share=0x7f0a0059;
-        public static final int menu_refresh=0x7f0a005a;
+        public static final int mc_chceck_box=0x7f0a0051;
+        public static final int mc_icon=0x7f0a004f;
+        public static final int mc_layout=0x7f0a004e;
+        public static final int mc_text=0x7f0a0050;
+        public static final int menu_item_share=0x7f0a005d;
+        public static final int menu_refresh=0x7f0a005e;
         public static final int message=0x7f0a000b;
         public static final int pager=0x7f0a002a;
         public static final int parent_cancel_button=0x7f0a0028;
@@ -151,21 +154,22 @@ containing a value of this type.
         public static final int radioSex=0x7f0a0003;
         public static final int recreateDB=0x7f0a002e;
         public static final int recycling_image=0x7f0a0045;
-        public static final int remove=0x7f0a0053;
+        public static final int remove=0x7f0a0055;
         public static final int select_parents=0x7f0a0040;
         public static final int send_button=0x7f0a000c;
         public static final int settings_activity=0x7f0a0026;
         public static final int submit_button=0x7f0a0044;
         public static final int swipe_activity=0x7f0a0023;
-        public static final int take_pic=0x7f0a0057;
+        public static final int take_pic=0x7f0a005b;
         public static final int txtTest=0x7f0a0034;
+        public static final int txtTitle=0x7f0a004d;
         public static final int upper_layout=0x7f0a001a;
-        public static final int user_gender=0x7f0a0052;
+        public static final int user_gender=0x7f0a0054;
         public static final int user_image=0x7f0a0000;
         public static final int user_img_hint=0x7f0a0001;
         public static final int user_name=0x7f0a0002;
-        public static final int user_pic=0x7f0a0050;
-        public static final int user_root=0x7f0a0051;
+        public static final int user_pic=0x7f0a0052;
+        public static final int user_root=0x7f0a0053;
         public static final int users_activity=0x7f0a0025;
         public static final int users_list_view=0x7f0a0031;
     }
@@ -189,9 +193,10 @@ containing a value of this type.
         public static final int image_item=0x7f030010;
         public static final int image_list=0x7f030011;
         public static final int image_row=0x7f030012;
-        public static final int multiple_choice_item=0x7f030013;
-        public static final int user_row=0x7f030014;
-        public static final int word_view=0x7f030015;
+        public static final int list_item_title_navigation=0x7f030013;
+        public static final int multiple_choice_item=0x7f030014;
+        public static final int user_row=0x7f030015;
+        public static final int word_view=0x7f030016;
     }
     public static final class menu {
         public static final int context_menu=0x7f090000;
@@ -239,6 +244,7 @@ containing a value of this type.
     }
     public static final class xml {
         public static final int preferences=0x7f050000;
+        public static final int searchable=0x7f050001;
     }
     public static final class styleable {
         /** Attributes that can be used with a WordViewOptions.

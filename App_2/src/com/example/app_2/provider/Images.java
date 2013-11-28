@@ -108,18 +108,28 @@ public class Images {
 		
 	}
 	
-	public static void addNewEntriesToImageTable(List<String> filenames, int categories[]){
+	public static void addNewEntriesToImageTable(List<String> filenames, ArrayList<Long> categories){
 		Database db = Database.getInstance(App_2.getAppContext());
 		db.open();
-		int cvSize = categories.length;
+		int cvSize = 0;
+		Long main_dict_id = db.getMainDictFk();
 		
+		if(categories!=null){
+			categories.add(main_dict_id);
+			cvSize = categories.size();
+		}
+		else{ 
+			categories = new ArrayList<Long>();
+			categories.add(main_dict_id);
+			cvSize  = 1;
+		}
 		for(String filename: filenames){
 			Long inserted_id = db.insertImage(filename);
 			if(inserted_id!= -1){
 				ContentValues[] cvArray  = new ContentValues[cvSize];
 				int i =0;
-				for(int category_fk :categories){
-					category_fk = categories[i];
+				for(Long category_fk :categories){
+					category_fk = categories.get(i);
 					ContentValues cv = new ContentValues();
 					cv.put(ParentContract.Columns.IMAGE_FK, inserted_id);
 					cv.put(ParentContract.Columns.PARENT_FK, category_fk);
@@ -324,11 +334,13 @@ public class Images {
 			int parents_count = argsList.size();
 			parents_count--;
 			String path_to_dir = (String) argsList.get(0);
-			int parents_fk[] = new int[parents_count];
+			ArrayList<Long> parents_fk = new ArrayList<Long>();
+			//int parents_fk[] = new int[parents_count];
 			
 			for(int i=1, j=0; i<argsList.size(); i++, j++){
 				try{
-					parents_fk[j] = Integer.parseInt((String) argsList.get(i));
+					//parents_fk[j] = Integer.parseInt((String) argsList.get(i));
+					parents_fk.add(Long.parseLong((String) argsList.get(i)));
 				}catch(NumberFormatException e){
 					e.printStackTrace();
 				}
@@ -487,7 +499,7 @@ public class Images {
 			*/
 			ArrayList<String> uniqueFilename = new ArrayList<String>();
 			uniqueFilename.add(Storage.scaleAndSaveBitmapFromPath(path_toIMG, new int[]{1,4,8}, Bitmap.CompressFormat.PNG,100,db, filenameVerification));
-			addNewEntriesToImageTable(uniqueFilename, new int[]{-1});
+			addNewEntriesToImageTable(uniqueFilename, null);
 			return null;
 		}
 	}

@@ -127,8 +127,7 @@ public class ImageContentProvider extends ContentProvider{
 			rowsUpdated = db.update(ImageContract.TABLE_IMAGE, values,selection, selectionArgs);
 			break;
 		case IMAGE_ID:
-			whereClause = ImageContract.Columns._ID + "="+ id +
-					(!TextUtils.isEmpty(selection) ? "AND ("+ selection +')':"");
+			whereClause = ImageContract.Columns._ID + "="+ id +	(!TextUtils.isEmpty(selection) ? "AND ("+ selection +')':"");
 			
 			rowsUpdated = db.update(ImageContract.TABLE_IMAGE, values, whereClause, selectionArgs);
 			break;

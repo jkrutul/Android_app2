@@ -17,7 +17,7 @@ import com.example.app_2.fragments.ImagesMultiselectFragment;
 
 public class BindImagesToCategory extends FragmentActivity{
 	ImagesMultiselectFragment imf;
-	int executing_category_id;
+	Long executing_category_id;
 	@Override
 	protected void onCreate(Bundle bundle) {
 		super.onCreate(bundle);
