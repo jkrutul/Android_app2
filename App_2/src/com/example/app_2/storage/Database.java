@@ -40,12 +40,7 @@ public class Database {
 	
 	private static final String DATABASE_NAME="myDatabase.db";
 	private static Database db_instance = null;
-	private static final String LOG_TAG = "Database";
-	
-	
-	// The name and the column index of each column in your database
-	// The index (key) column name for use in where clauses.
-			
+	private static final String LOG_TAG = "Database";			
 	private static final int DATABASE_VERSION = 1;
 		
 	private static final String TABLE_IMAGES_CREATE = "CREATE TABLE "+
@@ -211,6 +206,7 @@ public class Database {
 		cv.put(ImageContract.Columns.FILENAME, mio.getImageName() );
 		cv.put(ImageContract.Columns.CATEGORY, mio.getCategory());
 		cv.put(ImageContract.Columns.DESC, mio.getDescription());
+		cv.put(ImageContract.Columns.TIME_USED, mio.getTimes_used());
 		return db.update(ImageContract.TABLE_IMAGE, cv, where, whereArgs);
 	}
 	
@@ -225,6 +221,18 @@ public class Database {
 		cv.put(ImageContract.Columns.DESC, mio.getDescription());
 		Log.i(LOG_TAG, "updating image:"+mio);
 		return db.update(ImageContract.TABLE_IMAGE, cv, where, whereArgs);
+	}
+	
+	public int updateImageCounter(ImageObject io){
+		long used_counter = io.getTimes_used();
+		if(used_counter < 99999){
+			used_counter++;
+			io.setTimes_used(used_counter);
+			return updateImage(io.getId(), io);
+		}
+		else
+			return 0;
+		
 	}
 	
 	/* image - get */

@@ -1,7 +1,5 @@
 package com.example.app_2.fragments;
 
-import java.io.File;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -26,9 +24,7 @@ import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.Spinner;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.example.app_2.R;
 import com.example.app_2.activities.ImageDetailsActivity;
@@ -39,8 +35,8 @@ import com.example.app_2.intents.ImageIntents;
 import com.example.app_2.storage.Storage;
 import com.example.app_2.utils.BitmapCalc;
 import com.example.app_2.utils.ImageLoader;
-//import android.widget.ArrayAdapter;
 import com.example.app_2.utils.Utils;
+//import android.widget.ArrayAdapter;
 
 public class ImageDetailsFragment extends Fragment{
 	private TextView mId;

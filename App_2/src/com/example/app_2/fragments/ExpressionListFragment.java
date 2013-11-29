@@ -33,8 +33,8 @@ public class ExpressionListFragment extends Fragment implements OnItemClickListe
 		new ImageLoader(getActivity());	
 	}
 	
-	public void addImageToAdapter(ImageObject image_object){
-		mAdapter.addImageToAdapter(image_object);
+	public void addImageToExAdapter(ImageObject image_object){
+		mAdapter.addImageToExpressionAdapter(image_object);
 		
 	}
 
@@ -72,7 +72,9 @@ public class ExpressionListFragment extends Fragment implements OnItemClickListe
 		String expression = new String();
 		for(ImageObject io : ExpressionAdapter.dataObjects)
 			expression+=io.getDescription()+", ";
+		
 		executing_actv.speakOut(expression);
+		ExpressionAdapter.incrUseCounter();
 		
 	}
 }

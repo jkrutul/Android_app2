@@ -30,7 +30,6 @@ import com.example.app_2.widget.CheckableLinearLayout;
 public class ParentMultiselectFragment extends ListFragment implements LoaderCallbacks<Cursor>{
 	private SimpleCursorAdapter adapter;
 	private ListView listView;
-	//private List<Item> data;
 	
 	boolean mDualPane;
 	int mCurCheckPosition = 0;
@@ -82,7 +81,7 @@ public class ParentMultiselectFragment extends ListFragment implements LoaderCal
         String selection2 = ImageContract.Columns.CATEGORY + " IS NOT NULL AND ("+ImageContract.Columns.CATEGORY +" <> ?)";
         String[] selectionArgs2 ={""};
 		Cursor cursor2 = getActivity().getContentResolver().query(ImageContract.CONTENT_URI, projection3, selection2, selectionArgs2, null);
-		adapter = new SimpleCursorAdapter( getActivity().getApplicationContext(), /*android.R.layout.simple_list_item_multiple_choice */ R.layout.multiple_choice_item, cursor2, from, to, 0);
+		adapter = new SimpleCursorAdapter( getActivity().getApplicationContext(),  R.layout.multiple_choice_item, cursor2, from, to, 0);
 		adapter.setViewBinder(new SimpleCursorAdapter.ViewBinder() {
 			public boolean setViewValue(View view, Cursor cursor,int columnIndex) {
 				if (view.getId() == R.id.mc_icon) {

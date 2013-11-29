@@ -13,7 +13,6 @@ import com.example.app_2.utils.BitmapCalc;
 
 public class App_2 extends Application{
 	private static Context context;
-	//public static ImageGridActivity actvity;
 	public static Bitmap mPlaceHolderBitmap;
 	public static Bitmap mDarkPlaceHolderBitmap;
 	public static Drawable wallpaperDrawable;

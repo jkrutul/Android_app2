@@ -13,7 +13,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentTransaction;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
@@ -54,8 +53,6 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
     private int mImageThumbSize;
     private int mImageThumbSpacing;
 	private int mImageFontSize = 20;
-    private ActionMode mActionMode;
-    //private ImageCursorAdapter adapter;
     private SimpleCursorAdapter adapter;
     private Animator mCurrentAnimator;
     public  GridView mGridView;
@@ -64,16 +61,24 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
     private boolean mChangeNumColumns = false;
 	private static final int LOADER_ID = 1;
 	
-	private ImageGridActivity executingActivity;
+	private static ImageGridActivity executingActivity;
+	private static SharedPreferences sharedPref; 
 	
 	private static final int dev_h = App_2.getMaxHeight();
 	private static final int dev_w = App_2.getMaxWidth();
 	
-	public static String sortOrder =null;
-
+	public static String sortOrder ="i."+ImageContract.Columns.TIME_USED + " DESC";
 	
-	//private int img_size =100;
-
+	private static String[] from = new String[] {  ImageContract.Columns.FILENAME,   ImageContract.Columns.DESC	};
+	private static int[] to = new int[] {R.id.recycling_image, R.id.image_desc };
+	
+	private static String[] loader_projection = new String[] { "i."+ImageContract.Columns._ID,
+															   "i."+ImageContract.Columns.FILENAME,
+															   "i."+ImageContract.Columns.DESC,
+															   "i."+ImageContract.Columns.CATEGORY,
+														       "i."+ImageContract.Columns.MODIFIED,
+															   "i."+ImageContract.Columns.TIME_USED};	
+	
 	
 	private OnItemLongClickListener ilcL = new OnItemLongClickListener(){
 		@Override
@@ -86,19 +91,11 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
     		    // Load the high-resolution "zoomed-in" image.
     			if(expandedImageView!=null){
     				expandedImageView.bringToFront();
-    				//0 String path = Images.getImageFullScreenThumbsPath(img_object.getImageName());
     				 String path = Storage.getPathToScaledBitmap(img_object.getImageName(), dev_w);
-    				 //Bitmap b = BitmapFactory.decodeFile(path);
-    				 //Drawable verticalImage = new BitmapDrawable(getResources(), b);
     		         Bitmap unscaledBitmap = ScalingUtilities.decodeFile(path, App_2.getMaxWidth(), App_2.getMaxHeight(), ScalingLogic.FIT);
-
-    		            // Part 2: Scale image
     		         Bitmap bitmap = ScalingUtilities.createScaledBitmap(unscaledBitmap, App_2.getMaxWidth(), App_2.getMaxHeight(), ScalingLogic.FIT);
     		         unscaledBitmap.recycle();
     		         expandedImageView.setImageBitmap(bitmap);
-
-    				 //BitmapCalc.decodeSampleBitmapFromFile(filePath, reqWidth, reqHeight)
-    				 //imageLoader.loadBitmap(path, expandedImageView);
     			}
 
     		    thumbView.setAlpha(0f);
@@ -122,7 +119,6 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
                 final int numColumns = (int) Math.floor(mGridView.getWidth() / (mImageThumbSize + mImageThumbSpacing));
                 if (numColumns > 0) {
                     final int columnWidth = (mGridView.getWidth() / numColumns) - mImageThumbSpacing;
-                    //setNumColumns(numColumns);
                     mGridView.setColumnWidth(columnWidth);
                     setItemHeight(columnWidth);
                         Log.d(LOG_TAG, "onCreateView - numColumns set to " + numColumns);
@@ -141,7 +137,6 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
 		    	     iv.setLayoutParams(mImageViewLayoutParams);
 		    	     
 		    	     String path  = Storage.getPathToScaledBitmap(cursor.getString(1), mItemHeight);
-					 //String path = Images.getImageFullScreenThumbsPath(cursor.getString(1));
 					 String category = cursor.getString(3);
 					 boolean isCategory = (category != null  && !category.isEmpty() ) ? true : false; 
 					 ImageLoader.loadBitmap(path, iv, true);
@@ -170,29 +165,19 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		executingActivity = (ImageGridActivity) getActivity();
-		SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(executingActivity);
+		if(executingActivity == null){
+			executingActivity = (ImageGridActivity) getActivity();
+			sharedPref = PreferenceManager.getDefaultSharedPreferences(executingActivity);
+		}
 		mImageThumbSize = Integer.valueOf(sharedPref.getString("pref_img_size", ""));
 		mImageFontSize = Integer.valueOf(sharedPref.getString("pref_img_desc_font_size", ""));
         mImageThumbSpacing = getResources().getDimensionPixelSize(R.dimen.image_thumbnail_spacing);	
 		mChangeNumColumns = true;
-    	
-    	String[] from = new String[] {
-				   ImageContract.Columns._ID, 
-				   ImageContract.Columns.FILENAME,
-				   ImageContract.Columns.DESC,
-				   ImageContract.Columns.CATEGORY};
-		int[] to = new int[] { 0, R.id.recycling_image, R.id.image_desc };
-    	
+
     	adapter = new SimpleCursorAdapter(executingActivity.getApplicationContext(), R.layout.image_item, null, from, to, 0);
     	adapter.setViewBinder(vb);
-    			
 		getLoaderManager().initLoader(LOADER_ID, this.getArguments(), this);
-		
 		setHasOptionsMenu(true);
-		//mImageThumbSize = getResources().getDimensionPixelSize(R.dimen.image_thumbnail_size);
-		//mImageThumbSize = img_size;
-
 	}  
     
     @Override
@@ -207,8 +192,7 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
 	    mGridView.setOnItemClickListener(this);
 	    mGridView.setMultiChoiceModeListener(this);
 	    mGridView.setOnItemLongClickListener(ilcL);
-	    mGridView.getViewTreeObserver().addOnGlobalLayoutListener(vto);
-	    //mGridView.setChoiceMode(GridView.CHOICE_MODE_MULTIPLE_MODAL);	        
+	    mGridView.getViewTreeObserver().addOnGlobalLayoutListener(vto);        
 	    return v;
 
     }
@@ -237,9 +221,11 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
 	public void onItemClick(AdapterView<?> parent, final  View thumbView, int position, long id) {
 		Cursor c = (Cursor) adapter.getItem(position);						
 		ImageObject img_object= new ImageObject();
+		img_object.setId(c.getLong(c.getColumnIndex(ImageContract.Columns._ID)));
 		img_object.setImageName(c.getString(c.getColumnIndex(ImageContract.Columns.FILENAME)));
 		img_object.setDescription( c.getString(c.getColumnIndex(ImageContract.Columns.DESC)));
 		img_object.setCategory(c.getString(c.getColumnIndex(ImageContract.Columns.CATEGORY)));
+		img_object.setTimes_used(c.getLong(c.getColumnIndex(ImageContract.Columns.TIME_USED)));
 	
 		
 		if(img_object.getCategory() == null || img_object.getCategory().isEmpty())
@@ -250,58 +236,29 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
 	    }
 		 String category = img_object.getCategory();
 		 if(category!=null){
-			//ImageGridFragment fragment = new ImageGridFragment();
-			//Bundle args = new Bundle();			
-			//args.putLong("CATEGORY_ID", c.getLong(c.getColumnIndex(ImageContract.Columns._ID)));
-			//fragment.setArguments(args);
+
 			 Long l = c.getLong(c.getColumnIndex(ImageContract.Columns._ID));
 			executingActivity.replaceGridFragment(l, false);
-			/*
-			final FragmentTransaction ft = getActivity().getSupportFragmentManager().beginTransaction();
-			 ft.setCustomAnimations(R.anim.slide_in_right, R.anim.slide_out_left);
-		     ft.replace(R.id.content_frame, fragment, ImageGridActivity.GRID_FRAGMENT_TAG);
-		     ImageGridActivity.fragmentsHistory.add(ImageGridActivity.actual_category_fk);
-		     ft.commit();
-		     */		
+
 		     ActionBar actionBar = executingActivity.getActionBar();
 		     actionBar.setTitle(category);
 		 }
-		 
-
-		
 	}
-	/*
-    @Override
-    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-        inflater.inflate(R.menu.main, menu);
-    }
-	*/
+
 	@TargetApi(Build.VERSION_CODES.HONEYCOMB)
 	@Override
 	public Loader<Cursor> onCreateLoader(int arg0, Bundle bundle) {
-
-		CursorLoader cursorLoader= null;
+		//TODO login user root id
 		ImageGridActivity.actual_category_fk = (bundle!= null) ?  bundle.getLong("CATEGORY_ID", 1)	: 1;
 		Uri uri = Uri.parse(ImagesOfParentContract.CONTENT_URI + "/" + ImageGridActivity.actual_category_fk);
-		
-		String[] projection = new String[] { "i."+ImageContract.Columns._ID,  "i."+ImageContract.Columns.FILENAME,  "i."+ImageContract.Columns.DESC,  "i."+ImageContract.Columns.CATEGORY};	
-		//String selection = "p."+ParentContract.Columns.PARENT_FK +" = ?";
-		//String[] selectionArgs = new String[]{String.valueOf(ImageGridActivity.actual_category_fk)};
-		cursorLoader = new CursorLoader(executingActivity.getApplicationContext(),uri, projection, null, null ,sortOrder);
-		return cursorLoader;
+		return new CursorLoader(executingActivity.getApplicationContext(),uri, loader_projection, null, null ,sortOrder);
 	}
 
 	@Override
-	public void onLoadFinished(Loader<Cursor> arg0, Cursor data) {
-		adapter.swapCursor(data);
-		
-	}
+	public void onLoadFinished(Loader<Cursor> arg0, Cursor data) { adapter.swapCursor(data);}
 
 	@Override
-	public void onLoaderReset(Loader<Cursor> loader) {
-		adapter.swapCursor(null);
-		
-	}
+	public void onLoaderReset(Loader<Cursor> loader) { adapter.swapCursor(null); }
 
 	@Override
 	public boolean onActionItemClicked(ActionMode mode, MenuItem item) {

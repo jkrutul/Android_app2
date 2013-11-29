@@ -91,53 +91,10 @@ public class NewImgTemplateActivity extends Activity {
 							mCategory.setVisibility(View.INVISIBLE);
 					}
 				});
-		
-		//if(pathToNewImage!= null){
-		//	filename = Utils.getFilenameFromPath(pathToNewImage);
-		//	ImageLoader.loadBitmap(pathToNewImage, mImage, true);
-		//	mTitleText.setText(filename);
-		//	mDescText.setText(filename);
-		//}
-		/*
-		if(bitmap !=null){
-			mImage.setImageBitmap(bitmap);
-			showFields();
-		}
-		
-		row_id = (bundle == null) ? null : (Long) bundle.getLong("row_id"); //je¿eli ju¿ zapisano w bazie row_id != null, przywracam to co jest zapisane 
-		imageUri = Uri.parse(ImageContract.CONTENT_URI + "/" + row_id);
-		if(row_id!=null && row_id!=0){
-			fillData(imageUri);
-			showFields();
-		}else
-		{
-			hideFields();
-		}
-		*/
+
 
 	}
 
-	private void showFields(){
-		mId.setVisibility(View.VISIBLE);
-		mTitleText.setVisibility(View.VISIBLE);
-		//mCategory.setVisibility(View.VISIBLE);
-		mDescText.setVisibility(View.VISIBLE);
-		//mParent.setVisibility(View.VISIBLE);
-		mSpinner.setVisibility(View.VISIBLE);
-		mButton.setVisibility(View.VISIBLE);
-		mCreateCategoryCheckBox.setVisibility(View.VISIBLE);
-	}
-	
-	private void hideFields(){
-		mId.setVisibility(View.GONE);
-		mTitleText.setVisibility(View.GONE);
-		mCategory.setVisibility(View.GONE);
-		mDescText.setVisibility(View.GONE);
-		mParent.setVisibility(View.GONE);
-		mSpinner.setVisibility(View.GONE);
-		mButton.setVisibility(View.GONE);
-		mCreateCategoryCheckBox.setVisibility(View.GONE);
-	}
 	
 
 	@Override
@@ -258,22 +215,8 @@ public class NewImgTemplateActivity extends Activity {
 			this.getContentResolver().update(imageUri, values, null,null);
 		}
 	}
-/*
-	@Override
-	public void onSaveInstanceState(Bundle outState) {
-		super.onSaveInstanceState(outState);
-		
-		if (!imageUri.getLastPathSegment().equals("null")) {
-			outState.putLong("row_id",	Long.valueOf(imageUri.getLastPathSegment()));
-		}
-		if(bitmap != null)
-			saveState();
-		
-		// outState.putParcelable(ImageContract.CONTENT_ITEM_TYPE, imageUri);
-	}
-*/	
+
 	private void fillData(Uri uri) {
-		//Uri uri = Uri.parse(ImageContract.CONTENT_URI + "/" + id);
 		String[] projection = { ImageContract.Columns._ID,
 				ImageContract.Columns.FILENAME, ImageContract.Columns.DESC,
 				ImageContract.Columns.CATEGORY};
@@ -285,23 +228,12 @@ public class NewImgTemplateActivity extends Activity {
 
 			String img_id = cursor.getString(cursor
 					.getColumnIndex(ImageContract.Columns._ID));
-			//Long parent_fk = cursor.getLong(cursor
-			//		.getColumnIndexOrThrow(ImageContract.Columns.PARENTS));
+
 			String category = cursor.getString(cursor
 					.getColumnIndexOrThrow(ImageContract.Columns.CATEGORY));
 
 			mId.setText(img_id);
-			/*
-			if (parent_fk != Long.valueOf(-1)) {
-				if (categories_map.containsValue(parent_fk)) { // TODO
-					mParentCheckBox.setChecked(true);
-					String categoryName = Utils.getKeyByValue(categories_map,
-							parent_fk);
-					mSpinner.setSelection(list.indexOf(categoryName));
-				}
-			}
-			mParent.setText(String.valueOf(parent_fk));
-			*/
+
 			if (category != null)
 				if (!category.equals("")) {
 					mCreateCategoryCheckBox.setChecked(true);
@@ -313,10 +245,8 @@ public class NewImgTemplateActivity extends Activity {
 			mTitleText.setText(imgName);
 			mDescText.setText(cursor.getString(cursor
 					.getColumnIndexOrThrow(ImageContract.Columns.DESC)));
-
-			// Always close the cursor
 			cursor.close();
-			//ImageLoader.loadBitmap(Storage.getThumbsMaxDir() + File.separator	+ imgName, mImage);
+
 		}
 	}
 }

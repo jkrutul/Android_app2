@@ -1,10 +1,8 @@
 package com.example.app_2.fragments;
 
-import android.annotation.TargetApi;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.app.ListFragment;
@@ -13,20 +11,18 @@ import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v4.widget.SimpleCursorAdapter;
 import android.view.ContextMenu;
+import android.view.ContextMenu.ContextMenuInfo;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ContextMenu.ContextMenuInfo;
-import android.widget.AdapterView;
+import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.ImageView;
 import android.widget.ListView;
-import android.widget.AdapterView.AdapterContextMenuInfo;
 
 import com.example.app_2.R;
 import com.example.app_2.activities.ImageDetailsActivity;
 import com.example.app_2.contentprovider.ImageContract;
 import com.example.app_2.contentprovider.ImagesOfParentContract;
-import com.example.app_2.provider.Images;
 import com.example.app_2.storage.Storage;
 import com.example.app_2.utils.ImageLoader;
 
@@ -59,7 +55,6 @@ public class ImageListFragment extends ListFragment implements LoaderCallbacks<C
 			public boolean setViewValue(View view, Cursor cursor,int columnIndex) {
 				if (view.getId() == R.id.icon) {
 					String path = Storage.getPathToScaledBitmap(cursor.getString(cursor.getColumnIndex(ImageContract.Columns.FILENAME)), 100);
-					//String path = Images.getImageThumbsPath(cursor.getString(1));
 					ImageLoader.loadBitmap(path, (ImageView) view, false);
 					return true; // true because the data was bound to the view
 				}
@@ -84,8 +79,6 @@ public class ImageListFragment extends ListFragment implements LoaderCallbacks<C
 		if (mDualPane) {
 			// In dual-pane mode, the list view highlights the selected item.
 			getListView().setChoiceMode(ListView.CHOICE_MODE_SINGLE);
-			// Make sure our UI is in the correct state.
-			//showDetails(mCurCheckPosition,Long.valueOf(0));
 		}
 
 	}

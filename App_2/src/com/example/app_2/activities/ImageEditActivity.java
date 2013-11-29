@@ -47,7 +47,6 @@ public class ImageEditActivity extends FragmentActivity{
     	final FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
    	 	ft.add(R.id.fcontainer, ilf);
         ft.commit();
-        //final  com.example.app_2.fragments.ImageListFragment ilf = ( com.example.app_2.fragments.ImageListFragment) findViewById(R.id.titles);
         
     }
      
@@ -139,40 +138,15 @@ public class ImageEditActivity extends FragmentActivity{
 				if (resultCode == RESULT_OK) {
 					Intent i = new Intent(this, NewImgTemplateActivity.class);
 					startActivity(i);
-					/*
-					Uri uri = data.getData();
-					String path = null;
-					try {
-						if(uri != null){
-						path = Utils.getPath(this, uri);
-						ImageLoader.loadBitmap(path, mUserImage, true);
-						mHintText.setVisibility(View.INVISIBLE);
-						//Bitmap bitmap = BitmapCalc.decodeSampleBitmapFromFile(path,	150, 150);
-						// drawable = new BitmapDrawable(bitmap);
-						//mUserImage.setBackgroundDrawable(drawable);
-						}
-					} catch (URISyntaxException e) {
-						e.printStackTrace();
-					}
-					*/
 				}
 				break;
 			case TAKE_PIC_REQUEST:
 				if (resultCode == RESULT_OK) {
 					Intent i = new Intent(this, NewImgTemplateActivity.class);
 					startActivity(i);
-					
-					//String path_toIMG = Storage.readFromPreferences(null,"photoPath", this, Activity.MODE_PRIVATE);
-					//ImageLoader.loadBitmap(path_toIMG, mUserImage, true);
-					//mHintText.setVisibility(View.INVISIBLE);
-					//Bitmap bitmap = BitmapCalc.decodeSampleBitmapFromFile(path_toIMG, mUserImage.getWidth(), mUserImage.getHeight());
-					//Toast.makeText(this, path_toIMG, Toast.LENGTH_LONG).show();
-					//BitmapDrawable drawable = new BitmapDrawable(bitmap);
-					//mUserImage.setBackgroundDrawable(drawable);
 				}
 				break;
 
 			}
-			//super.onActivityResult(requestCode, resultCode, data);
 		}
 }

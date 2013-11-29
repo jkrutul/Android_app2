@@ -45,7 +45,6 @@ public class MainActivity extends Activity {
 
 		ActionBar actionBar = getActionBar();
 		actionBar.setSubtitle("G³owne menu");
-		//actionBar.setTitle("vogella.com"); 
 		prefs = getSharedPreferences("com.example.app_2", MODE_PRIVATE);
 	}
 	

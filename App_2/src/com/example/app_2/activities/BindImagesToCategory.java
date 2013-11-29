@@ -12,7 +12,6 @@ import android.view.View;
 import com.example.app_2.App_2;
 import com.example.app_2.R;
 import com.example.app_2.contentprovider.ParentContract;
-import com.example.app_2.fragments.ImageGridFragment;
 import com.example.app_2.fragments.ImagesMultiselectFragment;
 
 public class BindImagesToCategory extends FragmentActivity{
@@ -21,10 +20,7 @@ public class BindImagesToCategory extends FragmentActivity{
 	@Override
 	protected void onCreate(Bundle bundle) {
 		super.onCreate(bundle);
-		executing_category_id = ImageGridActivity.actual_category_fk;
-		//if(bundle!= null)
-		//	executing_category_id = bundle.getLong("executing_category_id");
-		
+		executing_category_id = ImageGridActivity.actual_category_fk;	
 		setContentView(R.layout.activity_bind_images_to_category);
 		
         imf = new ImagesMultiselectFragment();

@@ -76,15 +76,7 @@ public class ImagesMultiselectFragment extends ListFragment implements LoaderCal
 		
 		String[] from = new String[] {ImageContract.Columns._ID,  ImageContract.Columns.FILENAME,  ImageContract.Columns.DESC,  ImageContract.Columns.CATEGORY};
 		int[] to = new int[] { 0, R.id.mc_icon, R.id.mc_text, 0 }; 		
-		//String[] projection3 = { 
-		//		ImageContract.Columns._ID,
-		//		ImageContract.Columns.FILENAME,
-		//		ImageContract.Columns.CATEGORY
-		//		};
-        //String selection2 = ImageContract.Columns.CATEGORY + " IS NOT NULL AND ("+ImageContract.Columns.CATEGORY +" <> ?)";
-        //String[] selectionArgs2 ={""};
-		//Cursor cursor2 = getActivity().getContentResolver().query(ImageContract.CONTENT_URI, projection3, selection2, selectionArgs2, null);
-		adapter = new SimpleCursorAdapter( getActivity().getApplicationContext(), /*android.R.layout.simple_list_item_multiple_choice */ R.layout.multiple_choice_item, null, from, to, 0);
+		adapter = new SimpleCursorAdapter( getActivity().getApplicationContext(), R.layout.multiple_choice_item, null, from, to, 0);
 		adapter.setViewBinder(new SimpleCursorAdapter.ViewBinder() {
 			public boolean setViewValue(View view, Cursor cursor,int columnIndex) {
 				if (view.getId() == R.id.mc_icon) {
@@ -142,10 +134,10 @@ public class ImagesMultiselectFragment extends ListFragment implements LoaderCal
 	@Override
 	public Loader<Cursor> onCreateLoader(int arg0, Bundle bundle) {
 		Uri uri = Uri.parse(ImagesOfParentContract.CONTENT_URI + "/-1");
-		String[] projection = new String[] { "i."+ImageContract.Columns._ID, "i."+ImageContract.Columns.FILENAME,  "i."+ImageContract.Columns.DESC,  "i."+ImageContract.Columns.CATEGORY};	
-		//String selection = "p."+ParentContract.Columns.PARENT_FK +" = ?";
-		//String[] selectionArgs = new String[]{String.valueOf(-1)};
-	
+		String[] projection = new String[] { "i."+ImageContract.Columns._ID,
+											 "i."+ImageContract.Columns.FILENAME,
+											 "i."+ImageContract.Columns.DESC,
+											 "i."+ImageContract.Columns.CATEGORY};	
 		CursorLoader cursorLoader = new CursorLoader(getActivity(),	uri, projection, null, null, null);
 		return cursorLoader;
 	}

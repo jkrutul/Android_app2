@@ -16,6 +16,7 @@ import android.widget.TextView;
 import com.example.app_2.App_2;
 import com.example.app_2.R;
 import com.example.app_2.models.ImageObject;
+import com.example.app_2.storage.Database;
 import com.example.app_2.storage.Storage;
 import com.example.app_2.utils.ImageLoader;
 import com.example.app_2.views.RecyclingImageView;
@@ -51,44 +52,11 @@ public class ExpressionAdapter extends BaseAdapter{
 			
 			tv.setText(dataObjects.get(position).getDescription());
 			convertView = retval;
-			//convertView = new RecyclingImageView(this.context);
-			
-			//WordView wv = new WordView(this.context);
-			//wv.setText(dataObjects.get(position).getDescription());
-			//convertView=wv;
-			//convertView.setLayoutParams(params);
-			
-			
-			/*
-			RecyclingImageView rImageView;
-			TextView textView;
-			convertView = inflater.inflate(R.layout.image_item, parent, false);
-			rImageView = (RecyclingImageView) convertView.findViewById(R.id.recycling_image);
-			textView = (TextView) convertView.findViewById(R.id.image_desc);
-			rImageView.setLayoutParams(params);
-			ImageLoader.loadBitmap(Storage.getThumbsDir()+File.separator+dataObjects.get(position).getImageName(), rImageView, true);
-			textView.setText(dataObjects.get(position).getDescription());
-			 */
-		
 	
-		
-		/*
-		final int pos = position;
-		
-        // Now handle the main ImageView thumbnails
-		RecyclingImageView imageView;
-        if (convertView == null) { // if it's not recycled, instantiate and initialize
-            imageView = new RecyclingImageView(this.context);
-            imageView.setLayoutParams(params);
-            imageView.setLayoutParams(params);
-            ImageLoader.loadBitmap(Storage.getThumbsDir()+File.separator+dataObjects.get(position).getImageName(), imageView, false);
-            imageView.setClickable(true);
-        }
-	*/
 		String path = Storage.getPathToScaledBitmap(dataObjects.get(position).getImageName(), 100);
 		ImageLoader.loadBitmap(path, iv, true);
         return convertView;
-		//return null;
+
 	}
 	
 	@Override
@@ -106,8 +74,14 @@ public class ExpressionAdapter extends BaseAdapter{
 		return dataObjects.size();
 	}
 	
+	public static void incrUseCounter(){
+		Database db = Database.open();
+		for(ImageObject img_o : dataObjects)
+			db.updateImageCounter(img_o);
+		
+	}
 	
-	public void addImageToAdapter(ImageObject image_object){
+	public void addImageToExpressionAdapter(ImageObject image_object){
 		dataObjects.add(image_object);
 		notifyDataSetChanged();
 	}

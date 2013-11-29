@@ -20,13 +20,11 @@ public class ParentMultiselectActivity extends FragmentActivity{
 		setContentView(R.layout.activity_parent_multiselect);
 		findViewById(R.id.parents_list_fragment);
     	row_id = getIntent().getExtras().getLong("row_id");
-		//row_id = (bundle == null) ? null : (Long) bundle.getLong("row_id");
 		parent = ParentMultiselectFragment.newInstance(row_id);
 		FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
 		ft.add(R.id.parents_list_fragment, parent);
 		ft.commit();
-		//pmf = (ParentMultiselectFragment) getSupportFragmentManager().findFragmentById(R.id.parents_list_fragment);
-		//pmf.setArguments(getIntent().getExtras());
+
 
 	}
 	

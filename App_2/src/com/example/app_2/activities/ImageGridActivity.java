@@ -41,7 +41,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.speech.tts.TextToSpeech;
 import android.support.v4.app.ActionBarDrawerToggle;
-import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
@@ -67,7 +66,6 @@ import com.example.app_2.fragments.ImageGridFragment;
 import com.example.app_2.models.ImageObject;
 import com.example.app_2.storage.Storage;
 import com.example.app_2.utils.ImageLoader;
-import com.example.app_2.utils.Utils;
 
 /**
  * Simple FragmentActivity to hold the main {@link ImageGridFragment} and not much else.
@@ -126,9 +124,6 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 		actionBar.setListNavigationCallbacks(title_nav_adapter, this);
         igf = new ImageGridFragment();
         
-        //getWindow().requestFeature(Window.FEATURE_ACTION_BAR_OVERLAY);
-        //getActionBar().setBackgroundDrawable(new ColorDrawable(Color.parseColor("#330000ff")));
-        //getActionBar().setStackedBackgroundDrawable(new ColorDrawable(Color.parseColor("#550000ff")));
         setContentView(R.layout.activity_grid);
 		mCategoryMap = new HashMap<String, Long>();
 		
@@ -251,11 +246,11 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
     
     public void addImageToAdapter(ImageObject image_object){
     	if(elf!=null){
-    		elf.addImageToAdapter(image_object);
+    		elf.addImageToExAdapter(image_object);
     	}
     	else{
     		elf = new ExpressionListFragment();
-    		elf.addImageToAdapter(image_object);
+    		elf.addImageToExAdapter(image_object);
     	}
     }
 
@@ -275,27 +270,8 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 			Long cat_id = mCategoryMap.get(mCategoryTitles.get(position));
 			replaceGridFragment(cat_id, false);
 			
-			/*igf = new ImageGridFragment();
-			Bundle args = new Bundle();
-			
-			Log.i("info", "parent " + Utils.getKeyByValue(mCategoryMap, cat_id));
-			args.putLong("CATEGORY_ID", cat_id);
-			igf.setArguments(args);
-			
-			//Insert the fragment by replacing an existing fragment
-			
-			final FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
-	        ft.replace(R.id.content_frame, igf, GRID_FRAGMENT_TAG);
-
-
-		    ImageGridActivity.fragmentsHistory.add(actual_category_fk);
-            ft.commit();				
-			*/
 			 // Highlight the selected item, update the title, and close the drawer
 		    mDrawerList.setItemChecked(position, true);
-		    //setTitle(subCategories.get(position).getCategory());
-		    //mTitle = getTitle();
-		    //mDrawerLayout.closeDrawer(mDrawerList);
 		    mDrawerLayout.closeDrawers();
 		}
     }
@@ -329,8 +305,6 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 			if (result == TextToSpeech.LANG_MISSING_DATA|| result == TextToSpeech.LANG_NOT_SUPPORTED) {
 				Log.e("TTS", "LANG_NOT_SUPPORTED");
 			} else {
-				//btnSpeak.setEnabled(true);
-				//speakOut("init successful");
 			}
 		} else {
 			Log.e("TTS", "Initialization Failed");
@@ -436,25 +410,6 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 		if(fragmentsHistory.size()>0){
 			Long previousFragmentId = fragmentsHistory.get(fragmentsHistory.size()-1);
 			replaceGridFragment(previousFragmentId, true);
-			/*
-	        igf = new ImageGridFragment();
-			Bundle args = new Bundle();			
-			args.putLong("CATEGORY_ID", fragmentsHistory.get(fragmentsHistory.size()-1));
-			igf.setArguments(args);
-			 
-			final FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
-			ft.setCustomAnimations(android.R.anim.slide_in_left, android.R.anim.slide_out_right);
-			 //ft.setCustomAnimations(R.anim.slide_in_right, R.anim.slide_out_left);
-		     ft.replace(R.id.content_frame, igf, GRID_FRAGMENT_TAG);
-		     fragmentsHistory.remove(fragmentsHistory.size()-1);
-		     ft.commit();		
-		     String title = (String) getActionBar().getTitle();
-		     if(title!=null){
-			     String last_category = Utils.getFilenameFromPath(title);
-			     title = title.replace("/"+last_category, "");
-			     getActionBar().setTitle(title);
-		     }
-		     */
 		}
 		else{ // opuszczam aplikacje
 			if (doubleBackToExitPressedOnce) {

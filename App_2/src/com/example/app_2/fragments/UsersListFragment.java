@@ -54,7 +54,6 @@ public class UsersListFragment extends ListFragment implements LoaderCallbacks<C
 			public boolean setViewValue(View view, Cursor cursor,int columnIndex) {
 				switch(view.getId()){
 				case R.id.user_image:
-					//String path = Images.getImageThumbsPath(cursor.getString(cursor.getColumnIndex(UserContract.Columns.IMG_FILENAME)));
 					String path = Storage.getPathToScaledBitmap(cursor.getString(cursor.getColumnIndex(UserContract.Columns.IMG_FILENAME)),300);
 					ImageLoader.loadBitmap(path, (ImageView) view, false);
 					return true;

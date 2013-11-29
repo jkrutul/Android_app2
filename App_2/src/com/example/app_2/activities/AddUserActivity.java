@@ -1,17 +1,12 @@
 package com.example.app_2.activities;
 
-import java.io.File;
-import java.net.URISyntaxException;
-
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.ContentValues;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
-import android.provider.MediaStore;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.View;
@@ -26,12 +21,10 @@ import android.widget.Toast;
 import com.example.app_2.R;
 import com.example.app_2.contentprovider.ImageContract;
 import com.example.app_2.contentprovider.UserContract;
+import com.example.app_2.intents.ImageIntents;
 import com.example.app_2.provider.Images.AddingImageTask;
 import com.example.app_2.storage.Storage;
-import com.example.app_2.utils.BitmapCalc;
-import com.example.app_2.utils.ImageLoader;
 import com.example.app_2.utils.Utils;
-import com.example.app_2.intents.ImageIntents;
 import com.sonyericsson.util.ScalingUtilities;
 import com.sonyericsson.util.ScalingUtilities.ScalingLogic;
 
@@ -44,10 +37,8 @@ public class AddUserActivity extends Activity {
 
 	private final int FILE_SELECT_REQUEST = 12;
 	private final int TAKE_PIC_REQUEST = 24;
-	
 	private String pathToNewImage;
-	private Bitmap bitmap;
-
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
