@@ -1,4 +1,4 @@
-package com.example.app_2.adapters;
+package com.example.app_2.spinner.adapter;
 
 import java.util.List;
 
@@ -14,25 +14,26 @@ import android.widget.TextView;
 
 import com.example.app_2.R;
 import com.example.app_2.provider.Images;
-import com.example.app_2.provider.SpinnerItem;
+import com.example.app_2.spinner.model.ImageSpinnerItem;
 import com.example.app_2.storage.Storage;
 import com.example.app_2.utils.ImageLoader;
 
-public class MySpinnerAdapter extends ArrayAdapter<SpinnerItem> {
-	public static List<SpinnerItem> items;
+public class ImageSpinnerAdapter extends ArrayAdapter<ImageSpinnerItem> {
+	public static List<ImageSpinnerItem> items;
 	private Activity context;
 	ImageLoader il;
 	
 	
 
 	
-    public MySpinnerAdapter(Activity context, int resource, List<SpinnerItem> objects) {
+    public ImageSpinnerAdapter(Activity context, int resource, List<ImageSpinnerItem> objects) {
         super(context, resource, objects);
         this.items = objects;
         this.context = context;
         il = new ImageLoader(context);
     }
 
+    
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
         View v = super.getView(position, convertView, parent);
@@ -49,7 +50,7 @@ public class MySpinnerAdapter extends ArrayAdapter<SpinnerItem> {
              row = inflater.inflate(R.layout.image_row, parent, false);
     	}
 
-    	SpinnerItem item = items.get(position);
+    	ImageSpinnerItem item = items.get(position);
     	
 
     	if(item != null){
@@ -85,7 +86,7 @@ public class MySpinnerAdapter extends ArrayAdapter<SpinnerItem> {
     }
 
     @Override
-    public SpinnerItem getItem(int position) {
+    public ImageSpinnerItem getItem(int position) {
         return super.getItem(position);
     }
 

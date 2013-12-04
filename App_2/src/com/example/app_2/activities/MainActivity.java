@@ -129,6 +129,10 @@ public class MainActivity extends Activity {
 			startActivity(intent);
 			break;
 			
+		case R.id.user_login_activity:
+			intent = new Intent(this, UserLoginActivity.class);
+			startActivity(intent);
+			break;
 		default:
 			intent = null;
 			break;

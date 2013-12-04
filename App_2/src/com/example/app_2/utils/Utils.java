@@ -108,6 +108,11 @@ public class Utils {
     	return fn[0].replace("_", "");
     }
     
+    public static String cutOnlyExtention(String filename){
+    	String[] fn = filename.split("\\.");
+    	return fn[0];
+    }
+    
     public static String getExtention(String filename){
     	String[] fn = filename.split("\\.");
     	if(fn.length>1)

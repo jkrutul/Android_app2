@@ -32,6 +32,7 @@ import android.app.ProgressDialog;
 import android.app.SearchManager;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.database.Cursor;
 import android.database.MatrixCursor;
@@ -98,7 +99,7 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
     public ImageLoader imageLoader;
     public ExpressionListFragment elf;
     
-    public ImageGridFragment igf;
+    public static ImageGridFragment igf;
     
 	private static final int TTS_REQUEST_CODE = 1;
     private static final int SETTINGS_REQUEST_CODE = 37;
@@ -110,8 +111,10 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 	@Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-       
 
+		SharedPreferences sharedPref = getApplicationContext().getSharedPreferences("USER",Context.MODE_PRIVATE);
+		Long logged_user_root = sharedPref.getLong("logged_user_root", 1);
+        
         actionBar = getActionBar();
 		//actionBar.setDisplayShowTitleEnabled(false);
 		actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_LIST);
@@ -122,7 +125,15 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 		
 		title_nav_adapter = new TitleNavigationAdapter(getApplicationContext(), navSpinner);
 		actionBar.setListNavigationCallbacks(title_nav_adapter, this);
-        igf = new ImageGridFragment();
+		
+		igf = new ImageGridFragment();
+
+		if(logged_user_root != null){
+			Bundle args = new Bundle();			
+			args.putLong("CATEGORY_ID", logged_user_root);
+			igf.setArguments(args);
+			//fragmentsHistory.add(logged_user_root);
+        }
         
         setContentView(R.layout.activity_grid);
 		mCategoryMap = new HashMap<String, Long>();
@@ -144,11 +155,12 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
             ft.commit();
         }
         
-
+        if (getSupportFragmentManager().findFragmentByTag(EXPRESSION_FRAGMENT_TAG) == null) {
         	elf= new ExpressionListFragment();
             final FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
         	ft.replace(R.id.horizontal_listview, elf);
             ft.commit();
+        }
         
 
     }
@@ -208,7 +220,9 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
         switch (item.getItemId()) {
 	        case R.id.action_add_image:
 	        	Intent bind_intent = new Intent(this, BindImagesToCategory.class);
-	        	bind_intent.putExtra("executing_category_id", fragmentsHistory.get(fragmentsHistory.size() - 1));
+	        	
+	        	//bind_intent.putExtra("executing_category_id", fragmentsHistory.get(fragmentsHistory.size() - 1));
+	        	bind_intent.putExtra("executing_category_id", actual_category_fk);
 	        	startActivity(bind_intent);
 	        	return true;
 	        	
@@ -258,8 +272,10 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 
 		@Override
 		public void onItemClick(AdapterView parent, View view, int position, long id) {
-			if(actual_category_fk != id)
+			if(actual_category_fk != id){
 				selectItem(position);
+				igf.finishActionMode();
+			}
 			else{
 				Toast.makeText(getApplicationContext(), "Jesteœ ju¿ w tej kategorii", Toast.LENGTH_SHORT ).show();
 			    mDrawerLayout.closeDrawers();
@@ -414,6 +430,7 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 		else{ // opuszczam aplikacje
 			if (doubleBackToExitPressedOnce) {
 	            super.onBackPressed();
+	            finish();
 	            return;
 	        }
 	        this.doubleBackToExitPressedOnce = true;
@@ -435,7 +452,7 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 			switch (itemPosition) {
 	
 			case 0: // alfabetycznie 
-				ImageGridFragment.sortOrder = "i."+ImageContract.Columns.DESC + " ASC";			
+				ImageGridFragment.sortOrder = "i."+ImageContract.Columns.DESC + " COLLATE LOCALIZED ASC";			
 				args.putLong("CATEGORY_ID", actual_category_fk);
 				igf.getLoaderManager().restartLoader(1, args, (LoaderCallbacks<Cursor>) igf);
 				break;

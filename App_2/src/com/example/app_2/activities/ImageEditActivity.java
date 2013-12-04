@@ -20,15 +20,15 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.app_2.R;
-import com.example.app_2.adapters.MySpinnerAdapter;
 import com.example.app_2.contentprovider.ImageContract;
 import com.example.app_2.fragments.ImageDetailsFragment;
 import com.example.app_2.fragments.ImageListFragment;
-import com.example.app_2.provider.SpinnerItem;
+import com.example.app_2.spinner.adapter.ImageSpinnerAdapter;
+import com.example.app_2.spinner.model.ImageSpinnerItem;
 
 public class ImageEditActivity extends FragmentActivity{
 	private Spinner mSpinner;
-	ArrayList<SpinnerItem> items;
+	ArrayList<ImageSpinnerItem> items;
 	private ImageListFragment ilf;
 	private final static int TAKE_PIC_REQUEST = 86;
 	private final static int FILE_SELECT_REQUEST = 25;
@@ -56,7 +56,7 @@ public class ImageEditActivity extends FragmentActivity{
 			Bundle bundle = new Bundle();
 			@Override
 			public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int position, long id) {
-				SpinnerItem data = items.get(position);
+				ImageSpinnerItem data = items.get(position);
 				if(data.isHint()){
 					TextView tv = (TextView)selectedItemView;
 					if(tv!=null)
@@ -73,19 +73,19 @@ public class ImageEditActivity extends FragmentActivity{
 
 		});
 		
-		items =  new ArrayList<SpinnerItem>();
-		items.add(new SpinnerItem(null,"Wybierz kategoriê", Long.valueOf(-1), true));
+		items =  new ArrayList<ImageSpinnerItem>();
+		items.add(new ImageSpinnerItem(null,"Wybierz kategoriê", Long.valueOf(-1), true));
 		String[] projection = { ImageContract.Columns._ID, ImageContract.Columns.CATEGORY, ImageContract.Columns.FILENAME };
 		String selection = ImageContract.Columns.CATEGORY + " IS NOT NULL";
 		Cursor c = getContentResolver().query(ImageContract.CONTENT_URI, projection, selection, null, null);
 		c.moveToFirst();
 		while (!c.isAfterLast()) {
-			items.add(new SpinnerItem(c.getString(2), c.getString(1), c.getLong(0),false));
+			items.add(new ImageSpinnerItem(c.getString(2), c.getString(1), c.getLong(0),false));
 			c.moveToNext();
 		}
 		c.close();
 		
-		MySpinnerAdapter mySpinnerAdapter = new MySpinnerAdapter(this, android.R.layout.simple_spinner_item, items);
+		ImageSpinnerAdapter mySpinnerAdapter = new ImageSpinnerAdapter(this, android.R.layout.simple_spinner_item, items);
 		mySpinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 		mSpinner.setAdapter(mySpinnerAdapter);
 		mSpinner.setSelection(items.size()-1);

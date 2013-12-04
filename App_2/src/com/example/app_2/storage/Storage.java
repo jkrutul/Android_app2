@@ -211,8 +211,7 @@ public class Storage {
 	
 	/* SHARED PREFERENCES ------------------------------------------------------------------------------------------*/
 	public static void saveToSharedPreferences(String prefName, String value, String key, Context context, int mode) {
-		SharedPreferences sharedPref = context.getSharedPreferences(prefName,
-				mode);
+		SharedPreferences sharedPref = context.getSharedPreferences(prefName,mode);
 		SharedPreferences.Editor editor = sharedPref.edit();
 		editor.putString(key, value);
 		editor.commit();
@@ -260,13 +259,15 @@ public class Storage {
 					while(db.filenameVerification(filename)){
 						String ext = ".";
 						ext+= Utils.getExtention(filename);
-						filename = Utils.cutExtention(filename);
+						filename = Utils.cutOnlyExtention(filename);
 						filename+=("_"+ext);
 					}
 				}
 				last_saved_img_path = app_thumb_dir+ File.separator+filename;
 				FileOutputStream out = new FileOutputStream(last_saved_img_path);
 				bitmap.compress(compressformat, quality, out);
+				Log.i(LOG_TAG,"filename: " + path_toIMG +" saved");
+				
 			} catch (Exception e) {
 				e.printStackTrace();
 				return null;
@@ -314,16 +315,21 @@ public class Storage {
 			if(f!= null){											//sprawdzam czy istnieje ju¿ skalowany obrazek
 				String dir_to_scaled = f.getAbsolutePath();
 				img_f = new File(dir_to_scaled + File.separator + filename);
-				if(img_f.exists())
+				if(img_f.exists()){
+					//Log.i("GETPATH", "width: " +width+" scale: "+scale+" path: "+img_f.getAbsolutePath() + " dev_width: "+dev_width);
 					return img_f.getAbsolutePath();
+				}
+				//Log.w("GETPATH", "NOT EXIST width: " +width+" scale: "+scale+" path: "+filename + " dev_width: "+dev_width);
 			}
+			//Log.w("GETPATH", "2NOT EXIST width: " +width+" scale: "+scale+" path: "+filename +  " dev_width: "+dev_width);
 			if(scale == 1)
 				break;
-			scale = (int) Math.ceil(scale/2d);
+			scale--;// = (int) Math.ceil(scale/2d);
 		}while(true);
 
 		return null;
 	}
+
 
 
 }

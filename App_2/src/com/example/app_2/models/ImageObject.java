@@ -9,7 +9,7 @@ public class ImageObject { //ID imageName, AUDIOPATH, DESCRIPTION, times_used, m
 	private String modified;
 	private String last_used;
 	private String category;
-	
+	private Long author_fk;
 	
 	public String getCategory() {
 		return category;
@@ -33,8 +33,9 @@ public class ImageObject { //ID imageName, AUDIOPATH, DESCRIPTION, times_used, m
 		this.imageName = imageName;
 	}
 	
-	public ImageObject(String imageName, Long parent_fk){ 					// konstruktor dla liœcia
+	public ImageObject(String imageName, Long author_id){ 					// konstruktor dla liœcia
 		this.imageName = imageName;
+		this.author_fk = author_id;
 	}
 	
 	public ImageObject(String imageName, String audioPath, String description,String category){
@@ -88,6 +89,12 @@ public class ImageObject { //ID imageName, AUDIOPATH, DESCRIPTION, times_used, m
 	@Override
 	public String toString(){				//ID imageName, AUDIOPATH, DESCRIPTION, times_used, modified, last_used, category,parent_fk 
 		return id+";"+imageName+";"+audioPath+";"+description+";"+times_used+";"+modified+";"+last_used+";"+category+";";
+	}
+	public Long getAuthor_fk() {
+		return author_fk;
+	}
+	public void setAuthor_fk(Long author_fk) {
+		this.author_fk = author_fk;
 	}
 
 }

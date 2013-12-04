@@ -1,12 +1,12 @@
-package com.example.app_2.provider;
+package com.example.app_2.spinner.model;
 
-public class SpinnerItem {
-	private final String filename;
-	private final String text;
-	private final Long id;
-	private final boolean isHint;
+public class ImageSpinnerItem {
+	protected final String filename;
+	protected final String text;
+	protected final Long id;
+	protected final boolean isHint;
 	
-	 public SpinnerItem(String filename,String strItem, Long id, boolean flag) {
+	 public ImageSpinnerItem(String filename,String strItem, Long id, boolean flag) {
          this.isHint = flag;
          this.id = id;
          this.text = strItem;

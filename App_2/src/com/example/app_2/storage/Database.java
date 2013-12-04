@@ -150,7 +150,7 @@ public class Database {
 	 * @param mio
 	 * @return inserted ImageObject
 	 */
-	public ImageObject insertImage(ImageObject mio){
+	public ImageObject insertImage1(ImageObject mio){
 		ContentValues cv = new ContentValues();
 		cv.put(ImageContract.Columns.FILENAME, mio.getImageName() );
 		cv.put(ImageContract.Columns.CATEGORY, mio.getCategory());
@@ -171,19 +171,17 @@ public class Database {
 		return mio;
 	}
 	
-	public Long insertImage(String _filename){
-		/*
-		while(filenameVerification(_filename)){
-			String ext = ".";
-			ext+= Utils.getExtention(_filename);
-			_filename = Utils.cutExtention(_filename);
-			_filename+=("_"+ext);
-		}*/
+	public Long insertImage(ImageObject img_object){
+		String filename = img_object.getImageName();
+		String description = img_object.getDescription();
+		if(description == null)
+			description = Utils.cutExtention(filename);
 		
 		ContentValues cv = new ContentValues();
-		cv.put(ImageContract.Columns.FILENAME, _filename );
-		cv.put(ImageContract.Columns.DESC,  Utils.cutExtention(_filename));
+		cv.put(ImageContract.Columns.FILENAME, filename);
+		cv.put(ImageContract.Columns.DESC,  description);
 		cv.put(ImageContract.Columns.MODIFIED, dateFormat.format(date));
+		cv.put(ImageContract.Columns.AUTHOR_FK, img_object.getAuthor_fk());
 		return db.insert(ImageContract.TABLE_IMAGE, null, cv);
 	}
 	

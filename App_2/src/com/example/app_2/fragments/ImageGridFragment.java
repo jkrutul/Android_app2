@@ -1,5 +1,7 @@
 package com.example.app_2.fragments;
 
+import java.util.ArrayList;
+
 import android.animation.Animator;
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
@@ -28,6 +30,7 @@ import android.view.ViewGroup.LayoutParams;
 import android.view.ViewTreeObserver;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
 import android.widget.AdapterView.OnItemLongClickListener;
 import android.widget.GridView;
 import android.widget.ImageView;
@@ -40,20 +43,24 @@ import com.example.app_2.R;
 import com.example.app_2.activities.ImageGridActivity;
 import com.example.app_2.contentprovider.ImageContract;
 import com.example.app_2.contentprovider.ImagesOfParentContract;
+import com.example.app_2.contentprovider.ParentContentProvider;
+import com.example.app_2.contentprovider.ParentContract;
 import com.example.app_2.models.ImageObject;
 import com.example.app_2.storage.Storage;
 import com.example.app_2.utils.ImageLoader;
+import com.example.app_2.views.RecyclingImageView;
 import com.sonyericsson.util.ScalingUtilities;
 import com.sonyericsson.util.ScalingUtilities.ScalingLogic;
 
 @SuppressLint("NewApi")
-public class ImageGridFragment extends Fragment implements AdapterView.OnItemClickListener, LoaderCallbacks<Cursor>, AbsListView.MultiChoiceModeListener{
+public class ImageGridFragment extends Fragment implements LoaderCallbacks<Cursor>{
     private static final String LOG_TAG = ImageGridActivity.GRID_FRAGMENT_TAG;
     private ImageView expandedImageView;
     private int mImageThumbSize;
     private int mImageThumbSpacing;
 	private int mImageFontSize = 20;
     private SimpleCursorAdapter adapter;
+    private ArrayList<Long> selected_images_ids = new ArrayList<Long>();
     private Animator mCurrentAnimator;
     public  GridView mGridView;
     private RelativeLayout.LayoutParams mImageViewLayoutParams;
@@ -61,11 +68,16 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
     private boolean mChangeNumColumns = false;
 	private static final int LOADER_ID = 1;
 	
+	private boolean mEditMode = true;
+	private boolean mIsInActionMode = false;
+	
 	private static ImageGridActivity executingActivity;
 	private static SharedPreferences sharedPref; 
 	
 	private static final int dev_h = App_2.getMaxHeight();
 	private static final int dev_w = App_2.getMaxWidth();
+	
+	private static ActionMode mActionMode = null;
 	
 	public static String sortOrder ="i."+ImageContract.Columns.TIME_USED + " DESC";
 	
@@ -79,7 +91,7 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
 														       "i."+ImageContract.Columns.MODIFIED,
 															   "i."+ImageContract.Columns.TIME_USED};	
 	
-	
+
 	private OnItemLongClickListener ilcL = new OnItemLongClickListener(){
 		@Override
 		public boolean onItemLongClick(AdapterView<?> parent, final  View thumbView, int position, long i) {
@@ -88,7 +100,6 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
     		img_object.setImageName(c.getString(c.getColumnIndex(ImageContract.Columns.FILENAME)));
     		img_object.setDescription( c.getString(c.getColumnIndex(ImageContract.Columns.DESC)));
     		img_object.setCategory(c.getString(c.getColumnIndex(ImageContract.Columns.CATEGORY)));
-    		    // Load the high-resolution "zoomed-in" image.
     			if(expandedImageView!=null){
     				expandedImageView.bringToFront();
     				 String path = Storage.getPathToScaledBitmap(img_object.getImageName(), dev_w);
@@ -108,7 +119,10 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
     		            expandedImageView.setVisibility(View.GONE);
     		        }
     		    });
-        	return true;
+    		    return true;  			
+    		
+
+        	
     	}
 	};
 	
@@ -129,34 +143,123 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
 	};
    
 	private SimpleCursorAdapter.ViewBinder vb = new SimpleCursorAdapter.ViewBinder(){
+		@Override
 		   public boolean setViewValue(View view, Cursor cursor, int columnIndex){
 			   switch (view.getId()) {
 				case R.id.recycling_image:
-					 ImageView iv = (ImageView) view;
-					 mImageViewLayoutParams = new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT, mItemHeight);
-		    	     iv.setLayoutParams(mImageViewLayoutParams);
-		    	     
-		    	     String path  = Storage.getPathToScaledBitmap(cursor.getString(1), mItemHeight);
-					 String category = cursor.getString(3);
-					 boolean isCategory = (category != null  && !category.isEmpty() ) ? true : false; 
-					 ImageLoader.loadBitmap(path, iv, true);
-					 if(isCategory)
-						 view.setBackgroundColor(Color.argb(120, 0, 255, 0));
-					 else
-						 view.setBackgroundColor(Color.TRANSPARENT);
-					 return true; 
+					String filename = cursor.getString(1);
+					RecyclingImageView iv = (RecyclingImageView) view;
+				    mImageViewLayoutParams = new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT, mItemHeight);
+			        iv.setLayoutParams(mImageViewLayoutParams);
+			        String path  = Storage.getPathToScaledBitmap(filename, mItemHeight);  
+			        String category = cursor.getString(3);
+					boolean isCategory = (category != null  && !category.isEmpty() ) ? true : false; 
+					ImageLoader.loadBitmap(path, iv, true);
+					if(isCategory)
+						view.setBackgroundColor(Color.argb(120, 0, 255, 0));
+					else
+						view.setBackgroundColor(Color.TRANSPARENT);
+					if(selected_images_ids.contains(cursor.getLong(0)))
+						view.setBackgroundColor(Color.argb(255, 255, 0, 0));
+					
+					return true; 
+
 				case R.id.image_desc:
 					TextView tv = (TextView) view;
 					tv.setTextSize(mImageFontSize);
+					return false;
 					
-					break;
-	
 				default:
 					return false;
 			}
-			return false;
 		   }
 
+	};
+		
+	private AbsListView.MultiChoiceModeListener mMultiChoiceModeListener = new AbsListView.MultiChoiceModeListener() {
+		int select_counter = 0;
+		
+		@Override
+		public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
+			return false;
+		}
+		
+		@Override
+		public void onDestroyActionMode(ActionMode mode) {
+			mActionMode = null;
+			
+		}
+		
+		@Override
+		public boolean onCreateActionMode(ActionMode mode, Menu menu) { // Inflate the menu for the CAB
+
+	        MenuInflater inflater = mode.getMenuInflater();
+	        inflater.inflate(R.menu.context_menu, menu);
+	        mActionMode = mode;
+	        return true;
+		}
+		
+		@Override
+		public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
+	        switch (item.getItemId()) {
+            case R.id.remove:
+            	removeSelectedBindings();
+                mode.finish(); // Action picked, so close the CAB
+                return true;
+            default:
+                return false;
+	        }
+
+		}
+		
+		@Override
+		public void onItemCheckedStateChanged(ActionMode mode, int position, long id, boolean checked) {
+			if(checked){
+				select_counter++;
+				if(!selected_images_ids.contains(id))
+					selected_images_ids.add(id);
+			}
+			else{
+				select_counter--;
+				if(selected_images_ids.contains(id))
+					selected_images_ids.remove(id);
+			}
+			mode.setTitle("Zaznaczono: "+ select_counter + " elementów");			
+		}
+	};
+	
+	private OnItemClickListener mOnItemClickListener = new OnItemClickListener() {
+		@Override
+		public void onItemClick(AdapterView<?> parent, final  View thumbView, int position, long id) {
+			Cursor c = (Cursor) adapter.getItem(position);	
+			ImageObject img_object= new ImageObject();
+
+
+				img_object.setId(c.getLong(c.getColumnIndex(ImageContract.Columns._ID)));
+				img_object.setImageName(c.getString(c.getColumnIndex(ImageContract.Columns.FILENAME)));
+				img_object.setDescription( c.getString(c.getColumnIndex(ImageContract.Columns.DESC)));
+				img_object.setCategory(c.getString(c.getColumnIndex(ImageContract.Columns.CATEGORY)));
+				img_object.setTimes_used(c.getLong(c.getColumnIndex(ImageContract.Columns.TIME_USED)));
+			
+				
+				if(img_object.getCategory() == null || img_object.getCategory().isEmpty())
+					executingActivity.addImageToAdapter(img_object);
+				
+				if (mCurrentAnimator != null) {
+			        mCurrentAnimator.cancel();
+			    }
+				 String category = img_object.getCategory();
+				 if(category!=null){
+	
+					 Long l = c.getLong(c.getColumnIndex(ImageContract.Columns._ID));
+					executingActivity.replaceGridFragment(l, false);
+	
+				     ActionBar actionBar = executingActivity.getActionBar();
+				     actionBar.setTitle(category);
+				 }				
+			}
+
+	
 	};
 	
     public ImageGridFragment(){
@@ -165,10 +268,10 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		if(executingActivity == null){
+		//if(executingActivity == null){
 			executingActivity = (ImageGridActivity) getActivity();
 			sharedPref = PreferenceManager.getDefaultSharedPreferences(executingActivity);
-		}
+		//}
 		mImageThumbSize = Integer.valueOf(sharedPref.getString("pref_img_size", ""));
 		mImageFontSize = Integer.valueOf(sharedPref.getString("pref_img_desc_font_size", ""));
         mImageThumbSpacing = getResources().getDimensionPixelSize(R.dimen.image_thumbnail_spacing);	
@@ -189,9 +292,16 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
 
     	expandedImageView = (ImageView) executingActivity.findViewById(R.id.expanded_image);
         mGridView.setAdapter(adapter);
-	    mGridView.setOnItemClickListener(this);
-	    mGridView.setMultiChoiceModeListener(this);
-	    mGridView.setOnItemLongClickListener(ilcL);
+	    mGridView.setOnItemClickListener(mOnItemClickListener);
+	  
+	    if(mEditMode){
+	    	mGridView.setMultiChoiceModeListener(mMultiChoiceModeListener);
+	    	mGridView.setChoiceMode(GridView.CHOICE_MODE_MULTIPLE_MODAL);	
+	    }
+	    else
+	    	mGridView.setOnItemLongClickListener(ilcL);
+
+	    
 	    mGridView.getViewTreeObserver().addOnGlobalLayoutListener(vto);        
 	    return v;
 
@@ -216,34 +326,7 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
 
  
 
-	@TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
-	@Override
-	public void onItemClick(AdapterView<?> parent, final  View thumbView, int position, long id) {
-		Cursor c = (Cursor) adapter.getItem(position);						
-		ImageObject img_object= new ImageObject();
-		img_object.setId(c.getLong(c.getColumnIndex(ImageContract.Columns._ID)));
-		img_object.setImageName(c.getString(c.getColumnIndex(ImageContract.Columns.FILENAME)));
-		img_object.setDescription( c.getString(c.getColumnIndex(ImageContract.Columns.DESC)));
-		img_object.setCategory(c.getString(c.getColumnIndex(ImageContract.Columns.CATEGORY)));
-		img_object.setTimes_used(c.getLong(c.getColumnIndex(ImageContract.Columns.TIME_USED)));
-	
-		
-		if(img_object.getCategory() == null || img_object.getCategory().isEmpty())
-			executingActivity.addImageToAdapter(img_object);
-		
-		if (mCurrentAnimator != null) {
-	        mCurrentAnimator.cancel();
-	    }
-		 String category = img_object.getCategory();
-		 if(category!=null){
 
-			 Long l = c.getLong(c.getColumnIndex(ImageContract.Columns._ID));
-			executingActivity.replaceGridFragment(l, false);
-
-		     ActionBar actionBar = executingActivity.getActionBar();
-		     actionBar.setTitle(category);
-		 }
-	}
 
 	@TargetApi(Build.VERSION_CODES.HONEYCOMB)
 	@Override
@@ -258,50 +341,27 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
 	public void onLoadFinished(Loader<Cursor> arg0, Cursor data) { adapter.swapCursor(data);}
 
 	@Override
-	public void onLoaderReset(Loader<Cursor> loader) { adapter.swapCursor(null); }
+	public void onLoaderReset(Loader<Cursor> loader) { 
+		adapter.swapCursor(null); }
 
-	@Override
-	public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
-        // Respond to clicks on the actions in the CAB
-        switch (item.getItemId()) {
-            case R.id.delete:
-                //deleteSelectedItems();
-                mode.finish(); // Action picked, so close the CAB
-                return true;
-            default:
-                return false;
-        }
 
+	
+	public void finishActionMode(){
+		   if(mActionMode!= null){
+			   mActionMode.finish();
+			   selected_images_ids.clear();
+		   }
 	}
-
-	@Override
-	public boolean onCreateActionMode(ActionMode mode, Menu menu) {
-		 // Inflate the menu for the CAB
-        MenuInflater inflater = mode.getMenuInflater();
-        inflater.inflate(R.menu.context_menu, menu);
-        return true;
-
-	}
-
-	@Override
-	public void onDestroyActionMode(ActionMode mode) {
-        // Here you can make any necessary updates to the activity when
-        // the CAB is removed. By default, selected items are deselected/unchecked.	
-	}
-
-	@Override
-	public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
-        // Here you can perform updates to the CAB due to
-        // an invalidate() request
-        return false;
-
-	}
-
-	@Override
-	public void onItemCheckedStateChanged(ActionMode mode, int position,
-			long id, boolean checked) {
-		// TODO Auto-generated method stub
+	
+	public void removeSelectedBindings(){
+		String where = ParentContract.Columns.IMAGE_FK+" = ? AND "+ ParentContract.Columns.PARENT_FK+" = ? ";
+		Long category_fk = ImageGridActivity.actual_category_fk;
+		for(Long l : selected_images_ids){
+			getActivity().getContentResolver().delete(ParentContract.CONTENT_URI, where , new String[]{String.valueOf(l), String.valueOf(category_fk) });
+		}
+		Bundle args = new Bundle();		
+		args.putLong("CATEGORY_ID", category_fk);
+		getLoaderManager().restartLoader(1, args, this);
 		
 	}
-
 }

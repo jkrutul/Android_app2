@@ -8,6 +8,7 @@ import android.graphics.drawable.Drawable;
 import android.view.Display;
 import android.view.WindowManager;
 
+import com.example.app_2.storage.Database;
 import com.example.app_2.utils.BitmapCalc;
 
 
@@ -19,10 +20,12 @@ public class App_2 extends Application{
 	public static Bitmap wallpaperBitmap;
 	public static int maxWidth;
 	public static int maxHeight; 
+	private static Long main_dict_id;
 
 	
 	public void onCreate(){
 		super.onCreate();
+
 		App_2.context = getApplicationContext();
 		WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
 		Display display = wm.getDefaultDisplay();
@@ -32,6 +35,9 @@ public class App_2 extends Application{
 		mDarkPlaceHolderBitmap = BitmapCalc.decodeSampleBitmapFromResources(App_2.getAppContext().getResources(), R.drawable.dark_empty, 100, 100);
 		WallpaperManager wallpaperManager = WallpaperManager.getInstance(this);
 		wallpaperDrawable = wallpaperManager.getDrawable();
+		Database db = Database.getInstance(context);
+		Database.open();
+		setMain_dict_id(db.getMainDictFk());
 	}
 	
 	public static Context getAppContext(){
@@ -44,6 +50,14 @@ public class App_2 extends Application{
 	
 	public static int getMaxHeight(){
 		return maxHeight;
+	}
+
+	public static Long getMain_dict_id() {
+		return main_dict_id;
+	}
+
+	private static void setMain_dict_id(Long main_dict_id) {
+		App_2.main_dict_id = main_dict_id;
 	}
 	
 

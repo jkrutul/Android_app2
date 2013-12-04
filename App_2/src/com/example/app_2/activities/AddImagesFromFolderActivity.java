@@ -30,7 +30,7 @@ import com.example.app_2.R;
 import com.example.app_2.fragments.ParentMultiselectFragment;
 import com.example.app_2.provider.Images;
 import com.example.app_2.provider.Images.ProcessBitmapsTask;
-import com.example.app_2.provider.SpinnerItem;
+import com.example.app_2.spinner.model.ImageSpinnerItem;
 import com.example.app_2.utils.Utils;
 
 public class AddImagesFromFolderActivity  extends FragmentActivity{
@@ -44,8 +44,8 @@ public class AddImagesFromFolderActivity  extends FragmentActivity{
 	Long import_to_parent_id, user_id;
 	ParentMultiselectFragment pmf;
 
-	ArrayList<SpinnerItem> categoryItems;
-	ArrayList<SpinnerItem> userItems;
+	ArrayList<ImageSpinnerItem> categoryItems;
+	ArrayList<ImageSpinnerItem> userItems;
 	
 	@Override
 	protected void onCreate(Bundle bundle) {

@@ -18,6 +18,7 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.ListView;
 
+import com.example.app_2.App_2;
 import com.example.app_2.R;
 import com.example.app_2.activities.ImageGridActivity;
 import com.example.app_2.contentprovider.ImageContract;
@@ -133,7 +134,8 @@ public class ImagesMultiselectFragment extends ListFragment implements LoaderCal
 	
 	@Override
 	public Loader<Cursor> onCreateLoader(int arg0, Bundle bundle) {
-		Uri uri = Uri.parse(ImagesOfParentContract.CONTENT_URI + "/-1");
+		Long dict_if = App_2.getMain_dict_id();
+		Uri uri = Uri.parse(ImagesOfParentContract.CONTENT_URI + "/" + dict_if);
 		String[] projection = new String[] { "i."+ImageContract.Columns._ID,
 											 "i."+ImageContract.Columns.FILENAME,
 											 "i."+ImageContract.Columns.DESC,

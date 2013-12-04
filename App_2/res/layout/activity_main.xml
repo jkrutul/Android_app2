@@ -51,6 +51,13 @@
             android:layout_height="wrap_content"
             android:onClick="onClick"
             android:text="ustawienia" />
+        
+        <Button
+            android:id="@+id/user_login_activity"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="onClick"
+            android:text="Logowanie" />
     </LinearLayout>
 
 </ScrollView>

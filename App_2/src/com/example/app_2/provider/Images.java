@@ -14,6 +14,7 @@ import android.content.ContentProviderResult;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.OperationApplicationException;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.hardware.Camera.Size;
@@ -113,7 +114,12 @@ public class Images {
 		db.open();
 		int cvSize = 0;
 		Long main_dict_id = db.getMainDictFk();
-		
+		Long logged_user_id = null;
+		SharedPreferences sharedPref = App_2.getAppContext().getSharedPreferences("USER",Context.MODE_PRIVATE);
+		logged_user_id = sharedPref.getLong("logged_user_id", -1);
+		if(logged_user_id == -1)
+			logged_user_id = null;
+				
 		if(categories!=null){
 			categories.add(main_dict_id);
 			cvSize = categories.size();
@@ -124,7 +130,7 @@ public class Images {
 			cvSize  = 1;
 		}
 		for(String filename: filenames){
-			Long inserted_id = db.insertImage(filename);
+			Long inserted_id = db.insertImage(new ImageObject(filename, logged_user_id));
 			if(inserted_id!= -1){
 				ContentValues[] cvArray  = new ContentValues[cvSize];
 				int i =0;

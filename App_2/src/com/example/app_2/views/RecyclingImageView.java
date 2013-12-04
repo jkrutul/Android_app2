@@ -35,9 +35,9 @@ import android.widget.ImageView;
  */
 public class RecyclingImageView extends ImageView {
 	Paint mTextPaint;
-	String textToDraw;
 	int imgWidth = getMeasuredWidth();
 	int imgHeight = getMeasuredHeight();
+	public boolean selected = false;
 	
 	public RecyclingImageView(Context context, AttributeSet attributeSet, int defStyle) {
 		super(context, attributeSet, defStyle);
@@ -52,6 +52,10 @@ public class RecyclingImageView extends ImageView {
 	public RecyclingImageView(Context context) {
 		super(context);
 		
+	}
+	
+	public void toggleSelect(){
+		selected = (selected) ? false : true; 
 	}
 
 	

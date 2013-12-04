@@ -23,6 +23,7 @@ import com.example.app_2.R;
 import com.example.app_2.activities.ImageDetailsActivity;
 import com.example.app_2.contentprovider.ImageContract;
 import com.example.app_2.contentprovider.ImagesOfParentContract;
+import com.example.app_2.contentprovider.UserContract;
 import com.example.app_2.storage.Storage;
 import com.example.app_2.utils.ImageLoader;
 
@@ -47,8 +48,10 @@ public class ImageListFragment extends ListFragment implements LoaderCallbacks<C
 				ImageContract.Columns._ID,
 				ImageContract.Columns.FILENAME,
 				ImageContract.Columns.FILENAME,
-				ImageContract.Columns.CATEGORY};
-		int[] to = new int[] { 0, R.id.label, R.id.icon, R.id.category}; 		// Fields on the UI to which we map
+				ImageContract.Columns.CATEGORY,
+				UserContract.Columns.USERNAME
+				};
+		int[] to = new int[] { 0, R.id.label, R.id.icon, R.id.category, R.id.author}; 		// Fields on the UI to which we map
 
 		adapter = new SimpleCursorAdapter( getActivity().getApplicationContext(), R.layout.image_row, null, from, to, 0);
 		adapter.setViewBinder(new SimpleCursorAdapter.ViewBinder() {
@@ -80,6 +83,8 @@ public class ImageListFragment extends ListFragment implements LoaderCallbacks<C
 			// In dual-pane mode, the list view highlights the selected item.
 			getListView().setChoiceMode(ListView.CHOICE_MODE_SINGLE);
 		}
+		
+		
 
 	}
 
@@ -166,6 +171,7 @@ public class ImageListFragment extends ListFragment implements LoaderCallbacks<C
 				"i."+ImageContract.Columns._ID,
 				"i."+ImageContract.Columns.FILENAME,
 				"i."+ImageContract.Columns.CATEGORY,
+				"u."+UserContract.Columns.USERNAME
 				};
 		uri = Uri.parse(ImagesOfParentContract.CONTENT_URI+"/"+cat_id);
 		cursorLoader = new CursorLoader(getActivity(),uri, projection, null, null, null);

@@ -5,32 +5,24 @@ import java.lang.ref.WeakReference;
 
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
-import android.app.Application;
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.CompressFormat;
 import android.graphics.BitmapFactory;
-import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.Paint;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.TransitionDrawable;
-import android.os.AsyncTask;
 import android.os.Build;
 import android.support.v4.util.LruCache;
 import android.util.Log;
 import android.view.Display;
 import android.view.WindowManager;
-import android.widget.ImageButton;
 import android.widget.ImageView;
 
 import com.example.app_2.App_2;
-import com.example.app_2.R;
 import com.example.app_2.storage.DiskLruImageCache;
-import com.example.app_2.storage.Storage;
 import com.sonyericsson.util.ScalingUtilities;
 import com.sonyericsson.util.ScalingUtilities.ScalingLogic;
 
@@ -102,32 +94,37 @@ public class ImageLoader {
 	
 	@SuppressLint("NewApi")
 	public static void loadBitmap(String path, ImageView imageView, boolean darkPlaceholder){
-		//if(cancelPotentialWork(path, imageView)){
+		if(path == null){
+			return;
+		}
+		Bitmap value = null;
+		if(mMemoryCache!= null){
+			value = mMemoryCache.get(Utils.getFilenameFromPath(path));
+		}
+		if(value != null){
+			imageView.setImageBitmap(value);
+		}else if(cancelPotentialWork(path, imageView)){
 			BitmapWorkerTask task = new BitmapWorkerTask(imageView);
-			AsyncDrawable asyncDrawable;
-			if(darkPlaceholder)
-				asyncDrawable = new AsyncDrawable(App_2.getAppContext().getResources(), null, task);
-			else
-				asyncDrawable = new AsyncDrawable(App_2.getAppContext().getResources(), App_2.mPlaceHolderBitmap, task);
+			AsyncDrawable asyncDrawable = new AsyncDrawable(App_2.getAppContext().getResources(), null, task);
 			imageView.setImageDrawable(asyncDrawable);
-			//if(Utils.hasHoneycomb())
-				task.executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, path);
-			//else			
-				//task.execute(path);
-		//}
+			task.executeOnExecutor(AsyncTask.DUAL_THREAD_EXECUTOR, path);
+
+		}			
 	}
 
 	
 	public static boolean cancelPotentialWork(String path, ImageView imageView) {
 	     BitmapWorkerTask bitmapWorkerTask = getBitmapWorkerTask(imageView);
-
+	   
 	    if (bitmapWorkerTask != null) {
 	        final String bitmapPath = bitmapWorkerTask.path;
 	        if (bitmapPath != path) {
 	            // Cancel previous task
 	            bitmapWorkerTask.cancel(true);
+	            
 	        } else {
 	            // The same work is already in progress
+	        	Log.i("cancelPotentialWork", "path: "+path);
 	            return false;
 	        }
 	    }
@@ -164,9 +161,8 @@ public class ImageLoader {
 	        if(path== null)
 	        	return null;
 	        final String imageKey = Utils.getFilenameFromPath(path);
-	        Bitmap bitmap = mMemoryCache.get(imageKey);
-	        if(bitmap ==null){	// Not found in disk cache
-	        	//bitmap = BitmapCalc.decodeSampleBitmapFromFile(path, mWidth, mHeight);
+	        Bitmap bitmap = null;
+
 	            // Part 1: Decode image
 	            Bitmap unscaledBitmap = ScalingUtilities.decodeFile(path, mWidth, mHeight, ScalingLogic.FIT);
 
@@ -178,25 +174,14 @@ public class ImageLoader {
 	            else
 	            	Log.e(LOG_TAG, "bitmap missing, path:" + path);
 
-
-	            //scaledBitmap.recycle();
-
-	    		//bitmap = BitmapFactory.decodeFile(path, options);
-	        	//bitmap = BitmapFactory.decodeFile(path);
-	    		//if((maxHeight != -1 &&  maxWidth !=-1)&&(bitmap.getHeight()> maxHeight*1.5 || bitmap.getWidth()> maxWidth*1.5 )){
-		        	//bitmap = BitmapCalc.decodeSampleBitmapFromFile(path, maxWidth, maxHeight);
-		        //	}
 	        	if(bitmap == null)
 	        		return null;
-	        	//Log.i(LOG_TAG,bitmap.toString()+" decoded image h:"+bitmap.getHeight()+" w:"+bitmap.getWidth());
-		        
-		        	addBitmapToCache(imageKey,bitmap);
-	        }
-	        	//Log.i(LOG_TAG, bitmap.toString()+" read from cache");
-	        //return BitmapCalc.getRoundedCornerBitmap(bitmap);
-	        
+	        	
+	        	Log.i(LOG_TAG,bitmap.toString()+" decoded image h:"+bitmap.getHeight()+" w:"+bitmap.getWidth());
+		        addBitmapToCache(imageKey,bitmap);
 	        return bitmap;
 	    }
+	    
 	    public void addBitmapToCache(String key, Bitmap bitmap) {
 	    	if(key !=null && bitmap != null){
 		        if (getBitmapFromMemCache(key) == null) {
