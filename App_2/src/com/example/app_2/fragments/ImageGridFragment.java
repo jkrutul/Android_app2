@@ -1,11 +1,13 @@
 package com.example.app_2.fragments;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 
 import android.animation.Animator;
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.ActionBar;
+import android.content.ContentValues;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.graphics.Bitmap;
@@ -43,10 +45,12 @@ import com.example.app_2.R;
 import com.example.app_2.activities.ImageGridActivity;
 import com.example.app_2.contentprovider.ImageContract;
 import com.example.app_2.contentprovider.ImagesOfParentContract;
-import com.example.app_2.contentprovider.ParentContentProvider;
 import com.example.app_2.contentprovider.ParentContract;
+import com.example.app_2.contentprovider.ParentsOfImageContract;
+import com.example.app_2.models.EdgeModel;
 import com.example.app_2.models.ImageObject;
 import com.example.app_2.storage.Storage;
+import com.example.app_2.utils.DFS;
 import com.example.app_2.utils.ImageLoader;
 import com.example.app_2.views.RecyclingImageView;
 import com.sonyericsson.util.ScalingUtilities;
@@ -354,10 +358,58 @@ public class ImageGridFragment extends Fragment implements LoaderCallbacks<Curso
 	}
 	
 	public void removeSelectedBindings(){
+		boolean isCategory = false;
+		boolean isBindToAnotherCategory = false;
 		String where = ParentContract.Columns.IMAGE_FK+" = ? AND "+ ParentContract.Columns.PARENT_FK+" = ? ";
 		Long category_fk = ImageGridActivity.actual_category_fk;
+		Long main_dict_fk = App_2.getMain_dict_id();
+		
 		for(Long l : selected_images_ids){
-			getActivity().getContentResolver().delete(ParentContract.CONTENT_URI, where , new String[]{String.valueOf(l), String.valueOf(category_fk) });
+			Uri uri = Uri.parse(ImageContract.CONTENT_URI + "/" + l);
+			Cursor c =getActivity().getContentResolver().query(uri, new String[]{ImageContract.Columns.CATEGORY}, null, null, null);
+			if(c!= null){
+				c.moveToFirst();
+				if(c.getString(0) != null)
+					isCategory = true;
+			}
+
+			if(isCategory){
+				LinkedList<Long> parentsOfSelectedImage = new LinkedList<Long>();
+				//sprawdzam czy kategoria oprócz s³ownika i aktualnej kategorii wskazuje na coœ jeszcze,
+			
+				Uri parents_of_image_uri = Uri.parse(ParentsOfImageContract.CONTENT_URI+"/"+l);
+				Cursor parents_cursor= getActivity().getContentResolver().query(parents_of_image_uri, new String[]{"p."+ParentContract.Columns.PARENT_FK}, null, null, null);
+				if(parents_cursor!=null){
+					parents_cursor.moveToFirst();
+					while(!parents_cursor.isAfterLast()){
+						parentsOfSelectedImage.add(parents_cursor.getLong(0));
+						parents_cursor.moveToNext();
+					}
+
+					parentsOfSelectedImage.remove(main_dict_fk); // TODO nie trzeba tego usuwaæ bo nie zwraca obiektów króre nie maj¹ autora
+					parentsOfSelectedImage.remove(category_fk);
+					isBindToAnotherCategory = (parentsOfSelectedImage.size()>0) ? true : false;
+				}
+				
+				
+				if(!isBindToAnotherCategory){//jeœli nie to DFS i usuwam wszyskie relacje		
+					DFS.getElements(l, getActivity());
+					for(EdgeModel em : DFS.edges){
+						getActivity().getContentResolver().delete(ParentContract.CONTENT_URI, where , new String[]{String.valueOf(em.getChild()), String.valueOf(em.getParent()) });
+					   ContentValues cv = new ContentValues();
+						cv.put(ImageContract.Columns.CATEGORY, (Long)null);
+						// jeœli obrazki poddrzewa s¹ kategoriami to ustawiam na "null", ¿eby nie by³y widoczne w DrawerPane
+						Uri p_uri = Uri.parse(ImageContract.CONTENT_URI + "/" + em.getParent());
+						getActivity().getContentResolver().update(p_uri, cv, null, null);
+	
+						//Uri c_uri = Uri.parse(ImageContract.CONTENT_URI + "/" + em.getChild());
+						//getActivity().getContentResolver().update(c_uri, cv, null, null);
+					}					
+				}
+				//jeœli tak to usuwam tylko wiazanie na akutaln¹ kategoriê	
+			}		
+				getActivity().getContentResolver().delete(ParentContract.CONTENT_URI, where , new String[]{String.valueOf(l), String.valueOf(category_fk) });
+		
 		}
 		Bundle args = new Bundle();		
 		args.putLong("CATEGORY_ID", category_fk);

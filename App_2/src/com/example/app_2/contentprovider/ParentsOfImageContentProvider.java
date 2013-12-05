@@ -51,8 +51,16 @@ public class ParentsOfImageContentProvider extends ContentProvider{
 	public Cursor query(Uri uri, String[] projection, String selection,	String[] selectionArgs, String sortOrder) {
 		SQLiteQueryBuilder queryBuilder = new SQLiteQueryBuilder();
 		//checkColumns(projection);
-		queryBuilder.setTables(ImageContract.TABLE_IMAGE+" i INNER JOIN "+ ParentContract.TABLE_PARENT+" p ON ( i."+ImageContract.Columns._ID+" = p."+ParentContract.Columns.PARENT_FK+" )");
-		
+		//queryBuilder.setTables(ImageContract.TABLE_IMAGE+" i INNER JOIN "+ ParentContract.TABLE_PARENT+" p ON ( i."+ImageContract.Columns._ID+" = p."+ParentContract.Columns.PARENT_FK+" )");
+		queryBuilder.setTables(
+				"("+ImageContract.TABLE_IMAGE+" i " +" INNER JOIN "+UserContract.TABLE_USER+" u "+
+				"ON  i."+ImageContract.Columns.AUTHOR_FK+" = u."+UserContract.Columns._ID+
+				
+				")" +
+				" INNER JOIN "+
+				ParentContract.TABLE_PARENT+" p" +
+				" ON ( i."+ImageContract.Columns._ID+" = p."+ParentContract.Columns.PARENT_FK+" )"
+				);
 		switch(sURIMatcher.match(uri)){
 		case PARENT:
 			break;
