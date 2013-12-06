@@ -1,5 +1,7 @@
 package com.example.app_2.activities;
 
+import javax.crypto.spec.OAEPParameterSpec;
+
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.ContentValues;
@@ -20,9 +22,11 @@ import android.widget.Toast;
 
 import com.example.app_2.R;
 import com.example.app_2.contentprovider.ImageContract;
+import com.example.app_2.contentprovider.ParentContract;
 import com.example.app_2.contentprovider.UserContract;
 import com.example.app_2.intents.ImageIntents;
 import com.example.app_2.provider.Images.AddingImageTask;
+import com.example.app_2.storage.Database;
 import com.example.app_2.storage.Storage;
 import com.example.app_2.utils.Utils;
 import com.sonyericsson.util.ScalingUtilities;
@@ -147,6 +151,11 @@ public class AddUserActivity extends Activity {
 		img_val.put(ImageContract.Columns.FILENAME, user_img);
 		img_val.put(ImageContract.Columns.CATEGORY, username + " - G³ówna");
 		Uri img_uri = getContentResolver().insert(ImageContract.CONTENT_URI, img_val);
+		
+		ContentValues parent_root = new ContentValues();							// powi¹zanie korzenia u¿ytkownika z g³ównym korzeniem
+		parent_root.put(ParentContract.Columns.IMAGE_FK, img_uri.getLastPathSegment());
+		parent_root.put(ParentContract.Columns.PARENT_FK, Database.getMainRootFk());
+		getContentResolver().insert(ParentContract.CONTENT_URI, parent_root);
 		
 		Long user_root_fk = Long.valueOf(img_uri.getLastPathSegment()); 			// dodanie nowego u¿ytkownika do bazy
 		ContentValues user_val = new ContentValues();

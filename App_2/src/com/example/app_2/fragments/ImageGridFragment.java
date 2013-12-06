@@ -8,6 +8,7 @@ import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.ActionBar;
 import android.content.ContentValues;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.graphics.Bitmap;
@@ -42,6 +43,7 @@ import android.widget.TextView;
 
 import com.example.app_2.App_2;
 import com.example.app_2.R;
+import com.example.app_2.activities.ImageEditActivity;
 import com.example.app_2.activities.ImageGridActivity;
 import com.example.app_2.contentprovider.ImageContract;
 import com.example.app_2.contentprovider.ImagesOfParentContract;
@@ -72,7 +74,7 @@ public class ImageGridFragment extends Fragment implements LoaderCallbacks<Curso
     private boolean mChangeNumColumns = false;
 	private static final int LOADER_ID = 1;
 	
-	private boolean mEditMode = true;
+	public boolean mEditMode = true;
 	private boolean mIsInActionMode = false;
 	
 	private static ImageGridActivity executingActivity;
@@ -210,6 +212,17 @@ public class ImageGridFragment extends Fragment implements LoaderCallbacks<Curso
             	removeSelectedBindings();
                 mode.finish(); // Action picked, so close the CAB
                 return true;
+            case R.id.make_categoies:
+            	makeCategoiesFromSelected();
+            	mode.finish();
+            	return true;
+            case R.id.edit_image:
+            	//Intent a = new Intent(ImageEditActivity.class);
+        		//Bundle args = new Bundle();		
+        		//args.putLong("CATEGORY_ID", category_fk);
+        		//getLoaderManager().restartLoader(1, args, this);
+            	mode.finish();
+            	return true;
             default:
                 return false;
 	        }
@@ -256,7 +269,7 @@ public class ImageGridFragment extends Fragment implements LoaderCallbacks<Curso
 				 if(category!=null){
 	
 					 Long l = c.getLong(c.getColumnIndex(ImageContract.Columns._ID));
-					executingActivity.replaceGridFragment(l, false);
+					executingActivity.replaceGridFragment(l, false, true);
 	
 				     ActionBar actionBar = executingActivity.getActionBar();
 				     actionBar.setTitle(category);
@@ -335,10 +348,13 @@ public class ImageGridFragment extends Fragment implements LoaderCallbacks<Curso
 	@TargetApi(Build.VERSION_CODES.HONEYCOMB)
 	@Override
 	public Loader<Cursor> onCreateLoader(int arg0, Bundle bundle) {
-		//TODO login user root id
-		ImageGridActivity.actual_category_fk = (bundle!= null) ?  bundle.getLong("CATEGORY_ID", 1)	: 1;
-		Uri uri = Uri.parse(ImagesOfParentContract.CONTENT_URI + "/" + ImageGridActivity.actual_category_fk);
-		return new CursorLoader(executingActivity.getApplicationContext(),uri, loader_projection, null, null ,sortOrder);
+
+			//TODO login user root id
+			ImageGridActivity.actual_category_fk = (bundle!= null) ?  bundle.getLong("CATEGORY_ID", 1)	: 1;
+			Uri uri = Uri.parse(ImagesOfParentContract.CONTENT_URI + "/" + ImageGridActivity.actual_category_fk);
+			return new CursorLoader(executingActivity.getApplicationContext(),uri, loader_projection, null, null ,sortOrder);			
+		
+
 	}
 
 	@Override
@@ -357,16 +373,44 @@ public class ImageGridFragment extends Fragment implements LoaderCallbacks<Curso
 		   }
 	}
 	
+	
+	public void makeCategoiesFromSelected(){
+		boolean isCategory = false;
+		Cursor c = null;
+		for(Long l : selected_images_ids){
+			Uri uri = Uri.parse(ImageContract.CONTENT_URI + "/" + l);
+			c =getActivity().getContentResolver().query(uri, new String[]{ImageContract.Columns.DESC, ImageContract.Columns.CATEGORY}, null, null, null);
+			if(c!= null){
+				c.moveToFirst();
+				if(c.getString(1) != null)
+					isCategory = true;
+			}
+			
+			if(!isCategory){
+				ContentValues cv = new ContentValues();
+				cv.put(ImageContract.Columns.CATEGORY, c.getString(0));
+				getActivity().getContentResolver().update(uri, cv, null, null);
+				
+			}
+		}
+		c.close();
+		selected_images_ids.clear();
+		Bundle args = new Bundle();		
+		args.putLong("CATEGORY_ID", ImageGridActivity.actual_category_fk);
+		getLoaderManager().restartLoader(1, args, this);
+	}
+	
 	public void removeSelectedBindings(){
 		boolean isCategory = false;
 		boolean isBindToAnotherCategory = false;
 		String where = ParentContract.Columns.IMAGE_FK+" = ? AND "+ ParentContract.Columns.PARENT_FK+" = ? ";
 		Long category_fk = ImageGridActivity.actual_category_fk;
 		Long main_dict_fk = App_2.getMain_dict_id();
+		Cursor c =null;
 		
 		for(Long l : selected_images_ids){
 			Uri uri = Uri.parse(ImageContract.CONTENT_URI + "/" + l);
-			Cursor c =getActivity().getContentResolver().query(uri, new String[]{ImageContract.Columns.CATEGORY}, null, null, null);
+			c =getActivity().getContentResolver().query(uri, new String[]{ImageContract.Columns.CATEGORY}, null, null, null);
 			if(c!= null){
 				c.moveToFirst();
 				if(c.getString(0) != null)
@@ -409,11 +453,15 @@ public class ImageGridFragment extends Fragment implements LoaderCallbacks<Curso
 				//jeœli tak to usuwam tylko wiazanie na akutaln¹ kategoriê	
 			}		
 				getActivity().getContentResolver().delete(ParentContract.CONTENT_URI, where , new String[]{String.valueOf(l), String.valueOf(category_fk) });
+
 		
 		}
+		selected_images_ids.clear();
+		c.close();
 		Bundle args = new Bundle();		
 		args.putLong("CATEGORY_ID", category_fk);
 		getLoaderManager().restartLoader(1, args, this);
+		
 		
 	}
 }

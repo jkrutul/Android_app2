@@ -1,8 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android" >
+
     <item
         android:id="@+id/remove"
         android:icon="@drawable/bin"
-        android:title="usuń"
-        android:showAsAction="ifRoom"/>
+        android:showAsAction="ifRoom"
+        android:title="usuń"/>
+    <item
+        android:id="@+id/make_categoies"
+        android:icon="@drawable/collections_collection"
+        android:showAsAction="ifRoom"
+        android:title="utwórz kategorie"/>
+    <item
+        android:id="@+id/edit_image"
+        android:icon="@drawable/content_edit"
+        android:showAsAction="ifRoom"
+        android:title="edytuj zaznaczenie"/>
+
 </menu>

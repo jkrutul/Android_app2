@@ -75,7 +75,7 @@ public class Database {
 		    "FOREIGN KEY("+UserContract.Columns.ROOT_FK+") REFERENCES "+ImageContract.TABLE_IMAGE+"("+ImageContract.Columns._ID+") "+
 	");";
 	
-	private static final String TABLE_METADATA_CREATE = "CREATE TABLE metadata(_id INTEGER PRIMARY KEY AUTOINCREMENT,  dict_fk INTEGER DEFAULT 1)";
+	private static final String TABLE_METADATA_CREATE = "CREATE TABLE metadata(_id INTEGER PRIMARY KEY AUTOINCREMENT,  dict_fk INTEGER DEFAULT 1, root_fk INTEGER DEFAULT 2)";
 		
 	private static final String CREATE_UNIQUE_INDEX_ON_PARENT = "CREATE UNIQUE INDEX "+
 			"parent_idx ON "+ParentContract.TABLE_PARENT+"("+ParentContract.Columns._ID+","+ParentContract.Columns.IMAGE_FK+","+ParentContract.Columns.PARENT_FK+");";
@@ -282,6 +282,8 @@ public class Database {
 		return img_paths;
 	}
 	*/	
+	
+	/*
 	public ImageObject getRootCategory(){
 		ImageObject category =null;
 
@@ -302,7 +304,7 @@ public class Database {
 		catch(SQLException ex){Log.w(LOG_TAG,ex);}
 		return category;
 	}
-	
+*/	
 	public List<ImageObject> getAllImages(){
 		ImageObject mio;
 		
@@ -333,15 +335,26 @@ public class Database {
 	}
 	
 	public Long getMainDictFk(){
-		Cursor c = db.query("metadata", null, null ,null,null, null, "_id");
+		Cursor c = db.query("metadata", new String[]{"dict_fk"}, null ,null,null, null, "_id");
 		c.moveToFirst();
 		if(!c.isAfterLast()){
-			return c.getLong(1);
+			return c.getLong(0);
 		}
 		else
 			return null;
 	}
 	
+	public static Long getMainRootFk(){
+		Cursor c = db.query("metadata", new String[]{"root_fk"}, null ,null,null, null, "_id");
+		c.moveToFirst();
+		if(!c.isAfterLast()){
+			return c.getLong(0);
+		}
+		else
+			return null;
+	}
+	
+/*	
 	public static Cursor getCursorOfAllImages(){
 		String selection =ImageContract.Columns.CATEGORY+" NOT LIKE \'ROOT\'";
 		String[] selectionArgs = {""};
@@ -378,6 +391,7 @@ public class Database {
 		
 		return categories;
 	}
+	*/
 /*	
 	public List<ImageObject> getSubcategories(Long img_id){
 		ImageObject category = new ImageObject();
@@ -542,17 +556,32 @@ public class Database {
 				_db.execSQL(TABLE_USER_CREATE);
 				_db.execSQL(TABLE_METADATA_CREATE);
 				//_db.execSQL(CREATE_UNIQUE_INDEX_ON_PARENT);
+				long main_dict, main_root;
 				
 				ContentValues cv = new ContentValues();
 				cv.put(ImageContract.Columns.CATEGORY, "MAIN_DICT");
 				cv.put(ImageContract.Columns.DESC,  "MAIN_DICT");
 				cv.put(ImageContract.Columns.MODIFIED, dateFormat.format(date));
-				long l =  db.insert(ImageContract.TABLE_IMAGE, null, cv);
-				if(l!= -1){
+				main_dict=  _db.insert(ImageContract.TABLE_IMAGE, null, cv);
+				
+				cv.clear();
+				cv.put(ImageContract.Columns.CATEGORY, "MAIN_ROOT");
+				cv.put(ImageContract.Columns.DESC,  "MAIN_ROOT");
+				cv.put(ImageContract.Columns.MODIFIED, dateFormat.format(date));
+				main_root =  _db.insert(ImageContract.TABLE_IMAGE, null, cv);
+				
+				if(main_dict!= -1 && main_root != -1){
 					cv = new ContentValues();
-					cv.put("dict_fk", l);
-					db.insert("metadata", null, cv);
+					cv.put("dict_fk", main_dict);
+					cv.put("root_fk", main_root);
+					_db.insert("metadata", null, cv);
 				}
+				else{
+					Log.e(LOG_TAG, "nie tworzono s³ownika:"+main_dict+" lub korzenia: "+main_root);
+				}
+				
+
+
 		
 			}catch(SQLException ex){
 				Log.w(LOG_TAG, ex);

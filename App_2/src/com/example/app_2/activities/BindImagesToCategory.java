@@ -46,6 +46,10 @@ public class BindImagesToCategory extends FragmentActivity{
 				}
 				App_2.getAppContext().getContentResolver().bulkInsert(ParentContract.CONTENT_URI, cvArray);
 				
+				Bundle args = new Bundle();		
+				args.putLong("CATEGORY_ID", ImageGridActivity.actual_category_fk);
+				ImageGridActivity.igf.getLoaderManager().restartLoader(1, args, ImageGridActivity.igf);
+				
 			finish();
 			break;
 		case R.id.bi_cancel_button:

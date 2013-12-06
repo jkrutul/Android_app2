@@ -66,7 +66,6 @@ public class DFS {
 						for(EdgeModel em : edges){ // usuwam wi¹zania które wskazuj¹ na t¹ kategoriê, poniewa¿ przydadz¹ siê kiedy bêdê chcia³ odwiedziæ j¹ z innej kategoii, edges - zawiera wi¹zania do usuniêcia.
 							if(em.getParent() == category)
 								category_to_safe.add(em);
-								//edges.remove(em);
 						}
 					}
 					c.moveToNext();
