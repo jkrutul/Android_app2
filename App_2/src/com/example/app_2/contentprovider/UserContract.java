@@ -20,7 +20,9 @@ public class UserContract {
 		public static final String ISMALE = "ismale";
 		public static final String ROOT_FK = "rootfk";
 		public static final String IMG_FILENAME = "user_image";
+		public static final String FONT_SIZE = "font_size";
+		public static final String IMG_SIZE = "image_size";
 		public static final String DEFAULT_SORT_ORDER = _ID + " ASC";
-		
+
 	}
 }

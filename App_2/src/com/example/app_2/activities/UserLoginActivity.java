@@ -8,11 +8,13 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.SharedPreferences.Editor;
 import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.Spinner;
 
@@ -21,7 +23,6 @@ import com.example.app_2.contentprovider.UserContract;
 import com.example.app_2.spinner.adapter.ImageSpinnerAdapter;
 import com.example.app_2.spinner.model.ImageSpinnerItem;
 import com.example.app_2.spinner.model.UserSpinnerItem;
-import com.example.app_2.storage.Storage;
 
 public class UserLoginActivity extends Activity {
 	
@@ -93,6 +94,20 @@ public class UserLoginActivity extends Activity {
 			editor.putLong("logged_user_root", logged_user_root);
 			editor.putLong("logged_user_id", user_id);
 			editor.commit();
+			
+			Uri uri = Uri.parse(UserContract.CONTENT_URI + "/"	+ user_id);
+			Cursor c = getContentResolver().query(uri, new String[]{UserContract.Columns.FONT_SIZE, UserContract.Columns.IMG_SIZE},null, null, null);
+			c.moveToFirst();
+			if(!c.isAfterLast()){
+				SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this.getApplicationContext());
+				SharedPreferences.Editor e = sp.edit();
+				e.putString("pref_img_size", c.getString(1));
+				e.putString("pref_img_desc_font_size", c.getString(0));
+				e.commit();
+			}
+			c.close();
+			
+
 			Intent intent = new Intent(this, ImageGridActivity.class);
 			startActivity(intent);
 			overridePendingTransition(R.anim.right_slide_in, R.anim.right_slide_out);

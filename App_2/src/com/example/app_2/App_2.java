@@ -37,7 +37,7 @@ public class App_2 extends Application{
 		wallpaperDrawable = wallpaperManager.getDrawable();
 		Database db = Database.getInstance(context);
 		Database.open();
-		setMain_dict_id(db.getMainDictFk());
+		
 	}
 	
 	public static Context getAppContext(){
@@ -56,7 +56,7 @@ public class App_2 extends Application{
 		return main_dict_id;
 	}
 
-	private static void setMain_dict_id(Long main_dict_id) {
+	public static void setMain_dict_id(Long main_dict_id) {
 		App_2.main_dict_id = main_dict_id;
 	}
 	

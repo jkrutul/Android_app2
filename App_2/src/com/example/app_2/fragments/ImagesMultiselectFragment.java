@@ -25,6 +25,7 @@ import com.example.app_2.contentprovider.ImageContract;
 import com.example.app_2.contentprovider.ImagesOfParentContract;
 import com.example.app_2.contentprovider.ParentContract;
 import com.example.app_2.contentprovider.ParentsOfImageContract;
+import com.example.app_2.storage.Database;
 import com.example.app_2.storage.Storage;
 import com.example.app_2.utils.ImageLoader;
 import com.example.app_2.views.RecyclingImageView;
@@ -134,7 +135,7 @@ public class ImagesMultiselectFragment extends ListFragment implements LoaderCal
 	
 	@Override
 	public Loader<Cursor> onCreateLoader(int arg0, Bundle bundle) {
-		Long dict_if = App_2.getMain_dict_id();
+		Long dict_if = Database.getMainDictFk();
 		Uri uri = Uri.parse(ImagesOfParentContract.CONTENT_URI + "/" + dict_if);
 		String[] projection = new String[] { "i."+ImageContract.Columns._ID,
 											 "i."+ImageContract.Columns.FILENAME,

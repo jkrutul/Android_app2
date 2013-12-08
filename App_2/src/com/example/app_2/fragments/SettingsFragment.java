@@ -24,6 +24,7 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
 		pref.setSummary(sp.getString("pref_img_desc_font_size", ""));
 		
 		sp.registerOnSharedPreferenceChangeListener(this);
+		
 	}
 
 	@Override

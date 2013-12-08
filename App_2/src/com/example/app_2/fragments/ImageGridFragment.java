@@ -193,12 +193,11 @@ public class ImageGridFragment extends Fragment implements LoaderCallbacks<Curso
 		@Override
 		public void onDestroyActionMode(ActionMode mode) {
 			mActionMode = null;
-			
+			selected_images_ids.clear();
 		}
 		
 		@Override
 		public boolean onCreateActionMode(ActionMode mode, Menu menu) { // Inflate the menu for the CAB
-
 	        MenuInflater inflater = mode.getMenuInflater();
 	        inflater.inflate(R.menu.context_menu, menu);
 	        mActionMode = mode;
@@ -250,45 +249,35 @@ public class ImageGridFragment extends Fragment implements LoaderCallbacks<Curso
 		public void onItemClick(AdapterView<?> parent, final  View thumbView, int position, long id) {
 			Cursor c = (Cursor) adapter.getItem(position);	
 			ImageObject img_object= new ImageObject();
-
-
-				img_object.setId(c.getLong(c.getColumnIndex(ImageContract.Columns._ID)));
-				img_object.setImageName(c.getString(c.getColumnIndex(ImageContract.Columns.FILENAME)));
-				img_object.setDescription( c.getString(c.getColumnIndex(ImageContract.Columns.DESC)));
-				img_object.setCategory(c.getString(c.getColumnIndex(ImageContract.Columns.CATEGORY)));
-				img_object.setTimes_used(c.getLong(c.getColumnIndex(ImageContract.Columns.TIME_USED)));
+			img_object.setId(c.getLong(c.getColumnIndex(ImageContract.Columns._ID)));
+			img_object.setImageName(c.getString(c.getColumnIndex(ImageContract.Columns.FILENAME)));
+			img_object.setDescription( c.getString(c.getColumnIndex(ImageContract.Columns.DESC)));
+			img_object.setCategory(c.getString(c.getColumnIndex(ImageContract.Columns.CATEGORY)));
+			img_object.setTimes_used(c.getLong(c.getColumnIndex(ImageContract.Columns.TIME_USED)));
+							
+			if(img_object.getCategory() == null || img_object.getCategory().isEmpty())
+				executingActivity.addImageToAdapter(img_object);
 			
-				
-				if(img_object.getCategory() == null || img_object.getCategory().isEmpty())
-					executingActivity.addImageToAdapter(img_object);
-				
-				if (mCurrentAnimator != null) {
-			        mCurrentAnimator.cancel();
-			    }
-				 String category = img_object.getCategory();
-				 if(category!=null){
-	
-					 Long l = c.getLong(c.getColumnIndex(ImageContract.Columns._ID));
-					executingActivity.replaceGridFragment(l, false, true);
-	
-				     ActionBar actionBar = executingActivity.getActionBar();
-				     actionBar.setTitle(category);
-				 }				
-			}
-
-	
+			if (mCurrentAnimator != null) {
+			       mCurrentAnimator.cancel();
+			   }
+			String category = img_object.getCategory();
+			if(category!=null){
+				Long l = c.getLong(c.getColumnIndex(ImageContract.Columns._ID));
+				executingActivity.replaceGridFragment(l, false, true);
+				ActionBar actionBar = executingActivity.getActionBar();
+				actionBar.setTitle(category);
+			}				
+	 }
 	};
 	
-    public ImageGridFragment(){
-    }
+    public ImageGridFragment(){   }
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		//if(executingActivity == null){
-			executingActivity = (ImageGridActivity) getActivity();
-			sharedPref = PreferenceManager.getDefaultSharedPreferences(executingActivity);
-		//}
+		executingActivity = (ImageGridActivity) getActivity();
+		sharedPref = PreferenceManager.getDefaultSharedPreferences(executingActivity);
 		mImageThumbSize = Integer.valueOf(sharedPref.getString("pref_img_size", ""));
 		mImageFontSize = Integer.valueOf(sharedPref.getString("pref_img_desc_font_size", ""));
         mImageThumbSpacing = getResources().getDimensionPixelSize(R.dimen.image_thumbnail_spacing);	
@@ -370,6 +359,7 @@ public class ImageGridFragment extends Fragment implements LoaderCallbacks<Curso
 		   if(mActionMode!= null){
 			   mActionMode.finish();
 			   selected_images_ids.clear();
+			   
 		   }
 	}
 	
@@ -394,7 +384,7 @@ public class ImageGridFragment extends Fragment implements LoaderCallbacks<Curso
 			}
 		}
 		c.close();
-		selected_images_ids.clear();
+
 		Bundle args = new Bundle();		
 		args.putLong("CATEGORY_ID", ImageGridActivity.actual_category_fk);
 		getLoaderManager().restartLoader(1, args, this);
@@ -456,7 +446,7 @@ public class ImageGridFragment extends Fragment implements LoaderCallbacks<Curso
 
 		
 		}
-		selected_images_ids.clear();
+
 		c.close();
 		Bundle args = new Bundle();		
 		args.putLong("CATEGORY_ID", category_fk);

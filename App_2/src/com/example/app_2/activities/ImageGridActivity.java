@@ -16,6 +16,7 @@
 
 package com.example.app_2.activities;
 
+import java.net.ContentHandler;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -30,6 +31,7 @@ import android.app.ActionBar.OnNavigationListener;
 import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.app.SearchManager;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -37,9 +39,11 @@ import android.content.res.Configuration;
 import android.database.Cursor;
 import android.database.MatrixCursor;
 import android.database.MergeCursor;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.preference.PreferenceManager;
 import android.provider.ContactsContract.Contacts.Data;
 import android.speech.tts.TextToSpeech;
 import android.support.v4.app.ActionBarDrawerToggle;
@@ -190,7 +194,6 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
         case PLEASE_WAIT_DIALOG:
             dialog = new ProgressDialog(this);
             dialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
-     
             dialog.setCancelable(false);
             dialog.setTitle("Obliczanie, proszê czekaæ....");
             dialog.setMessage("Proszê czekaæ....");
@@ -247,8 +250,20 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
             	
             case R.id.action_logout:
             	igf.mEditMode = true;
+				SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this.getApplicationContext());
+				
+            	
     			SharedPreferences sharedPref = getApplicationContext().getSharedPreferences("USER",Context.MODE_PRIVATE);
     			SharedPreferences.Editor editor = sharedPref.edit();
+    			
+    			//zapisanie usawieñ u¿ytkownika do bazy
+    			Uri uri = Uri.parse(UserContract.CONTENT_URI + "/" + sharedPref.getLong("logged_user_id", 0));
+    			ContentValues cv = new ContentValues();
+    			cv.put(UserContract.Columns.FONT_SIZE, Integer.parseInt(sp.getString("pref_img_desc_font_size", "15")));
+    			cv.put(UserContract.Columns.IMG_SIZE, Integer.parseInt(sp.getString("pref_img_size", "100")));
+    			getContentResolver().update(uri, cv, null,null);
+    			
+    			
     			editor.putLong("logged_user_root", Database.getMainRootFk());
     			editor.putLong("logged_user_id", 0 );
     			editor.commit();

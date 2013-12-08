@@ -71,11 +71,13 @@ public class Database {
 			UserContract.Columns.USERNAME+" TEXT, "+
 			UserContract.Columns.IMG_FILENAME+" TEXT, "+
 			UserContract.Columns.ISMALE+" INTEGER DEFAULT 1, "+
+			UserContract.Columns.FONT_SIZE+" INTEGER DEFAULT 15, "+
+			UserContract.Columns.IMG_SIZE +" INTEGER DEFAULT 150, "+
 			UserContract.Columns.ROOT_FK+" INTEGER, "+
 		    "FOREIGN KEY("+UserContract.Columns.ROOT_FK+") REFERENCES "+ImageContract.TABLE_IMAGE+"("+ImageContract.Columns._ID+") "+
 	");";
 	
-	private static final String TABLE_METADATA_CREATE = "CREATE TABLE metadata(_id INTEGER PRIMARY KEY AUTOINCREMENT,  dict_fk INTEGER DEFAULT 1, root_fk INTEGER DEFAULT 2)";
+	private static final String TABLE_METADATA_CREATE = "CREATE TABLE metadata (_id INTEGER PRIMARY KEY AUTOINCREMENT,  dict_fk INTEGER DEFAULT 1, root_fk INTEGER DEFAULT 2)";
 		
 	private static final String CREATE_UNIQUE_INDEX_ON_PARENT = "CREATE UNIQUE INDEX "+
 			"parent_idx ON "+ParentContract.TABLE_PARENT+"("+ParentContract.Columns._ID+","+ParentContract.Columns.IMAGE_FK+","+ParentContract.Columns.PARENT_FK+");";
@@ -87,6 +89,7 @@ public class Database {
 		db.execSQL(drop_table+ParentContract.TABLE_PARENT);
 		db.execSQL(drop_table+ImageContract.TABLE_IMAGE);
 		db.execSQL(drop_table+UserContract.TABLE_USER);
+		db.execSQL(drop_table+"metadata");
 		//db.execSQL("drop index if exists parent_idx");
 		dbHelper.onCreate(db);
 	}
@@ -334,7 +337,7 @@ public class Database {
 		return images;
 	}
 	
-	public Long getMainDictFk(){
+	public static Long getMainDictFk(){
 		Cursor c = db.query("metadata", new String[]{"dict_fk"}, null ,null,null, null, "_id");
 		c.moveToFirst();
 		if(!c.isAfterLast()){
@@ -579,6 +582,8 @@ public class Database {
 				else{
 					Log.e(LOG_TAG, "nie tworzono s³ownika:"+main_dict+" lub korzenia: "+main_root);
 				}
+				
+				App_2.setMain_dict_id(main_dict);
 				
 
 

@@ -93,6 +93,7 @@ public class UserContentProvider extends ContentProvider{
 			break;
 		case USER_ID:
 			queryBuilder.appendWhere(UserContract.Columns._ID + "=" + uri.getLastPathSegment());
+			break;
 		default:
 		    throw new IllegalArgumentException("Unknown URI: " + uri);
 		}
