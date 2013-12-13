@@ -2,6 +2,7 @@ package com.example.app_2.fragments;
 
 import android.content.Intent;
 import android.database.Cursor;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.FragmentTransaction;
@@ -10,12 +11,17 @@ import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v4.widget.SimpleCursorAdapter;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.util.Log;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView.AdapterContextMenuInfo;
+import android.widget.EditText;
+import android.widget.FilterQueryProvider;
 import android.widget.ImageView;
 import android.widget.ListView;
 
@@ -29,16 +35,56 @@ import com.example.app_2.utils.ImageLoader;
 
 public class ImageListFragment extends ListFragment implements LoaderCallbacks<Cursor> {
 	SimpleCursorAdapter adapter;
+	private EditText searchText;
 	boolean mDualPane;
 	int mCurCheckPosition = 0;
 	private static final int DELETE_ID = Menu.FIRST + 1;
 	private static final int LOADER_ID = 0;
 	private static final String TAG = "ImageListFragment";
+	Long cat_id;
+	
+	String[] projection = { 
+			"i."+ImageContract.Columns._ID,
+			"i."+ImageContract.Columns.FILENAME,
+			"i."+ImageContract.Columns.CATEGORY,
+			"i."+ImageContract.Columns.DESC,
+			"u."+UserContract.Columns.USERNAME
+			};
+	
+	private TextWatcher filterTextWatcher= new TextWatcher(){
+		public void afterTextChanged(Editable s){}
+		public void beforeTextChanged(CharSequence s, int start, int count, int after){	}
+		public void onTextChanged(CharSequence s, int start, int before, int count){	adapter.getFilter().filter(s); }
+	};
+	
+	private FilterQueryProvider fqp = new FilterQueryProvider() {
+		@Override
+		public Cursor runQuery(CharSequence constraint){
+			String selection = "i."+ImageContract.Columns.FILENAME+" LIKE ? OR i."+ImageContract.Columns.DESC+" LIKE ? ";
+			Log.d("imageListFragment", " runQuery constraint:"+constraint);
+			String partialItemName = null;
+			if(constraint != null){
+				partialItemName = constraint.toString()+"%";
+			}
+			Uri uri = Uri.parse(ImagesOfParentContract.CONTENT_URI+"/"+cat_id);
+			return getActivity().getContentResolver().query(uri, projection, selection, new String[]{partialItemName, partialItemName}, null);
+		}
+	};
 	
 	public ImageListFragment(){
 		
 	}
 
+	@Override
+	public View onCreateView(android.view.LayoutInflater inflater, android.view.ViewGroup container, Bundle savedInstanceState) {
+		super.onCreateView(inflater, container, savedInstanceState);
+		final View v = inflater.inflate(R.layout.image_list_fragment, container ,false);
+		searchText = (EditText) v.findViewById(R.id.search_box);
+		searchText.addTextChangedListener(filterTextWatcher);
+		return v;
+	};
+
+	
 	@Override
 	public void onActivityCreated(Bundle savedInstanceState) {
 		super.onActivityCreated(savedInstanceState);
@@ -54,11 +100,20 @@ public class ImageListFragment extends ListFragment implements LoaderCallbacks<C
 		int[] to = new int[] { 0, R.id.label, R.id.icon, R.id.category, R.id.author}; 		// Fields on the UI to which we map
 
 		adapter = new SimpleCursorAdapter( getActivity().getApplicationContext(), R.layout.image_row, null, from, to, 0);
+		adapter.setFilterQueryProvider(fqp);
 		adapter.setViewBinder(new SimpleCursorAdapter.ViewBinder() {
 			public boolean setViewValue(View view, Cursor cursor,int columnIndex) {
 				if (view.getId() == R.id.icon) {
+					String category = cursor.getString(cursor.getColumnIndex(ImageContract.Columns.CATEGORY));
+					boolean isCategory = (category != null  && !category.isEmpty() ) ? true : false; 
 					String path = Storage.getPathToScaledBitmap(cursor.getString(cursor.getColumnIndex(ImageContract.Columns.FILENAME)), 100);
 					ImageLoader.loadBitmap(path, (ImageView) view, false);
+					if(isCategory){
+						view.setBackgroundColor(Color.argb(120, 0, 255, 0));
+					}
+					else
+						view.setBackgroundColor(Color.TRANSPARENT);
+					
 					return true; // true because the data was bound to the view
 				}
 				return false;
@@ -88,6 +143,13 @@ public class ImageListFragment extends ListFragment implements LoaderCallbacks<C
 
 	}
 
+	@Override
+	public void onDestroy() {
+		super.onDestroy();
+		searchText.removeTextChangedListener(filterTextWatcher);
+	};
+	
+	
 	@Override
 	public void onSaveInstanceState(Bundle outState) {
 		super.onSaveInstanceState(outState);
@@ -162,17 +224,12 @@ public class ImageListFragment extends ListFragment implements LoaderCallbacks<C
 	public Loader<Cursor> onCreateLoader(int arg0, Bundle bundle) {
 		CursorLoader cursorLoader = null;
 		Uri uri ;
-		Long cat_id= Long.valueOf(-1);
+		cat_id= Long.valueOf(-1);
 		
 		if(bundle!=null)
 			cat_id = bundle.getLong("cat_id");
 
-		String[] projection = { 
-				"i."+ImageContract.Columns._ID,
-				"i."+ImageContract.Columns.FILENAME,
-				"i."+ImageContract.Columns.CATEGORY,
-				"u."+UserContract.Columns.USERNAME
-				};
+
 		uri = Uri.parse(ImagesOfParentContract.CONTENT_URI+"/"+cat_id);
 		cursorLoader = new CursorLoader(getActivity(),uri, projection, null, null, null);
 

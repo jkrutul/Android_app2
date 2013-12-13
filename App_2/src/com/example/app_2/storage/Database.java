@@ -470,7 +470,6 @@ public class Database {
 		ImageObject mio = new ImageObject();
 		mio.setId(			cursor.getLong(		cursor.getColumnIndex(ImageContract.Columns._ID)));
 		mio.setImageName(	cursor.getString(	cursor.getColumnIndex(ImageContract.Columns.FILENAME)));
-		mio.setAudioPath(	cursor.getString(	cursor.getColumnIndex(ImageContract.Columns.AUDIO_PATH)));
 		mio.setDescription(	cursor.getString(	cursor.getColumnIndex(ImageContract.Columns.DESC)));
 		mio.setModified(	cursor.getString(	cursor.getColumnIndex(ImageContract.Columns.MODIFIED)));
 		mio.setTimes_used(	cursor.getLong(		cursor.getColumnIndex(ImageContract.Columns.TIME_USED)));
@@ -513,7 +512,7 @@ public class Database {
 				recreateDB();
 				while((line = reader.readLine())!=null){
 					tv = line.split("\\;"); //ID imageName, AUDIOPATH, DESCRIPTION, times_used, modified, last_used, category,parent_fk 
-					ImageObject io = new ImageObject(tv[1],tv[2],tv[3],tv[7]);  //String imageName, String audioPath, String description,String category, Long paretn_fk
+					ImageObject io = new ImageObject(tv[1],tv[3],tv[7]);  //String imageName, String audioPath, String description,String category, Long paretn_fk
 					insertImage(io);
 				}
 				in.close();

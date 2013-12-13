@@ -27,9 +27,9 @@ import com.example.app_2.spinner.adapter.ImageSpinnerAdapter;
 import com.example.app_2.spinner.model.ImageSpinnerItem;
 
 public class ImageEditActivity extends FragmentActivity{
+	private ImageListFragment ilf;
 	private Spinner mSpinner;
 	ArrayList<ImageSpinnerItem> items;
-	private ImageListFragment ilf;
 	private final static int TAKE_PIC_REQUEST = 86;
 	private final static int FILE_SELECT_REQUEST = 25;
 	
@@ -42,6 +42,7 @@ public class ImageEditActivity extends FragmentActivity{
         setContentView(R.layout.activity_image_edit);
         
         mSpinner = (Spinner) findViewById(R.id.category_select_spinner);
+
         addItemsOnSpinner();
         ilf = new ImageListFragment();
     	final FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
@@ -88,7 +89,7 @@ public class ImageEditActivity extends FragmentActivity{
 		ImageSpinnerAdapter mySpinnerAdapter = new ImageSpinnerAdapter(this, android.R.layout.simple_spinner_item, items);
 		mySpinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 		mSpinner.setAdapter(mySpinnerAdapter);
-		mSpinner.setSelection(items.size()-1);
+		mSpinner.setSelection(0);
 	}
 
     

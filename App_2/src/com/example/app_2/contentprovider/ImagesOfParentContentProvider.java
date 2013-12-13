@@ -70,7 +70,7 @@ public class ImagesOfParentContentProvider extends ContentProvider{
 			queryBuilder.appendWhere("p."+ParentContract.Columns.PARENT_FK + "=" + uri.getLastPathSegment());
 			break;
 		default:
-			queryBuilder.appendWhere("p."+ParentContract.Columns.PARENT_FK + "=" + uri.getLastPathSegment());
+		//	queryBuilder.appendWhere("p."+ParentContract.Columns.PARENT_FK + "=" + uri.getLastPathSegment());
 		  //throw new IllegalArgumentException("Unknown URI: " + uri);
 		}
 		

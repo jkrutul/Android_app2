@@ -229,7 +229,7 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
         // Handle presses on the action bar items
         switch (item.getItemId()) {
 	        case R.id.action_add_image:
-	        	Intent bind_intent = new Intent(this, BindImagesToCategory.class);
+	        	Intent bind_intent = new Intent(this, BindImagesToCategoryActivity.class);
 	        	
 	        	//bind_intent.putExtra("executing_category_id", fragmentsHistory.get(fragmentsHistory.size() - 1));
 	        	bind_intent.putExtra("executing_category_id", actual_category_fk);

@@ -3,7 +3,6 @@ package com.example.app_2.models;
 public class ImageObject { //ID imageName, AUDIOPATH, DESCRIPTION, times_used, modified, last_used, category,parent_fk 
 	private Long id;  		
 	private String imageName;
-	private String audioPath;
 	private String description;
 	private Long times_used;
 	private String modified;
@@ -38,9 +37,9 @@ public class ImageObject { //ID imageName, AUDIOPATH, DESCRIPTION, times_used, m
 		this.author_fk = author_id;
 	}
 	
-	public ImageObject(String imageName, String audioPath, String description,String category){
+	public ImageObject(String imageName, String description,String category){
 		this.imageName = imageName;
-		this.audioPath = audioPath;
+
 		this.description = description;
 		this.category = category;
 	
@@ -58,14 +57,6 @@ public class ImageObject { //ID imageName, AUDIOPATH, DESCRIPTION, times_used, m
 	public void setDescription(String description) {
 		this.description = description;
 	}
-
-	public String getAudioPath() {
-		return audioPath;
-	}
-	public void setAudioPath(String audioPath) {
-		this.audioPath = audioPath;
-	}
-
 
 	public Long getTimes_used() {
 		return times_used;
@@ -88,7 +79,7 @@ public class ImageObject { //ID imageName, AUDIOPATH, DESCRIPTION, times_used, m
 
 	@Override
 	public String toString(){				//ID imageName, AUDIOPATH, DESCRIPTION, times_used, modified, last_used, category,parent_fk 
-		return id+";"+imageName+";"+audioPath+";"+description+";"+times_used+";"+modified+";"+last_used+";"+category+";";
+		return id+";"+imageName+";"+description+";"+times_used+";"+modified+";"+last_used+";"+category+";";
 	}
 	public Long getAuthor_fk() {
 		return author_fk;

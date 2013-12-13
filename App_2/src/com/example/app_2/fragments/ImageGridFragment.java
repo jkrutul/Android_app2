@@ -1,5 +1,6 @@
 package com.example.app_2.fragments;
 
+import java.nio.channels.SelectableChannel;
 import java.util.ArrayList;
 import java.util.LinkedList;
 
@@ -43,6 +44,7 @@ import android.widget.TextView;
 
 import com.example.app_2.App_2;
 import com.example.app_2.R;
+import com.example.app_2.activities.ImageDetailsActivity;
 import com.example.app_2.activities.ImageEditActivity;
 import com.example.app_2.activities.ImageGridActivity;
 import com.example.app_2.contentprovider.ImageContract;
@@ -72,6 +74,8 @@ public class ImageGridFragment extends Fragment implements LoaderCallbacks<Curso
     private RelativeLayout.LayoutParams mImageViewLayoutParams;
     private int mItemHeight = 0;
     private boolean mChangeNumColumns = false;
+    private boolean restartLoader = false;
+    
 	private static final int LOADER_ID = 1;
 	
 	public boolean mEditMode = true;
@@ -89,7 +93,7 @@ public class ImageGridFragment extends Fragment implements LoaderCallbacks<Curso
 	
 	private static String[] from = new String[] {  ImageContract.Columns.FILENAME,   ImageContract.Columns.DESC	};
 	private static int[] to = new int[] {R.id.recycling_image, R.id.image_desc };
-	
+
 	private static String[] loader_projection = new String[] { "i."+ImageContract.Columns._ID,
 															   "i."+ImageContract.Columns.FILENAME,
 															   "i."+ImageContract.Columns.DESC,
@@ -97,7 +101,6 @@ public class ImageGridFragment extends Fragment implements LoaderCallbacks<Curso
 														       "i."+ImageContract.Columns.MODIFIED,
 															   "i."+ImageContract.Columns.TIME_USED};	
 	
-
 	private OnItemLongClickListener ilcL = new OnItemLongClickListener(){
 		@Override
 		public boolean onItemLongClick(AdapterView<?> parent, final  View thumbView, int position, long i) {
@@ -216,11 +219,12 @@ public class ImageGridFragment extends Fragment implements LoaderCallbacks<Curso
             	mode.finish();
             	return true;
             case R.id.edit_image:
-            	//Intent a = new Intent(ImageEditActivity.class);
-        		//Bundle args = new Bundle();		
-        		//args.putLong("CATEGORY_ID", category_fk);
-        		//getLoaderManager().restartLoader(1, args, this);
+				Intent intent = new Intent();
+				intent.setClass(getActivity(), ImageDetailsActivity.class);
+				intent.putExtra("row_id", selected_images_ids.get(0));
+				startActivity(intent);
             	mode.finish();
+            	restartLoader = true;
             	return true;
             default:
                 return false;
@@ -289,6 +293,18 @@ public class ImageGridFragment extends Fragment implements LoaderCallbacks<Curso
 		setHasOptionsMenu(true);
 	}  
     
+	@Override
+	public void onResume(){
+		super.onResume();
+		if(restartLoader){
+			Bundle args = new Bundle();		
+			args.putLong("CATEGORY_ID", ImageGridActivity.actual_category_fk);
+			getLoaderManager().restartLoader(1, args, this);		
+			restartLoader = false;
+		}
+
+	}
+	
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState){
     	super.onCreateView(inflater, container, savedInstanceState);
@@ -330,10 +346,6 @@ public class ImageGridFragment extends Fragment implements LoaderCallbacks<Curso
         adapter.notifyDataSetChanged();
     }
 
- 
-
-
-
 	@TargetApi(Build.VERSION_CODES.HONEYCOMB)
 	@Override
 	public Loader<Cursor> onCreateLoader(int arg0, Bundle bundle) {
@@ -353,8 +365,6 @@ public class ImageGridFragment extends Fragment implements LoaderCallbacks<Curso
 	public void onLoaderReset(Loader<Cursor> loader) { 
 		adapter.swapCursor(null); }
 
-
-	
 	public void finishActionMode(){
 		   if(mActionMode!= null){
 			   mActionMode.finish();
@@ -362,7 +372,6 @@ public class ImageGridFragment extends Fragment implements LoaderCallbacks<Curso
 			   
 		   }
 	}
-	
 	
 	public void makeCategoiesFromSelected(){
 		boolean isCategory = false;
