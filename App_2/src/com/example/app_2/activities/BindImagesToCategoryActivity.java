@@ -2,6 +2,7 @@ package com.example.app_2.activities;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 
 import android.content.ContentValues;
 import android.content.Context;
@@ -16,13 +17,11 @@ import android.view.WindowManager;
 
 import com.example.app_2.R;
 import com.example.app_2.contentprovider.ImageContract;
-import com.example.app_2.contentprovider.ImagesOfParentContract;
 import com.example.app_2.contentprovider.ParentContract;
 import com.example.app_2.fragments.ImagesMultiselectFragment;
-import com.example.app_2.models.ImageObject;
+import com.example.app_2.models.EdgeModel;
 import com.example.app_2.storage.Database;
 import com.example.app_2.utils.DFS;
-import com.example.app_2.utils.Utils;
 
 public class BindImagesToCategoryActivity extends FragmentActivity{
 	static final String LOG_TAG = "BindImagesToCategory";
@@ -88,7 +87,68 @@ public class BindImagesToCategoryActivity extends FragmentActivity{
 							ImageContract.Columns.DESC,
 							ImageContract.Columns.CATEGORY};
 				
+				// wydzielam kategorie do osobnej listy
+				ArrayList<Long>checked_category_list = new ArrayList<Long>();
 				for(Long checked_list_item : checked_list){
+					uri = Uri.parse(ImageContract.CONTENT_URI+"/"+checked_list_item);
+					c= getContentResolver().query(uri, new String[]{ImageContract.Columns._ID, ImageContract.Columns.CATEGORY}, null, null, null);
+					c.moveToFirst();
+					if(!c.isAfterLast()){
+						String category = c.getString(1);
+						if(category != null && !category.isEmpty())
+							checked_category_list.add(c.getLong(0));
+					}
+				}
+					
+				checked_list.removeAll(checked_category_list);
+				
+				// najpierw kopiuje kategorie
+				HashMap<Long,Long> copied = new HashMap<Long,Long>(); // key - id elemenutu kopiowanego, value - id nowego elementu
+				for(Long checked_category_id : checked_category_list){
+					DFS.getElements(checked_category_id, this);      		// ustawia liste DFS.edges
+					for(EdgeModel edge : DFS.edges){
+						Long parent = edge.getParent();
+						Long child = edge.getChild();
+						
+						if(!copied.keySet().contains(parent)){					// parent
+							uri = Uri.parse(ImageContract.CONTENT_URI+"/"+parent);
+							c = getContentResolver().query(uri, projection, null, null, null);
+							ContentValues img_cv = new ContentValues();
+							img_cv.put(ImageContract.Columns.FILENAME, c.getString(1));
+							img_cv.put(ImageContract.Columns.DESC, c.getString(2));
+							img_cv.put(ImageContract.Columns.CATEGORY, c.getString(3));
+							img_cv.put(ImageContract.Columns.AUTHOR_FK, category_author );
+							img_cv.put(ImageContract.Columns.MODIFIED, dateFormat.format(date));
+							c.close();
+							Uri inserted_image_uri = getContentResolver().insert(ImageContract.CONTENT_URI, img_cv);
+							copied.put(parent, Long.parseLong(inserted_image_uri.getLastPathSegment()));
+						}
+						
+						if(!copied.keySet().contains(child)){						// child
+							uri = Uri.parse(ImageContract.CONTENT_URI+"/"+child);
+							c = getContentResolver().query(uri, projection, null, null, null);
+							ContentValues img_cv = new ContentValues();
+							img_cv.put(ImageContract.Columns.FILENAME, c.getString(1));
+							img_cv.put(ImageContract.Columns.DESC, c.getString(2));
+							img_cv.put(ImageContract.Columns.CATEGORY, c.getString(3));
+							img_cv.put(ImageContract.Columns.AUTHOR_FK, category_author );
+							img_cv.put(ImageContract.Columns.MODIFIED, dateFormat.format(date));
+							c.close();
+							Uri inserted_image_uri = getContentResolver().insert(ImageContract.CONTENT_URI, img_cv);
+							copied.put(child, Long.parseLong(inserted_image_uri.getLastPathSegment()));
+						}
+						
+						ContentValues bind_cv = new ContentValues();
+						bind_cv.put(ParentContract.Columns.IMAGE_FK, copied.get(child));
+						bind_cv.put(ParentContract.Columns.PARENT_FK, copied.get(parent));
+						getContentResolver().insert(ParentContract.CONTENT_URI, bind_cv);
+						
+					}
+						
+				}
+	
+					
+				for(Long checked_list_item : checked_list){ 					// w liœcie checked_list nie ma kategorii
 
 					uri = Uri.parse(ImageContract.CONTENT_URI+"/"+checked_list_item);
 					c= getContentResolver().query(uri, projection, null, null, null);
