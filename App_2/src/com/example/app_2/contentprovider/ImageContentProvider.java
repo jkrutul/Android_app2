@@ -97,13 +97,16 @@ public class ImageContentProvider extends ContentProvider{
 		SQLiteQueryBuilder queryBuilder = new SQLiteQueryBuilder();
 		
 		//checkColumns(projection);
-		queryBuilder.setTables(ImageContract.TABLE_IMAGE);
+		queryBuilder.setTables(
+				"("+ImageContract.TABLE_IMAGE+" i " +" INNER JOIN "+UserContract.TABLE_USER+" u "+
+						"ON  i."+ImageContract.Columns.AUTHOR_FK+" = u."+UserContract.Columns._ID+")"
+				);
 		
 		switch(sURIMatcher.match(uri)){
 		case IMAGE:
 			break;
 		case IMAGE_ID:
-			queryBuilder.appendWhere(ImageContract.Columns._ID + "=" + uri.getLastPathSegment());
+			queryBuilder.appendWhere("i."+ImageContract.Columns._ID + "=" + uri.getLastPathSegment());
 			break;
 		default:
 		    throw new IllegalArgumentException("Unknown URI: " + uri);
@@ -111,7 +114,7 @@ public class ImageContentProvider extends ContentProvider{
 		
 		String orderBy = TextUtils.isEmpty(sortOrder) ? ImageContract.Columns.DEFAULT_SORT_ORDER : sortOrder;
 		SQLiteDatabase db = mOpenHelper.getWritableDatabase();
-		Cursor cursor = queryBuilder.query(db, projection, selection, selectionArgs, null, null, orderBy);
+		Cursor cursor = queryBuilder.query(db, projection, selection, selectionArgs, null, null, "i."+orderBy);
 		cursor.setNotificationUri(getContext().getContentResolver(), uri);
 		return cursor;
 	}

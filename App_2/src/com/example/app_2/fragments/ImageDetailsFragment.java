@@ -31,6 +31,7 @@ import com.example.app_2.activities.ImageDetailsActivity;
 import com.example.app_2.contentprovider.ImageContract;
 import com.example.app_2.contentprovider.ParentContract;
 import com.example.app_2.contentprovider.ParentsOfImageContract;
+import com.example.app_2.contentprovider.UserContract;
 import com.example.app_2.intents.ImageIntents;
 import com.example.app_2.storage.Storage;
 import com.example.app_2.utils.BitmapCalc;
@@ -43,8 +44,8 @@ public class ImageDetailsFragment extends Fragment{
 	private EditText mCategory;
 	private TextView mTitleText;
 	private EditText mDescText;
-	private EditText mParent;
 	private TextView mParents;
+	private TextView mAuthor;
 	private Button mButton;
 	public  ImageView mImage;
 	private static Bitmap bitmap;
@@ -110,6 +111,8 @@ public class ImageDetailsFragment extends Fragment{
 		mCategory = (EditText) view.findViewById(R.id.edit_category);
 		mDescText = (EditText) view.findViewById(R.id.edit_description);
 		mParents = (TextView) view.findViewById(R.id.parents);
+		mAuthor = (TextView) view.findViewById(R.id.image_author);
+		
 
 		mCreateCategoryCheckBox = (CheckBox) view
 				.findViewById(R.id.create_category);
@@ -132,9 +135,10 @@ public class ImageDetailsFragment extends Fragment{
 		
 		
 		categories_map = new HashMap<String, Long>();
-		String[] projection = { ImageContract.Columns._ID,
-				ImageContract.Columns.CATEGORY };
-		String selection = ImageContract.Columns.CATEGORY + " IS NOT NULL";
+		String[] projection = { 
+				"i."+ImageContract.Columns._ID,
+				"i."+ImageContract.Columns.CATEGORY };
+		String selection = "i."+ImageContract.Columns.CATEGORY + " IS NOT NULL";
 		Cursor c = executing_activity.getContentResolver().query(ImageContract.CONTENT_URI, projection, selection, null, null);
 		c.moveToFirst();
 		while (!c.isAfterLast()) {
@@ -273,18 +277,17 @@ public class ImageDetailsFragment extends Fragment{
 	
 	private void fillData(Long id) {
 		Uri uri = Uri.parse(ImageContract.CONTENT_URI + "/" + id);
-		String[] projection = { ImageContract.Columns._ID,
-				ImageContract.Columns.FILENAME, ImageContract.Columns.DESC,
-				ImageContract.Columns.CATEGORY};
+		String[] projection = { 
+				"i."+ImageContract.Columns._ID,
+				"i."+ImageContract.Columns.FILENAME,
+				"i."+ImageContract.Columns.DESC,
+				"i."+ImageContract.Columns.CATEGORY,
+				"u."+UserContract.Columns.USERNAME};
 		Cursor cursor = executing_activity.getContentResolver().query(uri,	projection, null, null, null);
 		if (cursor != null) {
 			cursor.moveToFirst();
-
-			String img_id = cursor.getString(cursor
-					.getColumnIndex(ImageContract.Columns._ID));
-			String category = cursor.getString(cursor
-					.getColumnIndexOrThrow(ImageContract.Columns.CATEGORY));
-
+			String img_id = cursor.getString(0);
+			String category = cursor.getString(3);
 			mId.setText(img_id);
 
 			if (category != null)
@@ -293,12 +296,10 @@ public class ImageDetailsFragment extends Fragment{
 					mCategory.setText(category);
 				}
 
-			String imgName = cursor.getString(cursor
-					.getColumnIndexOrThrow(ImageContract.Columns.FILENAME));
+			String imgName = cursor.getString(1);
 			mTitleText.setText(imgName);
-			mDescText.setText(cursor.getString(cursor
-					.getColumnIndexOrThrow(ImageContract.Columns.DESC)));
-
+			mDescText.setText(cursor.getString(2));
+			mAuthor.setText(cursor.getString(4));
 			cursor.close();
 			
 			ImageLoader.loadBitmap(Storage.getPathToScaledBitmap(imgName, 300), mImage, false);

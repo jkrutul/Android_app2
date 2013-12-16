@@ -380,7 +380,7 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 	@SuppressLint("NewApi")
 	@TargetApi(Build.VERSION_CODES.HONEYCOMB)
 	private void setDrawer(){
-		String[] projection = {ImageContract.Columns._ID, ImageContract.Columns.FILENAME, ImageContract.Columns.CATEGORY};
+		String[] projection = {"i."+ImageContract.Columns._ID, "i."+ImageContract.Columns.FILENAME, "i."+ImageContract.Columns.CATEGORY};
 		String selection;
 		String[] selectionArgs = {""};
 		mDrawerTitle = "Wybierz kategoriê";
@@ -411,13 +411,13 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 
         mDrawerList  = (ListView) findViewById(R.id.left_drawer);
         if(logged_user_id!=0){
-        	selection = ImageContract.Columns.CATEGORY + " IS NOT NULL AND ("+ImageContract.Columns.CATEGORY +" <> ?) AND "+ImageContract.Columns.AUTHOR_FK+" = ? ";
+        	selection = "i."+ImageContract.Columns.CATEGORY + " IS NOT NULL AND (i."+ImageContract.Columns.CATEGORY +" <> ?) AND "+"i."+ImageContract.Columns.AUTHOR_FK+" = ? ";
         	selectionArgs = new String[2];
         	selectionArgs[0]="";
         	selectionArgs[1]= String.valueOf(logged_user_id);
         }
         else
-        	selection = ImageContract.Columns.CATEGORY + " IS NOT NULL AND ("+ImageContract.Columns.CATEGORY +" <> ?)";
+        	selection = "i."+ImageContract.Columns.CATEGORY + " IS NOT NULL AND (i."+ImageContract.Columns.CATEGORY +" <> ?)";
         
         Cursor c = getContentResolver().query(ImageContract.CONTENT_URI, projection, selection, selectionArgs, null);
         
@@ -427,17 +427,17 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
        // Cursor c = new MergeCursor(cursors);
         c.moveToFirst();
         while(!c.isAfterLast()){
-        	String category = c.getString(c.getColumnIndex(ImageContract.Columns.CATEGORY));
-        	Long id = c.getLong(c.getColumnIndex(ImageContract.Columns._ID));
+        	String category = c.getString(2);
+        	Long id = c.getLong(0);
         	mCategoryMap.put(category, id);
         	mCategoryTitles.add(category);
         	c.moveToNext();
         }
        
 		String[] from = new String[] {
-				   ImageContract.Columns._ID, 
-				   ImageContract.Columns.FILENAME,
-				   ImageContract.Columns.CATEGORY};
+				   "i."+ImageContract.Columns._ID, 
+				   "i."+ImageContract.Columns.FILENAME,
+				   "i."+ImageContract.Columns.CATEGORY};
 		int[] to = new int[] { 0, R.id.drawer_category_icon, R.id.category };
 		
         SimpleCursorAdapter adapter = new SimpleCursorAdapter(getApplicationContext(), R.layout.drawer_row, c, from,to, 0);
@@ -445,7 +445,7 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 			   /** Binds the Cursor column defined by the specified index to the specified view */
 			   public boolean setViewValue(View view, Cursor cursor, int columnIndex){
 			       if(view.getId() == R.id.drawer_category_icon/*category_image*/){
-						 String path = Storage.getPathToScaledBitmap(cursor.getString(cursor.getColumnIndex(ImageContract.Columns.FILENAME)),50);
+						 String path = Storage.getPathToScaledBitmap(cursor.getString(1),50);
 						 ImageLoader.loadBitmap(path, (ImageView) view, true);
 			           return true; //true because the data was bound to the view
 			       }
