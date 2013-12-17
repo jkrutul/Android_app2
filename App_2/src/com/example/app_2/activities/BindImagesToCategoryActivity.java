@@ -28,7 +28,7 @@ public class BindImagesToCategoryActivity extends FragmentActivity{
 	static final String LOG_TAG = "BindImagesToCategory";
 	ImagesMultiselectFragment imf;
 	Long executing_category_id;
-	Long logged_user_id;
+	//Long logged_user_id;
 	private static SimpleDateFormat dateFormat;
 	private static Date date;
 	
@@ -38,8 +38,8 @@ public class BindImagesToCategoryActivity extends FragmentActivity{
 		dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"); 
 		date = new Date();
 		
-		SharedPreferences sharedPref = getSharedPreferences("USER",Context.MODE_PRIVATE);
-		logged_user_id = sharedPref.getLong("logged_user_id", 0);
+		//SharedPreferences sharedPref = getSharedPreferences("USER",Context.MODE_PRIVATE);
+		//logged_user_id = sharedPref.getLong("logged_user_id", 0);
 		
 		getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
 		executing_category_id = ImageGridActivity.actual_category_fk;	
@@ -92,7 +92,7 @@ public class BindImagesToCategoryActivity extends FragmentActivity{
 							"i."+ImageContract.Columns.CATEGORY};
 				
 				
-				ArrayList<Long>checked_category_list = new ArrayList<Long>();			// wydzielam kategorie do listy
+				ArrayList<Long>checked_category_list = new ArrayList<Long>();			// wydzielam kategorie do osobnej listy
 				for(Long checked_list_item : checked_list){
 					uri = Uri.parse(ImageContract.CONTENT_URI+"/"+checked_list_item);
 					c= getContentResolver().query(uri, new String[]{"i."+ImageContract.Columns._ID, "i."+ImageContract.Columns.CATEGORY}, null, null, null);
@@ -179,7 +179,7 @@ public class BindImagesToCategoryActivity extends FragmentActivity{
 				
 
 			
-			}else{ // obrazki nale¿¹ do tego samego u¿ytkownika co kategoria - dodajê tylko wiazania
+			}else{ // obrazki nale¿¹ do tego samego u¿ytkownika co kategoria - dodajê jedynie wiazania
 				int i =0;
 				for(Long image_fk :checked_list){
 					ContentValues cv = new ContentValues();

@@ -16,10 +16,8 @@
         android:icon="@drawable/action_settings"
         android:title="Ustawienia"/>
     <item
-        android:id="@+id/action_logout"
+        android:id="@+id/action_login_user"
         android:icon="@drawable/action_settings"
-        android:title="Wyloguj"/>
-
-    <!-- android:showAsAction="never" -->
-
+        android:title="Zaloguj użytkownika"/>
+    
 </menu>

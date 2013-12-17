@@ -33,7 +33,6 @@ public class MainActivity extends Activity {
 	private ShareActionProvider mShareActionProvider;
 	private SharedPreferences prefs = null;
 
-	@SuppressLint("NewApi")
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -59,7 +58,7 @@ public class MainActivity extends Activity {
 	            prefs.edit().putBoolean("firstrun", false).commit();
 	        }
 	}
-	@TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
+
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		// Inflate the menu; this adds items to the action bar if it is present.
@@ -68,7 +67,7 @@ public class MainActivity extends Activity {
 		// Locate MenuItem with ShareActionProvider
 		MenuItem item = menu.findItem(R.id.menu_item_share);
 		// Fetch and store ShareActionProvider
-		mShareActionProvider = (ShareActionProvider) item.getActionProvider();
+		//mShareActionProvider = (ShareActionProvider) item.getActionProvider();
 		return true;
 	}
 

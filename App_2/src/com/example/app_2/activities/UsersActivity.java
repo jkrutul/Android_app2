@@ -60,7 +60,7 @@ public class UsersActivity extends FragmentActivity implements LoaderCallbacks<C
 				case R.id.user_pic:
 					//String path = Images.getImageThumbsPath(cursor.getString(cursor.getColumnIndex(UserContract.Columns.IMG_FILENAME)));
 					String path = Storage.getPathToScaledBitmap(cursor.getString(cursor.getColumnIndex(UserContract.Columns.IMG_FILENAME)),300);
-					ImageLoader.loadBitmap(path, (ImageView) view, false);
+					ImageLoader.loadBitmap(path, (ImageView) view);
 					return true;
 				
 				case R.id.user_gender:

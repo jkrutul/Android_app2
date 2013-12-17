@@ -56,25 +56,21 @@ public class ImagesMultiselectFragment extends ListFragment implements LoaderCal
 	private EditText searchText;
 	Spinner mSpinner;
 	ArrayList<ImageSpinnerItem> items;
-	//private List<Item> data;
 	
-	boolean mDualPane;
 	int mCurCheckPosition = 0;
 	public static Long row_id;
 	private static final int LOADER_ID = 32;
-	private static final String TAG = "ParentMultiselectFragment";
-	private Map<Long,Integer> posMapOfAllItems;
 	private ArrayList<Long> selectedItemsOnCreate;
 	private Long cat_id;
-	private Long logged_user_id, logged_user_root ;
+
 	private Long executing_category_id;
+	private Long executing_category_author;
 	
 	private String[] projection = new String[] { "i."+ImageContract.Columns._ID,
 			 "i."+ImageContract.Columns.FILENAME,
 			 "i."+ImageContract.Columns.DESC,
 			 "i."+ImageContract.Columns.CATEGORY,
 			 "u."+UserContract.Columns.USERNAME};
-	
 	private String selection;
 	private String[] selectionArgs;
 			
@@ -108,113 +104,30 @@ public class ImagesMultiselectFragment extends ListFragment implements LoaderCal
 	
 	
 	public ImagesMultiselectFragment(){	}
-	/*
-	public static ParentMultiselectFragment newInstance(Long id){
-		ParentMultiselectFragment f = new ParentMultiselectFragment();
-		Bundle args = new Bundle();
-		args.putLong("row_id", id);
-		f.setArguments(args);
-		return f;
-	}
-	 */
+
 	public void onCreate(Bundle bundle){
 		super.onCreate(bundle);
-		SharedPreferences sharedPref = getActivity().getSharedPreferences("USER",Context.MODE_PRIVATE);
-		logged_user_root = sharedPref.getLong("logged_user_root", Database.getMainRootFk());
-		logged_user_id = sharedPref.getLong("logged_user_id", 0);
+		
 	    Bundle args = getArguments();
-		executing_category_id = (	args!=null) ? 	args.getLong("category_id") : null;
+		executing_category_id = (args!=null) ? 	args.getLong("category_id") : null;
+		executing_category_author = getCategoryAuthor(executing_category_id);
+		
+																							// SELECT:
+		selection = "p."+ParentContract.Columns.PARENT_FK+" = ? " 							// - obrazki które wskazuj¹ na s³ownik ( czyli wszystkie )
+					+ " AND i." + ImageContract.Columns.AUTHOR_FK + "= ? " 					// - w³aœcicielem jest autor kategorii do której dodajemy obrazki
+					+ " AND i." + ImageContract.Columns._ID + "<> ? ";						// - usuñ mo¿liwoœæ tworzenia pêtli na kategori¹ z kórej wywo³ujemy dodawanie obrazka
+		
+		selectionArgs= new String[]{Long.toString(Database.getMainDictFk()),
+									Long.toString(executing_category_author),
+									Long.toString(executing_category_id) 
+									};
+		
+																							// TODO - usuñ mo¿liwoœæ dodawania obrazków kóre s¹ ju¿ tej kategorii lub oznacz jako dodane
+
 		
 		
-		selection = "p."+ParentContract.Columns.PARENT_FK+" =? ";
-		Long user_id = null;	
-		selectionArgs= new String[1];
-		selectionArgs[0] =  Long.toString(Database.getMainDictFk());
 		
-		if(bundle != null){
-			user_id = bundle.getLong("USER_ID");
-		}else
-			user_id = logged_user_id;
-		
-		if(user_id != null && user_id != 0){
-			selection += " AND i." + ImageContract.Columns.AUTHOR_FK + "= ?";
-			selectionArgs = new String[]{selectionArgs[0],user_id.toString()};
-			
-			if(executing_category_id != null){
-				selection += " AND i." + ImageContract.Columns._ID + "<> ?";
-				selectionArgs = new String[]{selectionArgs[0], selectionArgs[1],Long.toString(executing_category_id)};
-			}
-		}
-		
-		
-		Intent intent =  getActivity().getIntent();
-		if(getArguments()!=null)
-			row_id  = getArguments().getLong("row_id");
-		if(bundle != null)
-			row_id = bundle.getLong("row_id");
-		else
-			if(intent != null && row_id == null){
-				Bundle b = intent.getExtras();
-				if(b!=null)
-					row_id = (Long)b.get("row_id");	
-			}
 	} 
-	@Override
-	public void onActivityCreated(Bundle savedInstanceState) {
-		super.onActivityCreated(savedInstanceState);
-		new ImageLoader(getActivity());
-		selectedItemsOnCreate = new ArrayList<Long>();
-		
-		String[] from = new String[] {ImageContract.Columns._ID,  ImageContract.Columns.FILENAME,  ImageContract.Columns.DESC,  ImageContract.Columns.CATEGORY, UserContract.Columns.USERNAME};
-		int[] to = new int[] { 0, R.id.mc_icon, R.id.mc_text, 0, R.id.mc_author }; 		
-		adapter = new SimpleCursorAdapter( getActivity().getApplicationContext(), R.layout.multiple_choice_item, null, from, to, 0);
-		adapter.setFilterQueryProvider(fqp);
-		adapter.setViewBinder(new SimpleCursorAdapter.ViewBinder() {
-			public boolean setViewValue(View view, Cursor cursor,int columnIndex) {
-				if (view.getId() == R.id.mc_icon) {
-					String path = Storage.getPathToScaledBitmap(cursor.getString(cursor.getColumnIndex(ImageContract.Columns.FILENAME)),100);
-					ImageLoader.loadBitmap(path, (ImageView) view, false);
-					return true;
-				}
-				return false;
-			}
-		});
-		
-		setListAdapter(adapter);
-		listView = getListView();
-		listView.setItemsCanFocus(false);
-		listView.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
-		
-		getActivity().getSupportLoaderManager().initLoader(LOADER_ID, null, this);
-
-
-		//wype³nienie - posMapOfAllItems id i pozycj¹ kategorii w liœcie
-		posMapOfAllItems = new HashMap<Long, Integer>();
-		SimpleCursorAdapter sca = (SimpleCursorAdapter) this.getListView().getAdapter();
-		for(int i=0; i<sca.getCount(); i++)
-			posMapOfAllItems.put(sca.getItemId(i), i);
-
-		if(row_id != null){
-			// zaznaczenie kategorii do których nale¿a³ wczeœniej obrazek
-			Uri imageUri = Uri.parse(ParentsOfImageContract.CONTENT_URI + "/" + row_id);
-			String [] projection ={"p."+ParentContract.Columns.PARENT_FK};
-			Cursor c= getActivity().getContentResolver().query(imageUri, projection , null, null, null);
-			c.moveToFirst();
-			ListView lv = getListView();
-			while(!c.isAfterLast()){
-				String l = c.getString(c.getColumnIndex(ParentContract.Columns.PARENT_FK));
-				c.moveToNext();
-				Long lo = Long.valueOf(l);
-				if(posMapOfAllItems.containsKey(lo)){
-					int position = posMapOfAllItems.get(lo);
-					selectedItemsOnCreate.add(lo);
-					lv.setItemChecked(position, true);
-				}
-			}
-			c.close();
-		}
-
-	}
 	
 	@Override
 	public View onCreateView(android.view.LayoutInflater inflater, android.view.ViewGroup container, Bundle savedInstanceState) {
@@ -229,9 +142,33 @@ public class ImagesMultiselectFragment extends ListFragment implements LoaderCal
 	};
 	
 	@Override
-	public void onSaveInstanceState(Bundle outState) {
-		super.onSaveInstanceState(outState);
-		//outState.putInt("curChoice", mCurCheckPosition);
+	public void onActivityCreated(Bundle savedInstanceState) {
+		super.onActivityCreated(savedInstanceState);
+		new ImageLoader(getActivity());
+		selectedItemsOnCreate = new ArrayList<Long>();
+		
+		String[] from = new String[] {ImageContract.Columns._ID,  ImageContract.Columns.FILENAME,  ImageContract.Columns.DESC,  ImageContract.Columns.CATEGORY, UserContract.Columns.USERNAME};
+		int[] to = new int[] { 0, R.id.mc_icon, R.id.mc_text, 0, R.id.mc_author }; 		
+		adapter = new SimpleCursorAdapter( getActivity().getApplicationContext(), R.layout.multiple_choice_item, null, from, to, 0);
+		adapter.setFilterQueryProvider(fqp);
+		adapter.setViewBinder(new SimpleCursorAdapter.ViewBinder() {
+			public boolean setViewValue(View view, Cursor cursor,int columnIndex) {
+				if (view.getId() == R.id.mc_icon) {
+					String path = Storage.getPathToScaledBitmap(cursor.getString(cursor.getColumnIndex(ImageContract.Columns.FILENAME)),100);
+					ImageLoader.loadBitmap(path, (ImageView) view);
+					return true;
+				}
+				return false;
+			}
+		});
+		
+		setListAdapter(adapter);
+		listView = getListView();
+		listView.setItemsCanFocus(false);
+		listView.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
+		
+		getActivity().getSupportLoaderManager().initLoader(LOADER_ID, null, this);
+
 	}
 
 	public ArrayList<Long> getCheckedItemIds(){
@@ -255,16 +192,16 @@ public class ImagesMultiselectFragment extends ListFragment implements LoaderCal
 		 return unSelectedItems;
 	}
 	
+	
+
 	private void addItemsOnUserSpinner(){
 		final LoaderCallbacks<Cursor> lc =  (LoaderCallbacks<Cursor>)this;
 		final FragmentActivity a = getActivity();
 
-		
 		items =  new ArrayList<ImageSpinnerItem>();
 		items.add(new ImageSpinnerItem(null,"Wybierz u¿ytkownika", null, true));
 		String[] projection = {UserContract.Columns._ID, UserContract.Columns.IMG_FILENAME, UserContract.Columns.USERNAME };
-		//String selection = ImageContract.Columns.CATEGORY + " IS NOT NULL";
-		
+	
 		Cursor c = a.getContentResolver().query(UserContract.CONTENT_URI, projection, null, null, null);
 		c.moveToFirst();
 		while (!c.isAfterLast()) {
@@ -277,17 +214,17 @@ public class ImagesMultiselectFragment extends ListFragment implements LoaderCal
 		mySpinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 		mSpinner.setAdapter(mySpinnerAdapter);
 		int logged_user_pos_in_spinner = 0;
+
+		for(  ImageSpinnerItem item : items)
+			if(item.getItemId()== executing_category_author)
+				break;
+			else
+				logged_user_pos_in_spinner++;
 		
-		if(logged_user_id != null && logged_user_id != 0){
-			for(  ImageSpinnerItem item : items)
-				if(item.getItemId()== logged_user_id)
-					break;
-				else
-					logged_user_pos_in_spinner++;
-		}
 		mSpinner.setSelection(logged_user_pos_in_spinner);
 		mSpinner.setOnItemSelectedListener(new OnItemSelectedListener() {
 			Bundle bundle = new Bundle();
+			
 			@Override
 			public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int position, long id) {
 				ImageSpinnerItem data = items.get(position);
@@ -302,6 +239,7 @@ public class ImagesMultiselectFragment extends ListFragment implements LoaderCal
 				//bundle.putLong("CATEGORY_ID", data.getItemId());
 				getLoaderManager().restartLoader(0, bundle, lc);
 			}
+			
 			@Override
 			public void onNothingSelected(AdapterView<?> parentView) {
 				bundle.putLong("USER_ID", -1);
@@ -310,30 +248,29 @@ public class ImagesMultiselectFragment extends ListFragment implements LoaderCal
 
 		});
 	}
+	
+	/**
+	 * 
+	 * @param category_fk
+	 * @return category author id or null
+	 */
+	private Long getCategoryAuthor(Long category_fk){
+		if(category_fk == null)
+			return null;
 		
+		Long author_id = null ;
+		 Uri uri = Uri.parse(ImageContract.CONTENT_URI + "/" + executing_category_id);
+		 Cursor c = getActivity().getContentResolver().query(uri, new String[]{"i."+ImageContract.Columns.AUTHOR_FK}, null, null, null);
+		 c.moveToFirst();
+		 if(!c.isAfterLast())
+			 author_id = c.getLong(0);
+		 
+		return author_id;
+	}
+	
 	//		---- L	O	A	D	E	R	----
-	@SuppressLint("NewApi")
 	@Override
 	public Loader<Cursor> onCreateLoader(int arg0, Bundle bundle) {
-		/*
-		String selection = "p."+ParentContract.Columns.PARENT_FK+" =? ";
-		Long user_id = null;	
-		String[] selectionArgs= { Long.toString(Database.getMainDictFk())};
-		if(bundle != null){
-			user_id = bundle.getLong("USER_ID");
-			//executing_category_id = bundle.getLong("category_id");
-		}
-		if(user_id != null && user_id != -1){
-			selection += " AND i." + ImageContract.Columns.AUTHOR_FK + "= ?";
-			selectionArgs = new String[]{selectionArgs[0],user_id.toString()};
-			
-			if(executing_category_id != null){
-				selection += " AND i." + ImageContract.Columns._ID + "<> ?";
-				selectionArgs = new String[]{selectionArgs[0], selectionArgs[1],Long.toString(executing_category_id)};
-			}
-		}
-		
-		*/
 		CursorLoader cursorLoader = new CursorLoader(getActivity(),	ImagesOfParentContract.CONTENT_URI, projection, selection, selectionArgs, null);
 		return cursorLoader;
 	}

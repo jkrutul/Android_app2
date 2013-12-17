@@ -32,6 +32,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
+import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.database.Cursor;
 import android.graphics.Bitmap;
@@ -40,6 +41,8 @@ import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.StrictMode;
+import android.support.v4.widget.DrawerLayout;
+import android.widget.LinearLayout;
 
 import com.example.app_2.App_2;
 import com.example.app_2.activities.ImageGridActivity;
@@ -219,9 +222,9 @@ public class Utils {
 	    return null;
 	} 
 
-	@TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
-	@SuppressLint("NewApi")
+
 	public static void setWallpaper(android.view.ViewGroup vg, int reqHeight, int reqWidth, Bitmap wallpaper, ScalingLogic sl){
+		
 		if(wallpaper == null){
 			WallpaperManager wallpaperManager = WallpaperManager.getInstance(App_2.getAppContext());
 			Drawable wallpaperDrawable = wallpaperManager.getDrawable();
@@ -235,14 +238,38 @@ public class Utils {
 		
 		Resources  r = App_2.getAppContext().getResources();
 		int orientation = r.getConfiguration().orientation;
+		
+
 		switch (orientation) {
-		case 1:				// landscape
-			Bitmap wallpaperLandscape = ScalingUtilities.createScaledBitmap(wallpaper, reqHeight, reqWidth, sl);
-			vg.setBackground(new BitmapDrawable(r,wallpaperLandscape));
+		case Configuration.ORIENTATION_LANDSCAPE:				// landscape
+			Bitmap wallpaperLandscape = ScalingUtilities.createScaledBitmap(wallpaper, reqWidth, reqHeight, sl);
+			if(Utils.hasJellyBean())
+				vg.setBackground(new BitmapDrawable(r,wallpaperLandscape));
+			else{
+				 if(vg instanceof LinearLayout){
+					 LinearLayout ll = (LinearLayout) vg;
+					 ll.setBackgroundDrawable(new BitmapDrawable(r,wallpaperLandscape));
+				 }else if(vg instanceof DrawerLayout){
+					 DrawerLayout dl = (DrawerLayout) vg;
+					 dl.setBackgroundDrawable(new BitmapDrawable(r, wallpaperLandscape));
+				 }
+			 	
+			}
 			break;
-		case 2:				// portrait
-			Bitmap wallpaperPortrait = ScalingUtilities.createScaledBitmap(wallpaper, reqWidth, reqHeight, sl);
-			vg.setBackground(new BitmapDrawable(r,wallpaperPortrait));
+		case Configuration.ORIENTATION_PORTRAIT:				// portrait
+			Bitmap wallpaperPortrait = ScalingUtilities.createScaledBitmap(wallpaper, reqHeight, reqWidth, sl);
+
+			if(Utils.hasJellyBean())
+				vg.setBackground(new BitmapDrawable(r, wallpaperPortrait));
+			else{
+				 if(vg instanceof LinearLayout){
+					 LinearLayout ll = (LinearLayout) vg;
+					 ll.setBackgroundDrawable(new BitmapDrawable(r,wallpaperPortrait));
+				 }else if(vg instanceof DrawerLayout){
+					 DrawerLayout dl = (DrawerLayout) vg;
+					 dl.setBackgroundDrawable(new BitmapDrawable(r, wallpaperPortrait));
+				 }
+			}
 			break;
 		default:
 			//ll.setBackgroundDrawable(App_2.wallpaperDrawable);

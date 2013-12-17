@@ -86,7 +86,7 @@ public class ParentMultiselectFragment extends ListFragment implements LoaderCal
 			public boolean setViewValue(View view, Cursor cursor,int columnIndex) {
 				if (view.getId() == R.id.mc_icon) {
 					String path = Storage.getPathToScaledBitmap(cursor.getString(cursor.getColumnIndex(ImageContract.Columns.FILENAME)),100);
-					ImageLoader.loadBitmap(path, (ImageView) view, false);
+					ImageLoader.loadBitmap(path, (ImageView) view);
 					return true;
 				}
 				return false;

@@ -93,7 +93,7 @@ public class ImageLoader {
 	}
 	
 	@SuppressLint("NewApi")
-	public static void loadBitmap(String path, ImageView imageView, boolean darkPlaceholder){
+	public static void loadBitmap(String path, ImageView imageView){
 		if(path == null){
 			return;
 		}

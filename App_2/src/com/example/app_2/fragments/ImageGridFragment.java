@@ -163,7 +163,7 @@ public class ImageGridFragment extends Fragment implements LoaderCallbacks<Curso
 			        String path  = Storage.getPathToScaledBitmap(filename, mItemHeight);  
 			        String category = cursor.getString(3);
 					boolean isCategory = (category != null  && !category.isEmpty() ) ? true : false; 
-					ImageLoader.loadBitmap(path, iv, true);
+					ImageLoader.loadBitmap(path, iv);
 					if(isCategory)
 						view.setBackgroundColor(Color.argb(120, 0, 255, 0));
 					else
@@ -318,7 +318,7 @@ public class ImageGridFragment extends Fragment implements LoaderCallbacks<Curso
         mGridView.setAdapter(adapter);
 	    mGridView.setOnItemClickListener(mOnItemClickListener);
 	  
-	    if(mEditMode){
+	    if(executingActivity.mEditMode){
 	    	mGridView.setMultiChoiceModeListener(mMultiChoiceModeListener);
 	    	mGridView.setChoiceMode(GridView.CHOICE_MODE_MULTIPLE_MODAL);	
 	    }

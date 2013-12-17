@@ -29,13 +29,14 @@ import android.app.ActionBar;
 import android.app.ActionBar.OnNavigationListener;
 import android.app.Dialog;
 import android.app.ProgressDialog;
-import android.app.SearchManager;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.os.Build;
@@ -58,10 +59,8 @@ import android.view.ViewTreeObserver;
 import android.widget.AdapterView;
 import android.widget.ImageView;
 import android.widget.ListView;
-import android.widget.SearchView;
 import android.widget.Toast;
 
-import com.example.app_2.App_2;
 import com.example.app_2.R;
 import com.example.app_2.actionbar.adapter.TitleNavigationAdapter;
 import com.example.app_2.actionbar.model.SpinnerNavItem;
@@ -74,6 +73,7 @@ import com.example.app_2.storage.Database;
 import com.example.app_2.storage.Storage;
 import com.example.app_2.utils.ImageLoader;
 import com.example.app_2.utils.Utils;
+import com.sonyericsson.util.ScalingUtilities;
 import com.sonyericsson.util.ScalingUtilities.ScalingLogic;
 
 /**
@@ -93,6 +93,8 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
     private List<String> mCategoryTitles = new LinkedList<String>();
     private DrawerLayout mDrawerLayout;
     private int layout_width = 0 , layout_height = 0;
+    
+    public static boolean mEditMode =false;
     
     private ActionBar mActionBar;
     private ActionBarDrawerToggle mDrawerToggle;
@@ -126,12 +128,33 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 		logged_user_root = sharedPref.getLong("logged_user_root", Database.getMainRootFk());
 		logged_user_id = sharedPref.getLong("logged_user_id", 0);
         
+		if(logged_user_root == Database.getMainRootFk()) //jeœli ktoœ zalogowany tryb edycji wy³¹czony
+			mEditMode = true;
+		else
+			mEditMode = false;
+		
         mActionBar = getActionBar();
-		//mActionBar.setDisplayShowTitleEnabled(false);
-		mActionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_LIST);
-		mActionBar.setBackgroundDrawable(new ColorDrawable(0xff4d055e)); //#05bff4 9a0bbc 4d055e
-		mActionBar.setDisplayShowTitleEnabled(false);
-		mActionBar.setDisplayShowTitleEnabled(true);
+        mActionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_LIST);
+        if(mEditMode){
+    		mActionBar.setBackgroundDrawable(new ColorDrawable(0xff000000)); 
+    		mActionBar.setDisplayShowTitleEnabled(false);
+    		mActionBar.setDisplayShowTitleEnabled(true);
+        }else{
+    		mActionBar.setBackgroundDrawable(new ColorDrawable(0xff4d055e)); 
+    		mActionBar.setDisplayShowTitleEnabled(false);
+    		mActionBar.setDisplayShowTitleEnabled(true);
+    		Uri uri = Uri.parse(UserContract.CONTENT_URI+"/"+logged_user_id);
+    		Cursor c = getContentResolver().query(uri, new String[]{UserContract.Columns.IMG_FILENAME}, null ,null, null);
+    		c.moveToFirst();
+    		if(!c.isAfterLast()){
+    			String path = Storage.getPathToScaledBitmap(c.getString(0), 50);
+    			Bitmap user_icon = ScalingUtilities.decodeFile(path, 50, 50, ScalingLogic.FIT);
+    			mActionBar.setIcon(new BitmapDrawable(getResources(),user_icon));
+    		}
+    		c.close();
+        }
+        	
+     
 		navSpinner = new ArrayList<SpinnerNavItem>();
 		navSpinner.add(new SpinnerNavItem("Alfabetycznie", R.drawable.ic_launcher));
 		navSpinner.add(new SpinnerNavItem("Ostatnio zmodyfikowane", R.drawable.ic_launcher));
@@ -252,8 +275,6 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
             case R.id.action_logout:
             	igf.mEditMode = true;
 				SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this.getApplicationContext());
-				
-            	
     			SharedPreferences sharedPref = getApplicationContext().getSharedPreferences("USER",Context.MODE_PRIVATE);
     			SharedPreferences.Editor editor = sharedPref.edit();
     			
@@ -262,14 +283,23 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
     			ContentValues cv = new ContentValues();
     			cv.put(UserContract.Columns.FONT_SIZE, Integer.parseInt(sp.getString("pref_img_desc_font_size", "15")));
     			cv.put(UserContract.Columns.IMG_SIZE, Integer.parseInt(sp.getString("pref_img_size", "100")));
-    			getContentResolver().update(uri, cv, null,null);
-    			
-    			
+    			getContentResolver().update(uri, cv, null,null);    			
     			editor.putLong("logged_user_root", Database.getMainRootFk());
     			editor.putLong("logged_user_id", 0 );
     			editor.commit();
+    			
     			fragmentsHistory.clear();
+    			Intent i = getIntent();
+    			finish();
+    			startActivity(i);
+    			
             	replaceGridFragment(Database.getMainRootFk(), false, false);
+            	
+            	return true;
+            	
+            case R.id.action_login_user:
+            	Intent login_intent = new Intent(this, UserLoginActivity.class);
+            	startActivity(login_intent);
             	return true;
             	
             default:
@@ -281,9 +311,11 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu items for use in the action bar
         MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.grid_activity_actions, menu);
-        
-        
+    	if(mEditMode)
+	        inflater.inflate(R.menu.grid_activity_actions, menu);    		
+    	else
+    		inflater.inflate(R.menu.grid_activity_login_user, menu);
+    	
         // Associate searchable configuration with the SearchView
        // SearchManager searchManager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
        // SearchView searchView = (SearchView) menu.findItem(R.id.action_search).getActionView();
@@ -460,7 +492,7 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 			   public boolean setViewValue(View view, Cursor cursor, int columnIndex){
 			       if(view.getId() == R.id.drawer_category_icon/*category_image*/){
 						 String path = Storage.getPathToScaledBitmap(cursor.getString(1),50);
-						 ImageLoader.loadBitmap(path, (ImageView) view, true);
+						 ImageLoader.loadBitmap(path, (ImageView) view);
 			           return true; //true because the data was bound to the view
 			       }
 			       return false;

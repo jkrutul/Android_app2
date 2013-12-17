@@ -107,7 +107,7 @@ public class ImageListFragment extends ListFragment implements LoaderCallbacks<C
 					String category = cursor.getString(cursor.getColumnIndex(ImageContract.Columns.CATEGORY));
 					boolean isCategory = (category != null  && !category.isEmpty() ) ? true : false; 
 					String path = Storage.getPathToScaledBitmap(cursor.getString(cursor.getColumnIndex(ImageContract.Columns.FILENAME)), 100);
-					ImageLoader.loadBitmap(path, (ImageView) view, false);
+					ImageLoader.loadBitmap(path, (ImageView) view);
 					if(isCategory){
 						view.setBackgroundColor(Color.argb(120, 0, 255, 0));
 					}

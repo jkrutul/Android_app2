@@ -54,7 +54,7 @@ public class ExpressionAdapter extends BaseAdapter{
 			convertView = retval;
 	
 		String path = Storage.getPathToScaledBitmap(dataObjects.get(position).getImageName(), 100);
-		ImageLoader.loadBitmap(path, iv, true);
+		ImageLoader.loadBitmap(path, iv);
         return convertView;
 
 	}
