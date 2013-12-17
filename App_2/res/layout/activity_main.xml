@@ -12,49 +12,34 @@
 
         <Button
             android:id="@+id/grid_activity"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:onClick="onClick"
-            android:text="goto Image Grid Activity" />
-
-
-        <Button
-            android:id="@+id/client_activity"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:onClick="onClick"
-            android:text="send message to computer" />
-
-        <Button
-            android:id="@+id/swipe_activity"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:onClick="onClick"
-            android:text="swipe activity" />
-
+            android:text="Komunikator" />
+        
         <Button
             android:id="@+id/edit_activity"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:onClick="onClick"
-            android:text="edit_activity" />
+            android:text="Edytor" />
         
         <Button
             android:id="@+id/users_activity"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:onClick="onClick"
-            android:text="users_activity" />
+            android:text="Użytkownicy" />
         <Button
             android:id="@+id/settings_activity"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:onClick="onClick"
-            android:text="ustawienia" />
+            android:text="Ustawienia" />
         
         <Button
             android:id="@+id/user_login_activity"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:onClick="onClick"
             android:text="Logowanie" />

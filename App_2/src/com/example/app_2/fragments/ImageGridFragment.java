@@ -301,6 +301,7 @@ public class ImageGridFragment extends Fragment implements LoaderCallbacks<Curso
 			args.putLong("CATEGORY_ID", ImageGridActivity.actual_category_fk);
 			getLoaderManager().restartLoader(1, args, this);		
 			restartLoader = false;
+			executingActivity.setDrawer();
 		}
 
 	}
@@ -310,7 +311,8 @@ public class ImageGridFragment extends Fragment implements LoaderCallbacks<Curso
     	super.onCreateView(inflater, container, savedInstanceState);
     	final View v = inflater.inflate(R.layout.fragment_image_grid, container,false);
     	mGridView  = (GridView) v.findViewById(R.id.gridView);
-    	executingActivity.findViewById(R.id.main_grid).setBackgroundDrawable(App_2.wallpaperDrawable);
+    	//mGridView.setBackgroundColor(Color.alpha(0));
+    	//executingActivity.findViewById(R.id.main_grid).setBackgroundDrawable(App_2.wallpaperDrawable);
 
     	expandedImageView = (ImageView) executingActivity.findViewById(R.id.expanded_image);
         mGridView.setAdapter(adapter);
@@ -397,6 +399,7 @@ public class ImageGridFragment extends Fragment implements LoaderCallbacks<Curso
 		Bundle args = new Bundle();		
 		args.putLong("CATEGORY_ID", ImageGridActivity.actual_category_fk);
 		getLoaderManager().restartLoader(1, args, this);
+		refreshDrawer();
 	}
 	
 	public void removeSelectedBindings(){
@@ -460,7 +463,11 @@ public class ImageGridFragment extends Fragment implements LoaderCallbacks<Curso
 		Bundle args = new Bundle();		
 		args.putLong("CATEGORY_ID", category_fk);
 		getLoaderManager().restartLoader(1, args, this);
+		refreshDrawer();
 		
-		
+	}
+	
+	private void refreshDrawer(){
+		executingActivity.setDrawer();
 	}
 }

@@ -16,7 +16,6 @@
 
 package com.example.app_2.activities;
 
-import java.net.ContentHandler;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -37,14 +36,12 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.database.Cursor;
-import android.database.MatrixCursor;
-import android.database.MergeCursor;
+import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
-import android.provider.ContactsContract.Contacts.Data;
 import android.speech.tts.TextToSpeech;
 import android.support.v4.app.ActionBarDrawerToggle;
 import android.support.v4.app.FragmentActivity;
@@ -57,12 +54,14 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewTreeObserver;
 import android.widget.AdapterView;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.SearchView;
 import android.widget.Toast;
 
+import com.example.app_2.App_2;
 import com.example.app_2.R;
 import com.example.app_2.actionbar.adapter.TitleNavigationAdapter;
 import com.example.app_2.actionbar.model.SpinnerNavItem;
@@ -74,6 +73,8 @@ import com.example.app_2.models.ImageObject;
 import com.example.app_2.storage.Database;
 import com.example.app_2.storage.Storage;
 import com.example.app_2.utils.ImageLoader;
+import com.example.app_2.utils.Utils;
+import com.sonyericsson.util.ScalingUtilities.ScalingLogic;
 
 /**
  * Simple FragmentActivity to hold the main {@link ImageGridFragment} and not much else.
@@ -91,8 +92,9 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
     public static List<Long> fragmentsHistory = new LinkedList<Long>();
     private List<String> mCategoryTitles = new LinkedList<String>();
     private DrawerLayout mDrawerLayout;
+    private int layout_width = 0 , layout_height = 0;
     
-    private ActionBar actionBar;
+    private ActionBar mActionBar;
     private ActionBarDrawerToggle mDrawerToggle;
     private ArrayList<SpinnerNavItem> navSpinner;
     private TitleNavigationAdapter title_nav_adapter;
@@ -119,21 +121,24 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 	@Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-		SharedPreferences sharedPref = getApplicationContext().getSharedPreferences("USER",Context.MODE_PRIVATE);
+      
+		SharedPreferences sharedPref = getApplicationContext().getSharedPreferences("USER",Context.MODE_PRIVATE);			// pobranie informacji o zalogowanym u¿ytkowniku
 		logged_user_root = sharedPref.getLong("logged_user_root", Database.getMainRootFk());
 		logged_user_id = sharedPref.getLong("logged_user_id", 0);
         
-        actionBar = getActionBar();
-		//actionBar.setDisplayShowTitleEnabled(false);
-		actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_LIST);
+        mActionBar = getActionBar();
+		//mActionBar.setDisplayShowTitleEnabled(false);
+		mActionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_LIST);
+		mActionBar.setBackgroundDrawable(new ColorDrawable(0xff4d055e)); //#05bff4 9a0bbc 4d055e
+		mActionBar.setDisplayShowTitleEnabled(false);
+		mActionBar.setDisplayShowTitleEnabled(true);
 		navSpinner = new ArrayList<SpinnerNavItem>();
 		navSpinner.add(new SpinnerNavItem("Alfabetycznie", R.drawable.ic_launcher));
 		navSpinner.add(new SpinnerNavItem("Ostatnio zmodyfikowane", R.drawable.ic_launcher));
 		navSpinner.add(new SpinnerNavItem("Najczêœciej u¿ywane", R.drawable.ic_launcher));
 		
 		title_nav_adapter = new TitleNavigationAdapter(getApplicationContext(), navSpinner);
-		actionBar.setListNavigationCallbacks(title_nav_adapter, this);
+		mActionBar.setListNavigationCallbacks(title_nav_adapter, this);
 		
 		igf = new ImageGridFragment();
 		
@@ -175,6 +180,7 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
         
 
     }
+    
     public void onButtonClick(View v){
     	switch (v.getId()) {
 		case R.id.clear_ex_button:
@@ -242,11 +248,6 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
     			overridePendingTransition(R.anim.right_slide_in, R.anim.right_slide_out);
     			finish();
                 return true;
-                
-                
-            case R.id.action_search:
-            	
-            	return true;
             	
             case R.id.action_logout:
             	igf.mEditMode = true;
@@ -284,9 +285,9 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
         
         
         // Associate searchable configuration with the SearchView
-        SearchManager searchManager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
-        SearchView searchView = (SearchView) menu.findItem(R.id.action_search).getActionView();
-        searchView.setSearchableInfo(searchManager.getSearchableInfo(getComponentName()));
+       // SearchManager searchManager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
+       // SearchView searchView = (SearchView) menu.findItem(R.id.action_search).getActionView();
+       // searchView.setSearchableInfo(searchManager.getSearchableInfo(getComponentName()));
  
         return super.onCreateOptionsMenu(menu);
     }
@@ -301,6 +302,16 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
     	}
     }
 
+    
+	private ViewTreeObserver.OnGlobalLayoutListener vto = new ViewTreeObserver.OnGlobalLayoutListener() {
+		@Override
+		public void onGlobalLayout() {
+			layout_width = mDrawerLayout.getWidth();
+			layout_height = mDrawerLayout.getHeight();
+		}
+	};
+	
+	
     private class DrawerItemClickListener implements ListView.OnItemClickListener{
 
 		@Override
@@ -379,12 +390,15 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 
 	@SuppressLint("NewApi")
 	@TargetApi(Build.VERSION_CODES.HONEYCOMB)
-	private void setDrawer(){
+	public void setDrawer(){
 		String[] projection = {"i."+ImageContract.Columns._ID, "i."+ImageContract.Columns.FILENAME, "i."+ImageContract.Columns.CATEGORY};
 		String selection;
 		String[] selectionArgs = {""};
 		mDrawerTitle = "Wybierz kategoriê";
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
+       mDrawerLayout.getViewTreeObserver().addOnGlobalLayoutListener(vto);
+        Utils.setWallpaper(mDrawerLayout, layout_height, layout_width, null, ScalingLogic.CROP);
+
         mDrawerToggle = new ActionBarDrawerToggle(
 	                this,                  /* host Activity */
 	                mDrawerLayout,         /* DrawerLayout object */
@@ -435,9 +449,9 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
         }
        
 		String[] from = new String[] {
-				   "i."+ImageContract.Columns._ID, 
-				   "i."+ImageContract.Columns.FILENAME,
-				   "i."+ImageContract.Columns.CATEGORY};
+				   ImageContract.Columns._ID, 
+				   ImageContract.Columns.FILENAME,
+				   ImageContract.Columns.CATEGORY};
 		int[] to = new int[] { 0, R.id.drawer_category_icon, R.id.category };
 		
         SimpleCursorAdapter adapter = new SimpleCursorAdapter(getApplicationContext(), R.layout.drawer_row, c, from,to, 0);

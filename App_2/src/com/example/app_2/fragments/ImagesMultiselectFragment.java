@@ -67,12 +67,18 @@ public class ImagesMultiselectFragment extends ListFragment implements LoaderCal
 	private ArrayList<Long> selectedItemsOnCreate;
 	private Long cat_id;
 	private Long logged_user_id, logged_user_root ;
+	private Long executing_category_id;
 	
-	String[] projection = new String[] { "i."+ImageContract.Columns._ID,
+	private String[] projection = new String[] { "i."+ImageContract.Columns._ID,
 			 "i."+ImageContract.Columns.FILENAME,
 			 "i."+ImageContract.Columns.DESC,
 			 "i."+ImageContract.Columns.CATEGORY,
-			 "u."+UserContract.Columns.USERNAME};	
+			 "u."+UserContract.Columns.USERNAME};
+	
+	private String selection;
+	private String[] selectionArgs;
+			
+			
 	private TextWatcher filterTextWatcher= new TextWatcher(){
 		public void afterTextChanged(Editable s){}
 		public void beforeTextChanged(CharSequence s, int start, int count, int after){	}
@@ -82,14 +88,21 @@ public class ImagesMultiselectFragment extends ListFragment implements LoaderCal
 	private FilterQueryProvider fqp = new FilterQueryProvider() {
 		@Override
 		public Cursor runQuery(CharSequence constraint){
-			String selection = "i."+ImageContract.Columns.FILENAME+" LIKE ? OR i."+ImageContract.Columns.DESC+" LIKE ? ";
 			Log.d( LOG_TAG," runQuery constraint:"+constraint);
-			String partialItemName = null;
-			if(constraint != null){
-				partialItemName = constraint.toString()+"%";
-			}
 			Uri uri = Uri.parse(ImagesOfParentContract.CONTENT_URI+"/"+cat_id);
-			return getActivity().getContentResolver().query(uri, projection, selection, new String[]{partialItemName, partialItemName}, null);
+			if(constraint != null && constraint.length()>0){
+				String partialItemName = constraint.toString()+"%";
+				String s = "(" + selection + " ) AND (i."+ImageContract.Columns.FILENAME+" LIKE ? OR i."+ImageContract.Columns.DESC+" LIKE ? )";// AND i."+ImageContract.Columns._ID+" <> "+executing_category_id;
+				String [] sArgs = new String[5];
+			    sArgs[0] = selectionArgs[0];
+			    sArgs[1] = selectionArgs[1];
+			    sArgs[2] = selectionArgs[2];
+			    sArgs[3] = partialItemName;
+			    sArgs[4] = partialItemName;			
+				return getActivity().getContentResolver().query(uri, projection, s, sArgs, null);
+			}else{
+				return getActivity().getContentResolver().query(uri, projection, selection, selectionArgs, null);
+			}
 		}
 	};
 	
@@ -109,6 +122,30 @@ public class ImagesMultiselectFragment extends ListFragment implements LoaderCal
 		SharedPreferences sharedPref = getActivity().getSharedPreferences("USER",Context.MODE_PRIVATE);
 		logged_user_root = sharedPref.getLong("logged_user_root", Database.getMainRootFk());
 		logged_user_id = sharedPref.getLong("logged_user_id", 0);
+	    Bundle args = getArguments();
+		executing_category_id = (	args!=null) ? 	args.getLong("category_id") : null;
+		
+		
+		selection = "p."+ParentContract.Columns.PARENT_FK+" =? ";
+		Long user_id = null;	
+		selectionArgs= new String[1];
+		selectionArgs[0] =  Long.toString(Database.getMainDictFk());
+		
+		if(bundle != null){
+			user_id = bundle.getLong("USER_ID");
+		}else
+			user_id = logged_user_id;
+		
+		if(user_id != null && user_id != 0){
+			selection += " AND i." + ImageContract.Columns.AUTHOR_FK + "= ?";
+			selectionArgs = new String[]{selectionArgs[0],user_id.toString()};
+			
+			if(executing_category_id != null){
+				selection += " AND i." + ImageContract.Columns._ID + "<> ?";
+				selectionArgs = new String[]{selectionArgs[0], selectionArgs[1],Long.toString(executing_category_id)};
+			}
+		}
+		
 		
 		Intent intent =  getActivity().getIntent();
 		if(getArguments()!=null)
@@ -278,19 +315,26 @@ public class ImagesMultiselectFragment extends ListFragment implements LoaderCal
 	@SuppressLint("NewApi")
 	@Override
 	public Loader<Cursor> onCreateLoader(int arg0, Bundle bundle) {
+		/*
 		String selection = "p."+ParentContract.Columns.PARENT_FK+" =? ";
 		Long user_id = null;	
 		String[] selectionArgs= { Long.toString(Database.getMainDictFk())};
-		if(bundle != null)
-			user_id = bundle.getLong("USER_ID", -1);
-
-		if(user_id != null && user_id !=-1){
+		if(bundle != null){
+			user_id = bundle.getLong("USER_ID");
+			//executing_category_id = bundle.getLong("category_id");
+		}
+		if(user_id != null && user_id != -1){
 			selection += " AND i." + ImageContract.Columns.AUTHOR_FK + "= ?";
 			selectionArgs = new String[]{selectionArgs[0],user_id.toString()};
+			
+			if(executing_category_id != null){
+				selection += " AND i." + ImageContract.Columns._ID + "<> ?";
+				selectionArgs = new String[]{selectionArgs[0], selectionArgs[1],Long.toString(executing_category_id)};
+			}
 		}
 		
+		*/
 		CursorLoader cursorLoader = new CursorLoader(getActivity(),	ImagesOfParentContract.CONTENT_URI, projection, selection, selectionArgs, null);
-		
 		return cursorLoader;
 	}
 

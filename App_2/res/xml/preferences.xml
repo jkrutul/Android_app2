@@ -10,7 +10,7 @@
             android:summary="100"
             android:title="wielkość miniatur" />
         <EditTextPreference
-            android:defaultValue="@dimen/desc_font_size"
+            android:defaultValue="15"
             android:key="pref_img_desc_font_size"
             android:summary="@dimen/desc_font_size"
             android:title="rozmiar czcionki" />

@@ -46,6 +46,9 @@ public class BindImagesToCategoryActivity extends FragmentActivity{
 		setContentView(R.layout.activity_bind_images_to_category);
 		
         imf = new ImagesMultiselectFragment();
+        Bundle args = new Bundle();
+        args.putLong("category_id", executing_category_id);
+        imf.setArguments(args);
         
     	final FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
    	 	ft.replace(R.id.list_fragment_container, imf);

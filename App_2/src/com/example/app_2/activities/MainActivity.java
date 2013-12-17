@@ -9,6 +9,7 @@ import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.drawable.BitmapDrawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
@@ -24,6 +25,8 @@ import com.example.app_2.R;
 import com.example.app_2.provider.Images;
 import com.example.app_2.storage.Database;
 import com.example.app_2.storage.Storage;
+import com.example.app_2.utils.Utils;
+import com.sonyericsson.util.ScalingUtilities.ScalingLogic;
 
 public class MainActivity extends Activity {
 	private final static String LOG_TAG = "MainActivity";
@@ -39,8 +42,7 @@ public class MainActivity extends Activity {
 		
 		
 		LinearLayout ll = (LinearLayout) findViewById(R.id.main_activity);
-		ll.setBackgroundDrawable(App_2.wallpaperDrawable);
-
+		Utils.setWallpaper(ll, App_2.maxHeight, App_2.getMaxWidth(), null, ScalingLogic.CROP);
 
 		ActionBar actionBar = getActionBar();
 		actionBar.setSubtitle("G³owne menu");
@@ -103,16 +105,6 @@ public class MainActivity extends Activity {
 			overridePendingTransition(R.anim.right_slide_in,
 					R.anim.right_slide_out);
 			break;
-
-		case R.id.client_activity:
-			intent = new Intent(this, SimpleClientActivity.class);
-			startActivity(intent);
-			break;
-
-		case R.id.swipe_activity:
-			intent = new Intent(this, SwipeActivity.class);
-			startActivity(intent);
-			break;
 			
 		case R.id.edit_activity:
 			intent = new Intent(this, ImageEditActivity.class);
@@ -140,4 +132,5 @@ public class MainActivity extends Activity {
 
 	}
 
+	
 }

@@ -352,88 +352,21 @@ public class Images {
 				}
 			}
 
-
-			//imgLastModified = Storage.getImagesDir().lastModified();
 			List<File> img_files = getListOfImageFiles(path_to_dir);
-			//List<String> fileNames = getImagesFileNames(Storage.getFilesNamesFromDir(new File(path_to_dir)));
 
-			// GENERUJ MINIATURKI
-			//String path_toIMG, path_toTHUMB, path_toFullScreenTHUMB, app_thumb_dir, app_fc_thumb_dir;
-			//Bitmap bitmap = null;
-
-			//int thumbWidth, thumbHeight, maxWidth, maxHeight;
-			//thumbWidth = App_2.getAppContext().getResources().getDimensionPixelSize(R.dimen.image_thumbnail_size);
-			//thumbHeight = App_2.getAppContext().getResources().getDimensionPixelSize(R.dimen.image_thumbnail_size);
-
-			//maxWidth = App_2.getMaxWidth();
-			//maxHeight = App_2.getMaxHeight();
-
-			//Log.i(LOG_TAG, "thumbs will be w:" + thumbWidth + " h:"	+ thumbHeight);
-			//Log.i(LOG_TAG, "max thumbs will be w:" + maxWidth + " h:"	+ maxHeight);
-			//count = fileNames.size();
 			count = img_files.size();
 			int i = 0;
-
-			//app_thumb_dir = Storage.getThumbsDir() + File.separator;
-			//app_fc_thumb_dir = Storage.getThumbsMaxDir() + File.separator;
-			/*
-			int min_scale = 8; // oczekiwana maxymalna iloœæ obrazków na ekranie 
-			
-			int citems = 0;
-			while(min_scale>=1){
-				min_scale/=2;
-				citems++;
-			}
-			--citems;
-			int[] scaleTab = new int[citems]; //1, [2], 4, 8, 
-
-			for(int k = 1, j=0; j<scaleTab.length; k*=2){
-				if(k!=2)
-					scaleTab[j++]=k;
-			}
-			*/
 			LinkedList<String> uniqueFilenames = new LinkedList<String>();
 			for (File image_file : img_files) {
 				publishProgress((int) ((i / (float) count) * 100));
 				
 				uniqueFilenames.add(Storage.scaleAndSaveBitmapFromPath(image_file.getAbsolutePath(), new int[]{1,4,8}, Bitmap.CompressFormat.PNG,100,db, filenameVerification));
-
-				/*
-				path_toIMG = path_to_dir + File.separator + filename;
-				path_toTHUMB = app_thumb_dir+ filename;
-				path_toFullScreenTHUMB = app_fc_thumb_dir + filename;
-
-				bitmap = BitmapCalc.decodeSampleBitmapFromFile(path_toIMG, maxWidth, maxHeight); // mo¿e byæ null
-
-				try {
-					FileOutputStream out = new FileOutputStream(path_toFullScreenTHUMB);
-					bitmap.compress(Bitmap.CompressFormat.PNG, 100, out);
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-
-				bitmap = BitmapCalc.decodeSampleBitmapFromFile(path_toFullScreenTHUMB, thumbWidth, thumbHeight);
-				// bitmap = Bitmap.createScaledBitmap(bitmap, thumbWidth,
-				// thumbHeight, true);
-				try {
-					FileOutputStream out = new FileOutputStream(path_toTHUMB);
-					bitmap.compress(Bitmap.CompressFormat.PNG, 100, out);
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-				*/
 				i++;
 				if (isCancelled())
 					break;
 
 			}
-
-			//img_dir_last_read = Storage.getImagesDir().lastModified();
-			//Storage.saveToSharedPreferences("imgDirLastRead", Long.toString(img_dir_last_read), "imgDirLastRead",App_2.getAppContext(), Context.MODE_PRIVATE);
-			//addImagesToDatabase(path_to_dir, parent_id);
 			addNewEntriesToImageTable(uniqueFilenames, parents_fk);
-
-			// cursor.close();
 			return null;
 		}
 

@@ -74,11 +74,11 @@ public class ParentMultiselectFragment extends ListFragment implements LoaderCal
 		String[] from = new String[] { ImageContract.Columns._ID,ImageContract.Columns.FILENAME, ImageContract.Columns.CATEGORY};
 		int[] to = new int[] { 0, R.id.mc_icon, R.id.mc_text}; 		
 		String[] projection3 = { 
-				ImageContract.Columns._ID,
-				ImageContract.Columns.FILENAME,
-				ImageContract.Columns.CATEGORY
+				"i."+ImageContract.Columns._ID,
+				"i."+ImageContract.Columns.FILENAME,
+				"i."+ImageContract.Columns.CATEGORY
 				};
-        String selection2 = ImageContract.Columns.CATEGORY + " IS NOT NULL AND ("+ImageContract.Columns.CATEGORY +" <> ?)";
+        String selection2 = "i."+ImageContract.Columns.CATEGORY + " IS NOT NULL AND (i."+ImageContract.Columns.CATEGORY +" <> ?)";
         String[] selectionArgs2 ={""};
 		Cursor cursor2 = getActivity().getContentResolver().query(ImageContract.CONTENT_URI, projection3, selection2, selectionArgs2, null);
 		adapter = new SimpleCursorAdapter( getActivity().getApplicationContext(),  R.layout.multiple_choice_item, cursor2, from, to, 0);
@@ -139,11 +139,11 @@ public class ParentMultiselectFragment extends ListFragment implements LoaderCal
 	@Override
 	public Loader<Cursor> onCreateLoader(int arg0, Bundle bundle) {
 		String[] projection = { 
-				ImageContract.Columns._ID,
-				ImageContract.Columns.FILENAME,
-				ImageContract.Columns.CATEGORY
+				"i."+ImageContract.Columns._ID,
+				"i."+ImageContract.Columns.FILENAME,
+				"i."+ImageContract.Columns.CATEGORY
 				};
-        String selection = ImageContract.Columns.CATEGORY + " IS NOT NULL AND ("+ImageContract.Columns.CATEGORY +" <> ?)";
+        String selection = "i."+ImageContract.Columns.CATEGORY + " IS NOT NULL AND (i."+ImageContract.Columns.CATEGORY +" <> ?)";
         String[] selectionArgs ={""};
 		CursorLoader cursorLoader = new CursorLoader(getActivity(),	ImageContract.CONTENT_URI, projection, selection, selectionArgs, null);
 		return cursorLoader;

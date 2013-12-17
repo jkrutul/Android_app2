@@ -17,8 +17,6 @@
 package com.example.app_2.utils;
 
 import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.security.MessageDigest;
@@ -27,21 +25,26 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
+import android.app.WallpaperManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
+import android.content.res.Resources;
 import android.database.Cursor;
 import android.graphics.Bitmap;
-import android.graphics.Bitmap.CompressFormat;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.StrictMode;
 
 import com.example.app_2.App_2;
 import com.example.app_2.activities.ImageGridActivity;
-import com.example.app_2.storage.Storage;
+import com.sonyericsson.util.ScalingUtilities;
+import com.sonyericsson.util.ScalingUtilities.ScalingLogic;
 
 /**
  * Class containing some static utility methods.
@@ -104,8 +107,12 @@ public class Utils {
     }
     
     public static String cutExtention(String filename){
-    	String[] fn = filename.split("\\.");
-    	return fn[0].replace("_", "");
+    	if(filename != null){
+	    	String[] fn = filename.split("\\.");
+	    	return fn[0].replace("_", "");
+	    	}
+    	else
+    		return null;
     }
     
     public static String cutOnlyExtention(String filename){
@@ -212,6 +219,36 @@ public class Utils {
 	    return null;
 	} 
 
-
+	@TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
+	@SuppressLint("NewApi")
+	public static void setWallpaper(android.view.ViewGroup vg, int reqHeight, int reqWidth, Bitmap wallpaper, ScalingLogic sl){
+		if(wallpaper == null){
+			WallpaperManager wallpaperManager = WallpaperManager.getInstance(App_2.getAppContext());
+			Drawable wallpaperDrawable = wallpaperManager.getDrawable();
+			wallpaper = BitmapCalc.drawableToBitmap(wallpaperDrawable);
+		}
+		
+		if(reqHeight == 0  || reqWidth == 0 ){
+			reqHeight = App_2.getMaxHeight();
+			reqWidth = App_2.getMaxWidth();
+		}
+		
+		Resources  r = App_2.getAppContext().getResources();
+		int orientation = r.getConfiguration().orientation;
+		switch (orientation) {
+		case 1:				// landscape
+			Bitmap wallpaperLandscape = ScalingUtilities.createScaledBitmap(wallpaper, reqHeight, reqWidth, sl);
+			vg.setBackground(new BitmapDrawable(r,wallpaperLandscape));
+			break;
+		case 2:				// portrait
+			Bitmap wallpaperPortrait = ScalingUtilities.createScaledBitmap(wallpaper, reqWidth, reqHeight, sl);
+			vg.setBackground(new BitmapDrawable(r,wallpaperPortrait));
+			break;
+		default:
+			//ll.setBackgroundDrawable(App_2.wallpaperDrawable);
+			break;
+		}
+	}
+	
 
 }

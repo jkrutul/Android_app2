@@ -26,8 +26,8 @@ public class ImageIntents {
 		Storage.saveToPreferences(mCurrentPhotoPath,"photoPath", a, Activity.MODE_PRIVATE);
 		intent.setType("image/*");
 		intent.putExtra("crop", "true");
-		intent.putExtra("outputX", 150);
-		intent.putExtra("outputY", 150);
+		intent.putExtra("outputX", 300);
+		intent.putExtra("outputY", 300);
 		intent.putExtra("aspectX",1);
 		intent.putExtra("aspectY", 1);
 		intent.putExtra("scale", true);
@@ -49,8 +49,8 @@ public class ImageIntents {
 			String mCurrentPhotoPath = f.getAbsolutePath();
 			Storage.saveToPreferences(mCurrentPhotoPath,"photoPath", a, Activity.MODE_PRIVATE);
 			camera.putExtra("crop", "true");
-			camera.putExtra("outputX", 150);
-			camera.putExtra("outputY", 150);
+			camera.putExtra("outputX", 300);
+			camera.putExtra("outputY", 300);
 			camera.putExtra("aspectX",1);
 			camera.putExtra("aspectY", 1);
 			camera.putExtra("scale", true);
@@ -72,8 +72,8 @@ public class ImageIntents {
 		Storage.saveToPreferences(mCurrentPhotoPath,"photoPath", a, Activity.MODE_PRIVATE);
 		intent.setType("image/*");
 		intent.putExtra("crop", "true");
-		intent.putExtra("outputX", 150);
-		intent.putExtra("outputY", 150);
+		intent.putExtra("outputX", 300);
+		intent.putExtra("outputY", 300);
 		intent.putExtra("aspectX",1);
 		intent.putExtra("aspectY", 1);
 		intent.putExtra("scale", true);
@@ -95,8 +95,8 @@ public class ImageIntents {
 			String mCurrentPhotoPath = tmp_f.getAbsolutePath();
 			Storage.saveToPreferences(mCurrentPhotoPath,"photoPath", a, Activity.MODE_PRIVATE);
 			camera.putExtra("crop", "true");
-			camera.putExtra("outputX", 150);
-			camera.putExtra("outputY", 150);
+			camera.putExtra("outputX", 300);
+			camera.putExtra("outputY", 300);
 			camera.putExtra("aspectX",1);
 			camera.putExtra("aspectY", 1);
 			camera.putExtra("scale", true);
