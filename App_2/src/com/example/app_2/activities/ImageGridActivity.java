@@ -257,10 +257,12 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 
         // Handle presses on the action bar items
         switch (item.getItemId()) {
-	        case R.id.action_add_image:
+	        case R.id.action_add_image:// TODO dodawanie nowych obrazków 
 	        	Intent bind_intent = new Intent(this, BindImagesToCategoryActivity.class);
-	        	
-	        	//bind_intent.putExtra("executing_category_id", fragmentsHistory.get(fragmentsHistory.size() - 1));
+	        	if(actual_category_fk== Database.getMainRootFk()){
+	        		Toast.makeText(getApplicationContext(), "Tutaj nie mo¿na dodawaæ obrazków, wybierz najpierw u¿ytkownika", Toast.LENGTH_LONG).show();
+	        		return true;
+	        	}
 	        	bind_intent.putExtra("executing_category_id", actual_category_fk);
 	        	startActivity(bind_intent);
 	        	return true;
@@ -300,6 +302,8 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
             case R.id.action_login_user:
             	Intent login_intent = new Intent(this, UserLoginActivity.class);
             	startActivity(login_intent);
+            	finish();
+            	fragmentsHistory.clear();
             	return true;
             	
             default:
@@ -315,13 +319,8 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 	        inflater.inflate(R.menu.grid_activity_actions, menu);    		
     	else
     		inflater.inflate(R.menu.grid_activity_login_user, menu);
-    	
-        // Associate searchable configuration with the SearchView
-       // SearchManager searchManager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
-       // SearchView searchView = (SearchView) menu.findItem(R.id.action_search).getActionView();
-       // searchView.setSearchableInfo(searchManager.getSearchableInfo(getComponentName()));
  
-        return super.onCreateOptionsMenu(menu);
+        return true;
     }
     
     public void addImageToAdapter(ImageObject image_object){
@@ -429,7 +428,7 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 		mDrawerTitle = "Wybierz kategoriê";
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
        mDrawerLayout.getViewTreeObserver().addOnGlobalLayoutListener(vto);
-        Utils.setWallpaper(mDrawerLayout, layout_height, layout_width, null, ScalingLogic.CROP);
+        //Utils.setWallpaper(mDrawerLayout, layout_height, layout_width, null, ScalingLogic.CROP);
 
         mDrawerToggle = new ActionBarDrawerToggle(
 	                this,                  /* host Activity */

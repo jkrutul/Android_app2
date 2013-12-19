@@ -110,7 +110,7 @@ public class BindImagesToCategoryActivity extends FragmentActivity{
 				
 				// najpierw kopiuje kategorie
 				for(Long checked_category_id : checked_category_list){
-					DFS.getElements(checked_category_id, this);      		// ustawia liste DFS.edges
+					DFS.getElements(checked_category_id);      		// ustawia liste DFS.edges
 					for(EdgeModel edge : DFS.edges){
 						Long parent = edge.getParent();
 						Long child = edge.getChild();

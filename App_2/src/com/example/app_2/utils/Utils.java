@@ -242,7 +242,7 @@ public class Utils {
 
 		switch (orientation) {
 		case Configuration.ORIENTATION_LANDSCAPE:				// landscape
-			Bitmap wallpaperLandscape = ScalingUtilities.createScaledBitmap(wallpaper, reqWidth, reqHeight, sl);
+			Bitmap wallpaperLandscape = ScalingUtilities.createScaledBitmap(wallpaper, reqHeight, reqWidth, sl);
 			if(Utils.hasJellyBean())
 				vg.setBackground(new BitmapDrawable(r,wallpaperLandscape));
 			else{
@@ -257,7 +257,7 @@ public class Utils {
 			}
 			break;
 		case Configuration.ORIENTATION_PORTRAIT:				// portrait
-			Bitmap wallpaperPortrait = ScalingUtilities.createScaledBitmap(wallpaper, reqHeight, reqWidth, sl);
+			Bitmap wallpaperPortrait = ScalingUtilities.createScaledBitmap(wallpaper, reqWidth, reqHeight, sl);
 
 			if(Utils.hasJellyBean())
 				vg.setBackground(new BitmapDrawable(r, wallpaperPortrait));

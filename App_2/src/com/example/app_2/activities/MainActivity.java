@@ -41,7 +41,7 @@ public class MainActivity extends Activity {
 		
 		
 		LinearLayout ll = (LinearLayout) findViewById(R.id.main_activity);
-		Utils.setWallpaper(ll, App_2.maxHeight, App_2.getMaxWidth(), null, ScalingLogic.CROP);
+		//Utils.setWallpaper(ll, App_2.maxHeight, App_2.getMaxWidth(), null, ScalingLogic.CROP);
 
 		ActionBar actionBar = getActionBar();
 		actionBar.setSubtitle("G³owne menu");
@@ -65,9 +65,6 @@ public class MainActivity extends Activity {
 		// Inflate menu resource file.
 		getMenuInflater().inflate(R.menu.main, menu);
 		// Locate MenuItem with ShareActionProvider
-		MenuItem item = menu.findItem(R.id.menu_item_share);
-		// Fetch and store ShareActionProvider
-		//mShareActionProvider = (ShareActionProvider) item.getActionProvider();
 		return true;
 	}
 
@@ -86,7 +83,7 @@ public class MainActivity extends Activity {
 						Database.open();
 						Database.recreateDB();
 						
-						Images.addImagesToDatabase(Storage.getThumbsMaxDir().getAbsolutePath(), "-1");
+						//Images.addImagesToDatabase(Storage.getThumbsMaxDir().getAbsolutePath(), "-1");
 					}
 		        }).create().show();
 			 break;

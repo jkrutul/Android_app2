@@ -1,31 +1,25 @@
 package com.example.app_2.fragments;
 
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
 
-import android.annotation.SuppressLint;
-import android.app.Activity;
-import android.content.Context;
-import android.content.Intent;
-import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.graphics.Color;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.ListFragment;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v4.widget.SimpleCursorAdapter;
-import  android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentActivity;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.util.SparseBooleanArray;
 import android.view.View;
-import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.EditText;
@@ -35,19 +29,19 @@ import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.TextView;
 
-import com.example.app_2.App_2;
 import com.example.app_2.R;
-import com.example.app_2.activities.ImageGridActivity;
 import com.example.app_2.contentprovider.ImageContract;
 import com.example.app_2.contentprovider.ImagesOfParentContract;
 import com.example.app_2.contentprovider.ParentContract;
-import com.example.app_2.contentprovider.ParentsOfImageContract;
 import com.example.app_2.contentprovider.UserContract;
 import com.example.app_2.spinner.adapter.ImageSpinnerAdapter;
 import com.example.app_2.spinner.model.ImageSpinnerItem;
 import com.example.app_2.storage.Database;
 import com.example.app_2.storage.Storage;
+import com.example.app_2.utils.DFS;
 import com.example.app_2.utils.ImageLoader;
+import com.example.app_2.utils.ImageLoader.BitmapWorkerTask;
+import com.example.app_2.widget.CheckableLinearLayout;
 
 public class ImagesMultiselectFragment extends ListFragment implements LoaderCallbacks<Cursor>{
 	private final static String LOG_TAG = "ImageMultiselectFragment";
@@ -124,9 +118,6 @@ public class ImagesMultiselectFragment extends ListFragment implements LoaderCal
 		
 																							// TODO - usuñ mo¿liwoœæ dodawania obrazków kóre s¹ ju¿ tej kategorii lub oznacz jako dodane
 
-		
-		
-		
 	} 
 	
 	@Override
@@ -148,17 +139,39 @@ public class ImagesMultiselectFragment extends ListFragment implements LoaderCal
 		selectedItemsOnCreate = new ArrayList<Long>();
 		
 		String[] from = new String[] {ImageContract.Columns._ID,  ImageContract.Columns.FILENAME,  ImageContract.Columns.DESC,  ImageContract.Columns.CATEGORY, UserContract.Columns.USERNAME};
-		int[] to = new int[] { 0, R.id.mc_icon, R.id.mc_text, 0, R.id.mc_author }; 		
+		int[] to = new int[] { 0, R.id.mc_icon, R.id.mc_text, R.id.mc_dfs, R.id.mc_author }; 		
 		adapter = new SimpleCursorAdapter( getActivity().getApplicationContext(), R.layout.multiple_choice_item, null, from, to, 0);
 		adapter.setFilterQueryProvider(fqp);
 		adapter.setViewBinder(new SimpleCursorAdapter.ViewBinder() {
 			public boolean setViewValue(View view, Cursor cursor,int columnIndex) {
-				if (view.getId() == R.id.mc_icon) {
-					String path = Storage.getPathToScaledBitmap(cursor.getString(cursor.getColumnIndex(ImageContract.Columns.FILENAME)),100);
+				Long img_id = cursor.getLong(0);
+				String path =  Storage.getPathToScaledBitmap(cursor.getString(1),100);
+				String category = cursor.getString(3);
+				boolean isCategory =  ( category != null && !category.isEmpty()) ? true : false;
+				
+				switch (view.getId()) {
+				case R.id.mc_icon:
 					ImageLoader.loadBitmap(path, (ImageView) view);
+					CheckableLinearLayout cll = (CheckableLinearLayout)view.getParent();
+					if(isCategory)
+						cll.setBackgroundColor(Color.argb(120, 0, 255, 0));
+					else
+						cll.setBackgroundColor(Color.TRANSPARENT);
 					return true;
+				
+				case R.id.mc_dfs:
+					TextView tv = (TextView) view;
+					if(isCategory)
+						calculateDfsTask(img_id, tv);
+					else
+						tv.setText("");
+						
+					return true;
+
+				default:
+					return false;
 				}
-				return false;
+
 			}
 		});
 		
@@ -182,7 +195,7 @@ public class ImagesMultiselectFragment extends ListFragment implements LoaderCal
         }
         return selectedItems;
 	}
-	
+	/*
 	public ArrayList<Long> getUncheckedItemsIds(ArrayList<Long> checkedItemIds){
 		 ArrayList<Long> unSelectedItems  = new ArrayList<Long>();
 		 for(Long l : selectedItemsOnCreate){
@@ -191,7 +204,7 @@ public class ImagesMultiselectFragment extends ListFragment implements LoaderCal
 		 }
 		 return unSelectedItems;
 	}
-	
+	*/
 	
 
 	private void addItemsOnUserSpinner(){
@@ -199,7 +212,7 @@ public class ImagesMultiselectFragment extends ListFragment implements LoaderCal
 		final FragmentActivity a = getActivity();
 
 		items =  new ArrayList<ImageSpinnerItem>();
-		items.add(new ImageSpinnerItem(null,"Wybierz u¿ytkownika", null, true));
+		items.add(new ImageSpinnerItem(null,"Autor kategorii", null, true));
 		String[] projection = {UserContract.Columns._ID, UserContract.Columns.IMG_FILENAME, UserContract.Columns.USERNAME };
 	
 		Cursor c = a.getContentResolver().query(UserContract.CONTENT_URI, projection, null, null, null);
@@ -233,16 +246,17 @@ public class ImagesMultiselectFragment extends ListFragment implements LoaderCal
 					if(tv!=null)
 						tv.setTextColor(Color.rgb(148, 150, 148));
 				}
+								
 				Long user_id = data.getItemId();
-				if(user_id != null)
-					bundle.putLong("USER_ID", user_id);
-				//bundle.putLong("CATEGORY_ID", data.getItemId());
-				getLoaderManager().restartLoader(0, bundle, lc);
+				if(user_id != null){
+					bundle.putLong("SELECTED_USER_ID", user_id);
+					a.getSupportLoaderManager().restartLoader(0, bundle, lc);
+				}
 			}
 			
 			@Override
 			public void onNothingSelected(AdapterView<?> parentView) {
-				bundle.putLong("USER_ID", -1);
+				bundle.putLong("SELECTED_USER_ID", executing_category_author);
 				a.getSupportLoaderManager().restartLoader(0, bundle, lc);
 			}
 
@@ -268,13 +282,73 @@ public class ImagesMultiselectFragment extends ListFragment implements LoaderCal
 		return author_id;
 	}
 	
+	private void calculateDfsTask(Long cat_root, TextView tv){
+		if(cat_root == null || tv == null){
+			return;
+		}
+		//else if(cancelPotentialWork(cat_root, tv)){
+			
+		//}
+		
+		CalculateDfsWorkerTask task = new CalculateDfsWorkerTask(tv);
+		task.executeOnExecutor(com.example.app_2.utils.AsyncTask.DUAL_THREAD_EXECUTOR, cat_root);
+		
+	}
+	
+	//private static boolean cancelPotentialWork(Long id, TextView tv){
+	//	CalculateDfsWorkerTask calculateDfsWorkerTask = getCalculateDfsWorkerTask(tv);
+	//}
+	
+	private static  CalculateDfsWorkerTask getCalculateDfsWorkerTask(TextView textView) {
+
+		    return null;
+		}
+	
+	
+	private static class CalculateDfsWorkerTask extends AsyncTask<Long, Void, Integer>{
+		private final WeakReference<TextView> textViewReference;
+		private Long cat_root = null;
+		
+		public CalculateDfsWorkerTask(TextView tv) {
+			textViewReference = new WeakReference<TextView>(tv);
+		}
+
+		@Override
+		protected Integer doInBackground(Long... params) {
+			cat_root = params[0];
+			DFS.getElements(cat_root);
+			return DFS.visited.size()-1;
+		}
+		
+		@Override
+		protected void onPostExecute(Integer count){
+			if(textViewReference != null && count != null){
+					final TextView textView = textViewReference.get();
+					textView.setText("zawiera: "+ count + " elementów");	
+			}
+
+		}
+		
+	}
+
+	
+	
 	//		---- L	O	A	D	E	R	----
 	@Override
 	public Loader<Cursor> onCreateLoader(int arg0, Bundle bundle) {
+		if(bundle != null){
+			Long selected_user_id = bundle.getLong("SELECTED_USER_ID");
+			if(selected_user_id != null){
+				selectionArgs= new String[]{Long.toString(Database.getMainDictFk()),
+						Long.toString(selected_user_id),
+						Long.toString(executing_category_id) 
+						};
+			}
+		}
 		CursorLoader cursorLoader = new CursorLoader(getActivity(),	ImagesOfParentContract.CONTENT_URI, projection, selection, selectionArgs, null);
 		return cursorLoader;
 	}
-
+	
 	@Override
 	public void onLoadFinished(Loader<Cursor> loader, Cursor cursor)  {
 		adapter.swapCursor(cursor);

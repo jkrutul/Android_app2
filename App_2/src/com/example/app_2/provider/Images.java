@@ -341,11 +341,9 @@ public class Images {
 			parents_count--;
 			String path_to_dir = (String) argsList.get(0);
 			ArrayList<Long> parents_fk = new ArrayList<Long>();
-			//int parents_fk[] = new int[parents_count];
 			
 			for(int i=1, j=0; i<argsList.size(); i++, j++){
 				try{
-					//parents_fk[j] = Integer.parseInt((String) argsList.get(i));
 					parents_fk.add(Long.parseLong((String) argsList.get(i)));
 				}catch(NumberFormatException e){
 					e.printStackTrace();

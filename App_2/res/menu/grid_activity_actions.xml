@@ -1,19 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android" >
 
-
-    <item
-        android:id="@+id/filter1"
-        android:actionViewClass="android.widget.Spinner"
-        android:orderInCategory="1"
-        android:showAsAction="ifRoom"/>
     <item
         android:id="@+id/action_add_image"
         android:icon="@drawable/content_new_picture"
+        android:showAsAction="ifRoom"
         android:title="Dodaj obrazek"/>
     <item
         android:id="@+id/action_settings"
         android:icon="@drawable/action_settings"
+        android:showAsAction="ifRoom"
         android:title="Ustawienia"/>
     <item
         android:id="@+id/action_login_user"

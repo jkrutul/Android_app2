@@ -6,6 +6,7 @@ import java.lang.ref.WeakReference;
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.CompressFormat;
@@ -15,6 +16,7 @@ import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.TransitionDrawable;
 import android.os.Build;
+import android.preference.PreferenceManager;
 import android.support.v4.util.LruCache;
 import android.util.Log;
 import android.view.Display;
@@ -147,11 +149,23 @@ public class ImageLoader {
 	    private final WeakReference<ImageView> imageViewReference;
 	    private String path = null;
 	    final BitmapFactory.Options options = new BitmapFactory.Options();
+	    ScalingLogic sl = ScalingLogic.FIT;
+	    
+	    SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(App_2.getAppContext());
+
+		//mImageThumbSize = Integer.valueOf(sharedPref.getB("pref_img_size", ""));
+		//mImageFontSize = Integer.valueOf(sharedPref.getString("pref_img_desc_font_size", ""));
+	    
+	
 	    
 	    public BitmapWorkerTask(ImageView imageView) {
 	        // Use a WeakReference to ensure the ImageView can be garbage collected
 	        imageViewReference = new WeakReference<ImageView>(imageView);
     		options.inPurgeable = true;
+    	    if(sharedPref.getBoolean("pref_img_crop", false))
+    	    	sl =  ScalingLogic.CROP;
+    	    else
+    	    	sl = ScalingLogic.FIT;
 	    }
 
 	    // Decode image in background.
@@ -164,11 +178,11 @@ public class ImageLoader {
 	        Bitmap bitmap = null;
 
 	            // Part 1: Decode image
-	            Bitmap unscaledBitmap = ScalingUtilities.decodeFile(path, mWidth, mHeight, ScalingLogic.FIT);
+	            Bitmap unscaledBitmap = ScalingUtilities.decodeFile(path, mWidth, mHeight, sl);
 
 	            // Part 2: Scale image
 	            if(unscaledBitmap != null){
-	            	bitmap = ScalingUtilities.createScaledBitmap(unscaledBitmap, mWidth, mHeight, ScalingLogic.FIT);
+	            	bitmap = ScalingUtilities.createScaledBitmap(unscaledBitmap, mWidth, mHeight, sl);
 		            unscaledBitmap.recycle();
 	            }
 	            else

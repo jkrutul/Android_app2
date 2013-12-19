@@ -3,10 +3,11 @@ package com.example.app_2.utils;
 import java.util.LinkedList;
 import java.util.NoSuchElementException;
 
-import android.app.Activity;
+import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
 
+import com.example.app_2.App_2;
 import com.example.app_2.contentprovider.ImageContract;
 import com.example.app_2.contentprovider.ImagesOfParentContract;
 import com.example.app_2.contentprovider.ParentsOfImageContract;
@@ -18,7 +19,8 @@ public class DFS {
 	public static LinkedList<Long> stack = new LinkedList<Long>();
 	public static LinkedList<EdgeModel> edges = new LinkedList<EdgeModel>();
 
-	public static void getElements(Long root, Activity a) {
+	public static void getElements(Long root) {
+		Context context = App_2.getAppContext();
 		visited.clear();
 		stack.clear();
 		edges.clear();
@@ -29,7 +31,7 @@ public class DFS {
 			}catch(NoSuchElementException e){	}
 			visited.add(root);
 			Uri uri = Uri.parse(ImagesOfParentContract.CONTENT_URI + "/" + root);
-			Cursor c = a.getContentResolver().query(uri, projection, null, null, "i." + ImageContract.Columns._ID + " DESC");
+			Cursor c = context.getContentResolver().query(uri, projection, null, null, "i." + ImageContract.Columns._ID + " DESC");
 			if (c != null) {
 				c.moveToFirst();
 				while (!c.isAfterLast()) {
@@ -57,7 +59,7 @@ public class DFS {
 		}
 		for(Long category : categories){
 			Uri uri = Uri.parse(ParentsOfImageContract.CONTENT_URI + "/" + category);
-			Cursor c = a.getContentResolver().query(uri, projection, null, null, "i." + ImageContract.Columns._ID + " DESC");
+			Cursor c = context.getContentResolver().query(uri, projection, null, null, "i." + ImageContract.Columns._ID + " DESC");
 			if (c != null) {
 				c.moveToFirst();
 				while (!c.isAfterLast()) {
@@ -76,6 +78,7 @@ public class DFS {
 		
 		for(EdgeModel safe : category_to_safe)
 			edges.remove(safe);
+
 
 	}
 	

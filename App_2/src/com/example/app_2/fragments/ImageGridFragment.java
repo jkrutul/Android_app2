@@ -79,8 +79,7 @@ public class ImageGridFragment extends Fragment implements LoaderCallbacks<Curso
 	private static final int LOADER_ID = 1;
 	
 	public boolean mEditMode = true;
-	private boolean mIsInActionMode = false;
-	
+
 	private static ImageGridActivity executingActivity;
 	private static SharedPreferences sharedPref; 
 	
@@ -311,9 +310,6 @@ public class ImageGridFragment extends Fragment implements LoaderCallbacks<Curso
     	super.onCreateView(inflater, container, savedInstanceState);
     	final View v = inflater.inflate(R.layout.fragment_image_grid, container,false);
     	mGridView  = (GridView) v.findViewById(R.id.gridView);
-    	//mGridView.setBackgroundColor(Color.alpha(0));
-    	//executingActivity.findViewById(R.id.main_grid).setBackgroundDrawable(App_2.wallpaperDrawable);
-
     	expandedImageView = (ImageView) executingActivity.findViewById(R.id.expanded_image);
         mGridView.setAdapter(adapter);
 	    mGridView.setOnItemClickListener(mOnItemClickListener);
@@ -439,7 +435,7 @@ public class ImageGridFragment extends Fragment implements LoaderCallbacks<Curso
 				
 				
 				if(!isBindToAnotherCategory){//jeœli nie to DFS i usuwam wszyskie relacje		
-					DFS.getElements(l, getActivity());
+					DFS.getElements(l);
 					for(EdgeModel em : DFS.edges){
 						getActivity().getContentResolver().delete(ParentContract.CONTENT_URI, where , new String[]{String.valueOf(em.getChild()), String.valueOf(em.getParent()) });
 					   ContentValues cv = new ContentValues();

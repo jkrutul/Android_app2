@@ -36,13 +36,24 @@
             android:textColor="@android:color/black"
             android:textSize="20sp"
             android:textStyle="bold|italic" />
+        
+        <TextView
+            android:id="@+id/mc_dfs"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:focusable="false"
+            android:gravity="left"
+            android:text="mc_dfs"
+            android:textColor="@android:color/black"
+            android:textSize="12sp"
+            android:textStyle="bold|italic" />
 
         <TextView
             android:id="@+id/mc_author"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
-
             android:layout_toRightOf="@id/mc_icon"
             android:focusable="false"
             android:gravity="left"

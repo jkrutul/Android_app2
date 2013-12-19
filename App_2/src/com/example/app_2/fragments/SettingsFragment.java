@@ -22,6 +22,11 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
 		pref.setSummary(sp.getString("pref_img_size", ""));
 		pref = findPreference("pref_img_desc_font_size");
 		pref.setSummary(sp.getString("pref_img_desc_font_size", ""));
+		pref = findPreference("pref_img_crop");
+		if(sp.getBoolean("pref_img_crop", false))
+			pref.setSummary("tak");
+		else
+			pref.setSummary("nie");
 		
 		sp.registerOnSharedPreferenceChangeListener(this);
 		
@@ -36,6 +41,13 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
 		else if(key.equals("pref_img_desc_font_size")){
 			Preference pref = findPreference(key);
 			pref.setSummary(sharedPreferences.getString(key, ""));
+		}
+		else if(key.equals("pref_img_crop")){
+			Preference pref = findPreference(key);
+			if(sharedPreferences.getBoolean("pref_img_crop", false))
+				pref.setSummary("tak");
+			else
+				pref.setSummary("nie");
 		}
 
 	}
