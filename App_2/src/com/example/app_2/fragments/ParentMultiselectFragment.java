@@ -34,7 +34,7 @@ public class ParentMultiselectFragment extends ListFragment implements LoaderCal
 	boolean mDualPane;
 	int mCurCheckPosition = 0;
 	public static Long row_id;
-	private static final int LOADER_ID = 32;
+	public static final int LOADER_ID = 32;
 	private static final String TAG = "ParentMultiselectFragment";
 	private Map<Long,Integer> posMapOfAllItems;
 	private ArrayList<Long> selectedItemsOnCreate;
@@ -138,13 +138,27 @@ public class ParentMultiselectFragment extends ListFragment implements LoaderCal
 	
 	@Override
 	public Loader<Cursor> onCreateLoader(int arg0, Bundle bundle) {
+		
 		String[] projection = { 
 				"i."+ImageContract.Columns._ID,
 				"i."+ImageContract.Columns.FILENAME,
-				"i."+ImageContract.Columns.CATEGORY
+				"i."+ImageContract.Columns.CATEGORY,
+				"i."+ImageContract.Columns.AUTHOR_FK
 				};
-        String selection = "i."+ImageContract.Columns.CATEGORY + " IS NOT NULL AND (i."+ImageContract.Columns.CATEGORY +" <> ?)";
+        String selection = "i."+ImageContract.Columns.CATEGORY + " IS NOT NULL AND (i."+ImageContract.Columns.CATEGORY +" <> ?)" ;
         String[] selectionArgs ={""};
+        
+		Long user_id = null;					
+		if (bundle !=null){
+			user_id = bundle.getLong("USER_ID");	
+		}
+		
+		if(user_id != null){
+			selection +=   " AND i."+ImageContract.Columns.AUTHOR_FK+" = ? ";
+			selectionArgs = new String[]{selectionArgs[0], Long.toString(user_id)};
+		}
+		
+
 		CursorLoader cursorLoader = new CursorLoader(getActivity(),	ImageContract.CONTENT_URI, projection, selection, selectionArgs, null);
 		return cursorLoader;
 	}

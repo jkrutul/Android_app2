@@ -47,7 +47,7 @@ public class ImageSpinnerAdapter extends ArrayAdapter<ImageSpinnerItem> {
     	
     	if(row == null){
     		 LayoutInflater inflater = context.getLayoutInflater();
-             row = inflater.inflate(R.layout.image_row, parent, false);
+             row = inflater.inflate(R.layout.images_list_row, parent, false);
     	}
 
     	ImageSpinnerItem item = items.get(position);

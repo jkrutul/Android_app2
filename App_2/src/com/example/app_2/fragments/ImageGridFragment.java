@@ -281,8 +281,8 @@ public class ImageGridFragment extends Fragment implements LoaderCallbacks<Curso
 		super.onCreate(savedInstanceState);
 		executingActivity = (ImageGridActivity) getActivity();
 		sharedPref = PreferenceManager.getDefaultSharedPreferences(executingActivity);
-		mImageThumbSize = Integer.valueOf(sharedPref.getString("pref_img_size", ""));
-		mImageFontSize = Integer.valueOf(sharedPref.getString("pref_img_desc_font_size", ""));
+		mImageThumbSize = Integer.valueOf(sharedPref.getString("pref_img_size", "150"));
+		mImageFontSize = Integer.valueOf(sharedPref.getString("pref_img_desc_font_size", "15"));
         mImageThumbSpacing = getResources().getDimensionPixelSize(R.dimen.image_thumbnail_spacing);	
 		mChangeNumColumns = true;
 

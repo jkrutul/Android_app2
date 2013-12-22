@@ -27,11 +27,14 @@ import com.example.app_2.spinner.adapter.ImageSpinnerAdapter;
 import com.example.app_2.spinner.model.ImageSpinnerItem;
 
 public class ImageEditActivity extends FragmentActivity{
-	private ImageListFragment ilf;
+	private static ImageListFragment ilf;
 	private Spinner mSpinner;
+	
 	ArrayList<ImageSpinnerItem> items;
 	private final static int TAKE_PIC_REQUEST = 86;
 	private final static int FILE_SELECT_REQUEST = 25;
+	
+	private final static String IMAGE_LIST_FRAGMENT= "image_list_fragment";
 	
 
 	
@@ -40,17 +43,20 @@ public class ImageEditActivity extends FragmentActivity{
         super.onCreate(savedInstanceState);
 	    getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
         setContentView(R.layout.activity_image_edit);
-        
-        mSpinner = (Spinner) findViewById(R.id.category_select_spinner);
-
-        addItemsOnSpinner();
         ilf = new ImageListFragment();
-    	final FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
-   	 	ft.add(R.id.fcontainer, ilf);
-        ft.commit();
+        
+        
+        if (getSupportFragmentManager().findFragmentByTag(IMAGE_LIST_FRAGMENT) == null) {
+            final FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+            ft.replace(R.id.fcontainer, ilf, IMAGE_LIST_FRAGMENT);
+            ft.commit();
+        }
+
+
         
     }
      
+    /*
 	private void addItemsOnSpinner() {
 
 		mSpinner.setOnItemSelectedListener(new OnItemSelectedListener() {
@@ -91,6 +97,7 @@ public class ImageEditActivity extends FragmentActivity{
 		mSpinner.setAdapter(mySpinnerAdapter);
 		mSpinner.setSelection(0);
 	}
+	*/
 
     
 	// Create the menu based on the XML defintion

@@ -156,9 +156,9 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
         	
      
 		navSpinner = new ArrayList<SpinnerNavItem>();
-		navSpinner.add(new SpinnerNavItem("Alfabetycznie", R.drawable.ic_launcher));
-		navSpinner.add(new SpinnerNavItem("Ostatnio zmodyfikowane", R.drawable.ic_launcher));
-		navSpinner.add(new SpinnerNavItem("Najczêœciej u¿ywane", R.drawable.ic_launcher));
+		navSpinner.add(new SpinnerNavItem("Alfabetycznie", R.drawable.sort_ascend));
+		navSpinner.add(new SpinnerNavItem("Ostatnio zmodyfikowane", R.drawable.clock));
+		navSpinner.add(new SpinnerNavItem("Najczêœciej u¿ywane", R.drawable.favourites));
 		
 		title_nav_adapter = new TitleNavigationAdapter(getApplicationContext(), navSpinner);
 		mActionBar.setListNavigationCallbacks(title_nav_adapter, this);
@@ -217,6 +217,7 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 			break;
 		}
     }
+    
     @Override
     public Dialog onCreateDialog(int dialogId) {
         switch (dialogId) {
@@ -428,7 +429,7 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 		mDrawerTitle = "Wybierz kategoriê";
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
        mDrawerLayout.getViewTreeObserver().addOnGlobalLayoutListener(vto);
-        //Utils.setWallpaper(mDrawerLayout, layout_height, layout_width, null, ScalingLogic.CROP);
+       // Utils.setWallpaper(mDrawerLayout, layout_height, layout_width, null, ScalingLogic.CROP);
 
         mDrawerToggle = new ActionBarDrawerToggle(
 	                this,                  /* host Activity */

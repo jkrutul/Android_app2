@@ -19,7 +19,8 @@ public class DFS {
 	public static LinkedList<Long> stack = new LinkedList<Long>();
 	public static LinkedList<EdgeModel> edges = new LinkedList<EdgeModel>();
 
-	public static void getElements(Long root) {
+	public static int getElements(Long root) {
+		int element_counter = 0;
 		Context context = App_2.getAppContext();
 		visited.clear();
 		stack.clear();
@@ -30,6 +31,7 @@ public class DFS {
 			try{stack.removeLast();	
 			}catch(NoSuchElementException e){	}
 			visited.add(root);
+			element_counter++;
 			Uri uri = Uri.parse(ImagesOfParentContract.CONTENT_URI + "/" + root);
 			Cursor c = context.getContentResolver().query(uri, projection, null, null, "i." + ImageContract.Columns._ID + " DESC");
 			if (c != null) {
@@ -79,7 +81,7 @@ public class DFS {
 		for(EdgeModel safe : category_to_safe)
 			edges.remove(safe);
 
-
+		return element_counter;
 	}
 	
 

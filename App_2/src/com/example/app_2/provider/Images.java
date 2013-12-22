@@ -109,17 +109,21 @@ public class Images {
 		
 	}
 	
-	public static void addNewEntriesToImageTable(List<String> filenames, ArrayList<Long> categories){
+	public static void addNewEntriesToImageTable(List<String> filenames, ArrayList<Long> categories, Long user_id){
 		Database db = Database.getInstance(App_2.getAppContext());
 		db.open();
 		int cvSize = 0;
 		Long main_dict_id = db.getMainDictFk();
 		Long logged_user_id = null;
-		SharedPreferences sharedPref = App_2.getAppContext().getSharedPreferences("USER",Context.MODE_PRIVATE);
-		logged_user_id = sharedPref.getLong("logged_user_id", -1);
-		if(logged_user_id == -1)
-			logged_user_id = null;
-				
+		if(user_id != null){
+			logged_user_id = user_id;
+		}else{
+			SharedPreferences sharedPref = App_2.getAppContext().getSharedPreferences("USER",Context.MODE_PRIVATE);
+			logged_user_id = sharedPref.getLong("logged_user_id", -1);
+			if(logged_user_id == -1)
+				logged_user_id = null;
+		}
+
 		if(categories!=null){
 			categories.add(main_dict_id);
 			cvSize = categories.size();
@@ -314,11 +318,13 @@ public class Images {
 	public static class ProcessBitmapsTask extends	AsyncTask<ArrayList<String>, Integer, Void> {
 		Activity executing_activity;
 		Database db;
+		Long user_id;
 
-		public ProcessBitmapsTask(Activity activity) {
+		public ProcessBitmapsTask(Activity activity, Long user_id) {
 			this.executing_activity = activity;
 			db = Database.getInstance(activity);
 			db.open();
+			this.user_id = user_id;
 		}
 
 		@Override
@@ -364,7 +370,7 @@ public class Images {
 					break;
 
 			}
-			addNewEntriesToImageTable(uniqueFilenames, parents_fk);
+			addNewEntriesToImageTable(uniqueFilenames, parents_fk ,this.user_id);
 			return null;
 		}
 
@@ -436,7 +442,7 @@ public class Images {
 			*/
 			ArrayList<String> uniqueFilename = new ArrayList<String>();
 			uniqueFilename.add(Storage.scaleAndSaveBitmapFromPath(path_toIMG, new int[]{1,4,8}, Bitmap.CompressFormat.PNG,100,db, filenameVerification));
-			addNewEntriesToImageTable(uniqueFilename, null);
+			addNewEntriesToImageTable(uniqueFilename, null ,null);
 			return null;
 		}
 	}

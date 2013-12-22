@@ -3,38 +3,55 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical" >
-    
-    <TextView 
+
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textSize="15dp"
-        android:textStyle="bold"
-        android:text="Wybierz obrazki które dodać do kategorii:"/>
-    
+        android:orientation="horizontal"
+        android:layout_marginLeft="10dp" >
+        
+        <ImageView 
+            android:id="@+id/parent_category_image"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            />
+
+        <TextView
+            android:id="@+id/txt_cat_info"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Kategoria: "
+            android:textSize="15dp"
+            android:layout_gravity="center"
+            android:textStyle="bold" />
+    </LinearLayout>
+
     <FrameLayout
-        android:id="@+id/list_fragment_container" 
+        android:id="@+id/list_fragment_container"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"/>
-    
-    <LinearLayout 
+        android:layout_weight="1" />
+
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal">
-        <Button 
+        android:orientation="horizontal" >
+
+        <Button
             android:id="@+id/bi_confirm_button"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:onClick="onButtonClick"
-            android:text="Zatwierdź"/>
-        <Button 
+            android:text="Zatwierdź" />
+
+        <Button
             android:id="@+id/bi_cancel_button"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:onClick="onButtonClick"
-            android:text="Anuluj"/>
-        </LinearLayout>
+            android:text="Anuluj" />
+    </LinearLayout>
 
 </LinearLayout>

@@ -20,8 +20,11 @@ import android.text.TextWatcher;
 import android.util.Log;
 import android.util.SparseBooleanArray;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemSelectedListener;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.FilterQueryProvider;
 import android.widget.ImageView;
@@ -48,14 +51,17 @@ public class ImagesMultiselectFragment extends ListFragment implements LoaderCal
 	private SimpleCursorAdapter adapter;
 	private ListView listView;
 	private EditText searchText;
-	Spinner mSpinner;
+	private CheckBox onlyCategoriesCheckBox;
+	private Spinner mSpinner;
 	ArrayList<ImageSpinnerItem> items;
-	
+		
 	int mCurCheckPosition = 0;
 	public static Long row_id;
 	private static final int LOADER_ID = 32;
 	private ArrayList<Long> selectedItemsOnCreate;
 	private Long cat_id;
+	private Long selected_user_id = null;
+
 
 	private Long executing_category_id;
 	private Long executing_category_author;
@@ -67,6 +73,9 @@ public class ImagesMultiselectFragment extends ListFragment implements LoaderCal
 			 "u."+UserContract.Columns.USERNAME};
 	private String selection;
 	private String[] selectionArgs;
+	public String sortOrder;
+	
+	private boolean showOnlyCategories = false;
 			
 			
 	private TextWatcher filterTextWatcher= new TextWatcher(){
@@ -96,9 +105,20 @@ public class ImagesMultiselectFragment extends ListFragment implements LoaderCal
 		}
 	};
 	
+	LoaderCallbacks<Cursor> lc = (LoaderCallbacks<Cursor>)this;
+	
+	private OnClickListener cb_clickListener = new OnClickListener() {
+
+		@Override
+		public void onClick(View v) {
+			showOnlyCategories = (((CheckBox)v).isChecked()) ? true : false;
+			getActivity().getSupportLoaderManager().restartLoader(LOADER_ID, null, lc);
+						
+		}
+	};
 	
 	public ImagesMultiselectFragment(){	}
-
+	
 	public void onCreate(Bundle bundle){
 		super.onCreate(bundle);
 		
@@ -110,7 +130,7 @@ public class ImagesMultiselectFragment extends ListFragment implements LoaderCal
 		selection = "p."+ParentContract.Columns.PARENT_FK+" = ? " 							// - obrazki które wskazuj¹ na s³ownik ( czyli wszystkie )
 					+ " AND i." + ImageContract.Columns.AUTHOR_FK + "= ? " 					// - w³aœcicielem jest autor kategorii do której dodajemy obrazki
 					+ " AND i." + ImageContract.Columns._ID + "<> ? ";						// - usuñ mo¿liwoœæ tworzenia pêtli na kategori¹ z kórej wywo³ujemy dodawanie obrazka
-		
+	
 		selectionArgs= new String[]{Long.toString(Database.getMainDictFk()),
 									Long.toString(executing_category_author),
 									Long.toString(executing_category_id) 
@@ -127,6 +147,10 @@ public class ImagesMultiselectFragment extends ListFragment implements LoaderCal
 		searchText = (EditText) v.findViewById(R.id.search_box);
 		searchText.addTextChangedListener(filterTextWatcher);
 		mSpinner = (Spinner) v.findViewById(R.id.user_select_spinner);
+		onlyCategoriesCheckBox = (CheckBox) v.findViewById(R.id.show_only_categories_cb);
+		onlyCategoriesCheckBox.setOnClickListener(cb_clickListener);
+
+		
 		addItemsOnUserSpinner();
 		
 		return v;
@@ -139,8 +163,14 @@ public class ImagesMultiselectFragment extends ListFragment implements LoaderCal
 		selectedItemsOnCreate = new ArrayList<Long>();
 		
 		String[] from = new String[] {ImageContract.Columns._ID,  ImageContract.Columns.FILENAME,  ImageContract.Columns.DESC,  ImageContract.Columns.CATEGORY, UserContract.Columns.USERNAME};
-		int[] to = new int[] { 0, R.id.mc_icon, R.id.mc_text, R.id.mc_dfs, R.id.mc_author }; 		
+		int[] to = new int[] { 0, R.id.mc_icon, R.id.mc_text, R.id.mc_dfs, R.id.mc_author }; 
+		
+		listView = getListView();
 		adapter = new SimpleCursorAdapter( getActivity().getApplicationContext(), R.layout.multiple_choice_item, null, from, to, 0);
+		listView.setItemsCanFocus(false);
+		listView.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
+
+		
 		adapter.setFilterQueryProvider(fqp);
 		adapter.setViewBinder(new SimpleCursorAdapter.ViewBinder() {
 			public boolean setViewValue(View view, Cursor cursor,int columnIndex) {
@@ -160,11 +190,11 @@ public class ImagesMultiselectFragment extends ListFragment implements LoaderCal
 					return true;
 				
 				case R.id.mc_dfs:
-					TextView tv = (TextView) view;
-					if(isCategory)
-						calculateDfsTask(img_id, tv);
-					else
-						tv.setText("");
+					//TextView tv = (TextView) view;
+					//if(isCategory)
+					//	calculateDfsTask(img_id, tv);
+					//else
+					//	tv.setText("");
 						
 					return true;
 
@@ -176,9 +206,7 @@ public class ImagesMultiselectFragment extends ListFragment implements LoaderCal
 		});
 		
 		setListAdapter(adapter);
-		listView = getListView();
-		listView.setItemsCanFocus(false);
-		listView.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
+
 		
 		getActivity().getSupportLoaderManager().initLoader(LOADER_ID, null, this);
 
@@ -212,7 +240,7 @@ public class ImagesMultiselectFragment extends ListFragment implements LoaderCal
 		final FragmentActivity a = getActivity();
 
 		items =  new ArrayList<ImageSpinnerItem>();
-		items.add(new ImageSpinnerItem(null,"Autor kategorii", null, true));
+		//items.add(new ImageSpinnerItem(null,"Autor kategorii", null, true));
 		String[] projection = {UserContract.Columns._ID, UserContract.Columns.IMG_FILENAME, UserContract.Columns.USERNAME };
 	
 		Cursor c = a.getContentResolver().query(UserContract.CONTENT_URI, projection, null, null, null);
@@ -247,11 +275,15 @@ public class ImagesMultiselectFragment extends ListFragment implements LoaderCal
 						tv.setTextColor(Color.rgb(148, 150, 148));
 				}
 								
-				Long user_id = data.getItemId();
-				if(user_id != null){
-					bundle.putLong("SELECTED_USER_ID", user_id);
-					a.getSupportLoaderManager().restartLoader(0, bundle, lc);
+
+				if(selected_user_id != data.getItemId()){
+					selected_user_id = data.getItemId();
+					a.getSupportLoaderManager().restartLoader(0, null, lc);
 				}
+				//if(user_id != null){
+				//	bundle.putLong("SELECTED_USER_ID", user_id);
+				//	a.getSupportLoaderManager().restartLoader(0, bundle, lc);
+				//}
 			}
 			
 			@Override
@@ -316,8 +348,8 @@ public class ImagesMultiselectFragment extends ListFragment implements LoaderCal
 		@Override
 		protected Integer doInBackground(Long... params) {
 			cat_root = params[0];
-			DFS.getElements(cat_root);
-			return DFS.visited.size()-1;
+			int count = DFS.getElements(cat_root);
+			return count-1;
 		}
 		
 		@Override
@@ -336,16 +368,22 @@ public class ImagesMultiselectFragment extends ListFragment implements LoaderCal
 	//		---- L	O	A	D	E	R	----
 	@Override
 	public Loader<Cursor> onCreateLoader(int arg0, Bundle bundle) {
-		if(bundle != null){
-			Long selected_user_id = bundle.getLong("SELECTED_USER_ID");
-			if(selected_user_id != null){
-				selectionArgs= new String[]{Long.toString(Database.getMainDictFk()),
-						Long.toString(selected_user_id),
-						Long.toString(executing_category_id) 
-						};
-			}
+		String sel = selection;
+		String selArgs[] = selectionArgs;
+
+		if(selected_user_id != null){
+			selArgs= new String[]{Long.toString(Database.getMainDictFk()),
+							      Long.toString(selected_user_id),
+								  Long.toString(executing_category_id) 
+			};
 		}
-		CursorLoader cursorLoader = new CursorLoader(getActivity(),	ImagesOfParentContract.CONTENT_URI, projection, selection, selectionArgs, null);
+		
+		if(showOnlyCategories){
+			sel += " AND ( " + ImageContract.Columns.CATEGORY + "<> ? OR " + ImageContract.Columns.CATEGORY + " IS NOT NULL )";
+			selArgs = new String[]{ selArgs[0], selArgs[1], selArgs[2], ""};
+		}
+
+		CursorLoader cursorLoader = new CursorLoader(getActivity(),	ImagesOfParentContract.CONTENT_URI, projection, sel, selArgs, sortOrder);
 		return cursorLoader;
 	}
 	

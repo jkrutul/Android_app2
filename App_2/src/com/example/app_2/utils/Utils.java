@@ -223,7 +223,8 @@ public class Utils {
 	} 
 
 
-	public static void setWallpaper(android.view.ViewGroup vg, int reqHeight, int reqWidth, Bitmap wallpaper, ScalingLogic sl){
+	public static void setWallpaper(android.view.ViewGroup vg, int reqWidth, int reqHeight, Bitmap wallpaper, ScalingLogic sl){
+		
 		
 		if(wallpaper == null){
 			WallpaperManager wallpaperManager = WallpaperManager.getInstance(App_2.getAppContext());
@@ -255,6 +256,7 @@ public class Utils {
 				 }
 			 	
 			}
+			//wallpaperLandscape.recycle();
 			break;
 		case Configuration.ORIENTATION_PORTRAIT:				// portrait
 			Bitmap wallpaperPortrait = ScalingUtilities.createScaledBitmap(wallpaper, reqWidth, reqHeight, sl);
@@ -270,6 +272,7 @@ public class Utils {
 					 dl.setBackgroundDrawable(new BitmapDrawable(r, wallpaperPortrait));
 				 }
 			}
+			//wallpaperPortrait.recycle();
 			break;
 		default:
 			//ll.setBackgroundDrawable(App_2.wallpaperDrawable);

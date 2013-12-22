@@ -4,33 +4,51 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 
+import android.app.ActionBar;
+import android.app.ActionBar.OnNavigationListener;
 import android.content.ContentValues;
-import android.content.Context;
-import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentTransaction;
+import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
+import android.widget.ImageView;
+import android.widget.TextView;
 
 import com.example.app_2.R;
+import com.example.app_2.actionbar.adapter.TitleNavigationAdapter;
+import com.example.app_2.actionbar.model.SpinnerNavItem;
 import com.example.app_2.contentprovider.ImageContract;
 import com.example.app_2.contentprovider.ParentContract;
 import com.example.app_2.fragments.ImagesMultiselectFragment;
 import com.example.app_2.models.EdgeModel;
 import com.example.app_2.storage.Database;
+import com.example.app_2.storage.Storage;
 import com.example.app_2.utils.DFS;
+import com.example.app_2.utils.ImageLoader;
 
-public class BindImagesToCategoryActivity extends FragmentActivity{
+public class BindImagesToCategoryActivity extends FragmentActivity implements OnNavigationListener{
 	static final String LOG_TAG = "BindImagesToCategory";
 	ImagesMultiselectFragment imf;
 	Long executing_category_id;
 	//Long logged_user_id;
 	private static SimpleDateFormat dateFormat;
 	private static Date date;
+	
+    private ArrayList<SpinnerNavItem> navSpinner;
+    private TitleNavigationAdapter title_nav_adapter;
+    
+    private ImageView parent_category_imageView;
+    private TextView category_name_textView;
+
+    
+    
 	
 	@Override
 	protected void onCreate(Bundle bundle) {
@@ -44,6 +62,21 @@ public class BindImagesToCategoryActivity extends FragmentActivity{
 		getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
 		executing_category_id = ImageGridActivity.actual_category_fk;	
 		setContentView(R.layout.activity_bind_images_to_category);
+		parent_category_imageView = (ImageView) findViewById(R.id.parent_category_image);
+		category_name_textView = (TextView) findViewById(R.id.txt_cat_info);
+
+		
+		Uri uri = Uri.parse(ImageContract.CONTENT_URI+"/"+executing_category_id);
+		
+		Cursor c = getContentResolver().query(uri, new String[]{ImageContract.Columns.FILENAME, ImageContract.Columns.CATEGORY}, null, null, null);
+		c.moveToFirst();
+		if(!c.isAfterLast()){
+			String path = Storage.getPathToScaledBitmap(c.getString(0), 150);
+			ImageLoader.loadBitmap(path, parent_category_imageView);
+			category_name_textView.append("\""+c.getString(1)+"\"");
+		}
+		c.close();
+		
 		
         imf = new ImagesMultiselectFragment();
         Bundle args = new Bundle();
@@ -53,6 +86,18 @@ public class BindImagesToCategoryActivity extends FragmentActivity{
     	final FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
    	 	ft.replace(R.id.list_fragment_container, imf);
         ft.commit();
+        
+        
+        
+    	navSpinner = new ArrayList<SpinnerNavItem>();
+		navSpinner.add(new SpinnerNavItem("Alfabetycznie", R.drawable.sort_ascend));
+		navSpinner.add(new SpinnerNavItem("Ostatnio zmodyfikowane", R.drawable.clock));
+		navSpinner.add(new SpinnerNavItem("Najczêœciej u¿ywane", R.drawable.favourites));
+		
+		title_nav_adapter = new TitleNavigationAdapter(getApplicationContext(), navSpinner);
+		getActionBar().setListNavigationCallbacks(title_nav_adapter, this);
+		getActionBar().setNavigationMode(ActionBar.NAVIGATION_MODE_LIST);
+		
 	}
 	
 	
@@ -218,6 +263,33 @@ public class BindImagesToCategoryActivity extends FragmentActivity{
 		img_cv.put(ImageContract.Columns.AUTHOR_FK, author_fk);
 		img_cv.put(ImageContract.Columns.MODIFIED, dateFormat.format(date));
 		return img_cv;
+	}
+
+
+	@Override
+	public boolean onNavigationItemSelected(int itemPosition, long itemId) {
+		Bundle args = new Bundle();		
+
+			switch (itemPosition) {
+	
+			case 0: // alfabetycznie 
+				imf.sortOrder = "i."+ImageContract.Columns.DESC + " COLLATE LOCALIZED ASC";			
+				imf.getLoaderManager().restartLoader(0, null, (LoaderCallbacks<Cursor>) imf);
+				break;
+			case 1: // ostatnio zmodyfikowane
+				imf.sortOrder = "i."+ImageContract.Columns.MODIFIED + " DESC";
+				imf.getLoaderManager().restartLoader(0, null, (LoaderCallbacks<Cursor>) imf);
+				break;
+			case 2: // najczêœciej u¿ywane
+				imf.sortOrder = "i."+ImageContract.Columns.TIME_USED + " DESC";
+				imf.getLoaderManager().restartLoader(0, null, (LoaderCallbacks<Cursor>) imf);
+				break;
+	
+			default:
+				break;
+			}
+		
+		return false;
 	}
 
 }
