@@ -77,7 +77,7 @@ public class Database {
 		    "FOREIGN KEY("+UserContract.Columns.ROOT_FK+") REFERENCES "+ImageContract.TABLE_IMAGE+"("+ImageContract.Columns._ID+") "+
 	");";
 	
-	private static final String TABLE_METADATA_CREATE = "CREATE TABLE metadata (_id INTEGER PRIMARY KEY AUTOINCREMENT,  dict_fk INTEGER DEFAULT 1, root_fk INTEGER DEFAULT 2)";
+	private static final String TABLE_METADATA_CREATE = "CREATE TABLE metadata (dict_fk INTEGER DEFAULT 1, root_fk INTEGER DEFAULT 2)";
 		
 	private static final String CREATE_UNIQUE_INDEX_ON_PARENT = "CREATE UNIQUE INDEX "+
 			"parent_idx ON "+ParentContract.TABLE_PARENT+"("+ParentContract.Columns._ID+","+ParentContract.Columns.IMAGE_FK+","+ParentContract.Columns.PARENT_FK+");";
@@ -338,7 +338,7 @@ public class Database {
 	}
 	
 	public static Long getMainDictFk(){
-		Cursor c = db.query("metadata", new String[]{"dict_fk"}, null ,null,null, null, "_id");
+		Cursor c = db.query("metadata", new String[]{"dict_fk"}, null ,null,null, null, null);
 		c.moveToFirst();
 		if(!c.isAfterLast()){
 			return c.getLong(0);
@@ -348,7 +348,7 @@ public class Database {
 	}
 	
 	public static Long getMainRootFk(){
-		Cursor c = db.query("metadata", new String[]{"root_fk"}, null ,null,null, null, "_id");
+		Cursor c = db.query("metadata", new String[]{"root_fk"}, null ,null,null, null, null);
 		c.moveToFirst();
 		if(!c.isAfterLast()){
 			return c.getLong(0);

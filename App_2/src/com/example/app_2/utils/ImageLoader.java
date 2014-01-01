@@ -152,10 +152,6 @@ public class ImageLoader {
 	    ScalingLogic sl = ScalingLogic.FIT;
 	    
 	    SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(App_2.getAppContext());
-
-		//mImageThumbSize = Integer.valueOf(sharedPref.getB("pref_img_size", ""));
-		//mImageFontSize = Integer.valueOf(sharedPref.getString("pref_img_desc_font_size", ""));
-	    
 	
 	    
 	    public BitmapWorkerTask(ImageView imageView) {
@@ -191,7 +187,7 @@ public class ImageLoader {
 	        	if(bitmap == null)
 	        		return null;
 	        	
-	        	Log.i(LOG_TAG,bitmap.toString()+" decoded image h:"+bitmap.getHeight()+" w:"+bitmap.getWidth());
+	        	//Log.i(LOG_TAG, "filename: "+ path +" decoded image h:"+bitmap.getHeight()+" w:"+bitmap.getWidth());
 		        addBitmapToCache(imageKey,bitmap);
 	        return bitmap;
 	    }

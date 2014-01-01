@@ -104,149 +104,217 @@ public class BindImagesToCategoryActivity extends FragmentActivity implements On
 	public void onButtonClick(View view){
 		switch (view.getId()) {
 		case R.id.bi_confirm_button:
-			ArrayList<Long> checked_list = imf.getCheckedItemIds();
-			if(checked_list.size()<=0){
-				finish();
-				break;
-			}
+            ArrayList<Long> checked_list = imf.getCheckedItemIds();
+            if(checked_list.size()<=0){
+                finish();
+                break;
+            }
 
-		    boolean copy_images = true;
-			Long category_author = null, selected_items_author = null;
-			
-			Uri uri = Uri.parse(ImageContract.CONTENT_URI + "/"+ImageGridActivity.actual_category_fk); 				// znaleŸenie autora kategorii do której dodawane bêd¹ obrazki
-			Cursor c = getContentResolver().query(uri, new String[]{"i."+ImageContract.Columns.AUTHOR_FK}, null,null, null);
-			c.moveToFirst(); // TODO dodaæ else
-			if(!c.isAfterLast())
-				category_author = c.getLong(0);
-			c.close();
-			
-			uri = Uri.parse(ImageContract.CONTENT_URI + "/"+checked_list.get(0));									// znaleŸenie autora dodawanych obrazków
-			c = getContentResolver().query(uri, new String[]{"i."+ImageContract.Columns.AUTHOR_FK}, null, null, null);
-			c.moveToFirst();
-			if(!c.isAfterLast())
-				selected_items_author = c.getLong(0);
-			c.close();
-			
-			copy_images = (category_author == selected_items_author) ? false : true;
-			ContentValues[] cvArray  = new ContentValues[checked_list.size()];
-			if(copy_images){			// obrazki nie nale¿¹ do tego samego u¿ytkownika - kopiujê obrazki
-				String[] projection = {
-							"i."+ImageContract.Columns._ID,
-							"i."+ImageContract.Columns.FILENAME,
-							"i."+ImageContract.Columns.DESC,
-							"i."+ImageContract.Columns.CATEGORY};
-				
-				
-				ArrayList<Long>checked_category_list = new ArrayList<Long>();			// wydzielam kategorie do osobnej listy
-				for(Long checked_list_item : checked_list){
-					uri = Uri.parse(ImageContract.CONTENT_URI+"/"+checked_list_item);
-					c= getContentResolver().query(uri, new String[]{"i."+ImageContract.Columns._ID, "i."+ImageContract.Columns.CATEGORY}, null, null, null);
-					c.moveToFirst();
-					if(!c.isAfterLast()){
-						String category = c.getString(1);
-						if(category != null && !category.isEmpty())
-							checked_category_list.add(c.getLong(0));
-					}
-				}
-					
-				checked_list.removeAll(checked_category_list);
-				
-				HashMap<Long,Long> copied = new HashMap<Long,Long>(); // key - id elemenutu kopiowanego, value - id nowego elementu
-				
-				// najpierw kopiuje kategorie
-				for(Long checked_category_id : checked_category_list){
-					DFS.getElements(checked_category_id);      		// ustawia liste DFS.edges
-					for(EdgeModel edge : DFS.edges){
-						Long parent = edge.getParent();
-						Long child = edge.getChild();
-						
-						if(!copied.keySet().contains(parent)){					// parent
-							uri = Uri.parse(ImageContract.CONTENT_URI+"/"+parent);
-							c = getContentResolver().query(uri, projection, null, null, null);
-							c.moveToFirst();
-							if(!c.isAfterLast()){
-								ContentValues img_cv = createImgContentValue( c.getString(1), c.getString(2), c.getString(3), category_author);
-								Uri inserted_image_uri = getContentResolver().insert(ImageContract.CONTENT_URI, img_cv);
-								copied.put(parent, Long.parseLong(inserted_image_uri.getLastPathSegment()));
-							}
-							c.close();
-
-						}
-						
-						if(!copied.keySet().contains(child)){						// child
-							uri = Uri.parse(ImageContract.CONTENT_URI+"/"+child);
-							c = getContentResolver().query(uri, projection, null, null, null);
-							c.moveToFirst();
-							if(!c.isAfterLast()){
-								ContentValues img_cv = createImgContentValue( c.getString(1), c.getString(2), c.getString(3), category_author );
-								Uri inserted_image_uri = getContentResolver().insert(ImageContract.CONTENT_URI, img_cv);
-								copied.put(child, Long.parseLong(inserted_image_uri.getLastPathSegment()));
-							}
-							c.close();
-
-						}
-						getContentResolver().insert(ParentContract.CONTENT_URI, createParentContentValue(copied.get(child), copied.get(parent)));
-					}
-					
-					// dodajê wi¹zanie nowo powsta³ego podgrafu do kategorii
-					getContentResolver().insert(ParentContract.CONTENT_URI, createParentContentValue(copied.get(checked_category_id), executing_category_id));
-					
-				}
-	
-				// teraz kopiuje pozosta³e liœcie	
-				for(Long checked_list_item : checked_list){
-					if(!copied.keySet().contains(checked_list_item)){
-						uri = Uri.parse(ImageContract.CONTENT_URI+"/"+checked_list_item);
-						c= getContentResolver().query(uri, projection, null, null, null);
-						c.moveToFirst();
-						if(!c.isAfterLast()){
-							ContentValues img_cv = createImgContentValue( c.getString(1), c.getString(2), c.getString(3), category_author );
-							if(c.getString(3) != null && !c.getString(3).isEmpty()){
-								Log.w(LOG_TAG, "obrazek jest kategori¹, a dodawany jako liœæ");							
-							}
-							c.close();
-								
-							Uri inserted_image_uri = getContentResolver().insert(ImageContract.CONTENT_URI, img_cv);
-							copied.put(checked_list_item, Long.parseLong(inserted_image_uri.getLastPathSegment()));
-							
-							// dodanie wi¹zania na kategoriê do której kopiujê element
-							ContentValues parent_cv = new ContentValues();
-							parent_cv.put(ParentContract.Columns.IMAGE_FK, inserted_image_uri.getLastPathSegment());
-							parent_cv.put(ParentContract.Columns.PARENT_FK, executing_category_id);
-							getContentResolver().insert(ParentContract.CONTENT_URI, createParentContentValue(Long.parseLong(inserted_image_uri.getLastPathSegment()), executing_category_id));
-						}	
-					}
-
-				}
-			
-				for(Long newCopiedId : copied.values())
-					getContentResolver().insert(ParentContract.CONTENT_URI, createParentContentValue(newCopiedId, Database.getMainDictFk()));
-				
-
-			
-			}else{ // obrazki nale¿¹ do tego samego u¿ytkownika co kategoria - dodajê jedynie wiazania
-				int i =0;
-				for(Long image_fk :checked_list){
-					ContentValues cv = new ContentValues();
-					cv.put(ParentContract.Columns.IMAGE_FK, image_fk);
-					cv.put(ParentContract.Columns.PARENT_FK, executing_category_id);
-					cvArray[i++] = cv;
-				}
-				getContentResolver().bulkInsert(ParentContract.CONTENT_URI, cvArray);
-			}
-			
-			Bundle args = new Bundle();		
-			args.putLong("CATEGORY_ID", ImageGridActivity.actual_category_fk);
-			ImageGridActivity.igf.getLoaderManager().restartLoader(1, args, ImageGridActivity.igf);	
-			finish();
-			break;
-			
+            bindImagesToCategory(checked_list, true);
+            
+            //Bundle args = new Bundle();        
+           // args.putLong("CATEGORY_ID", ImageGridActivity.actual_category_fk);
+           // ImageGridActivity.igf.getLoaderManager().restartLoader(1, args, ImageGridActivity.igf);    
+            finish();
+            break;
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           
 		case R.id.bi_cancel_button:
 			finish();
 		default:
 			break;
 		}
 	}
+	
+	
+    private void bindImagesToCategory(ArrayList<Long> checked_list, boolean preventDuplicates){
+        boolean copy_images = true;
+        Long category_author = null, selected_items_author = null;
+   
+        Uri uri = Uri.parse(ImageContract.CONTENT_URI + "/"+ImageGridActivity.actual_category_fk);                 // znaleŸenie autora kategorii do której dodawane bêd¹ obrazki
+        Cursor c = getContentResolver().query(uri, new String[]{"i."+ImageContract.Columns.AUTHOR_FK}, null,null, null);
+        c.moveToFirst(); // TODO dodaæ else
+        if(!c.isAfterLast())
+            category_author = c.getLong(0);
+        c.close();
+        
+        uri = Uri.parse(ImageContract.CONTENT_URI + "/"+checked_list.get(0));                                    // znaleŸenie autora dodawanych obrazków
+        c = getContentResolver().query(uri, new String[]{"i."+ImageContract.Columns.AUTHOR_FK}, null, null, null);
+        c.moveToFirst();
+        if(!c.isAfterLast())
+            selected_items_author = c.getLong(0);
+        c.close();
+        
+        copy_images = (category_author == selected_items_author) ? false : true;
+        ContentValues[] cvArray  = new ContentValues[checked_list.size()];
+        
+        if(copy_images){            // obrazki nie nale¿¹ do tego samego u¿ytkownika - kopiujê obrazki
+            String[] projection = {
+                        "i."+ImageContract.Columns._ID,
+                        "i."+ImageContract.Columns.FILENAME,
+                        "i."+ImageContract.Columns.DESC,
+                        "i."+ImageContract.Columns.CATEGORY};
+            
+            
+            ArrayList<Long>checked_category_list = new ArrayList<Long>();            // wydzielam kategorie do osobnej listy
+            for(Long checked_list_item : checked_list){
+                uri = Uri.parse(ImageContract.CONTENT_URI+"/"+checked_list_item);
+                c= getContentResolver().query(uri, new String[]{"i."+ImageContract.Columns._ID, "i."+ImageContract.Columns.CATEGORY}, null, null, null);
+                c.moveToFirst();
+                if(!c.isAfterLast()){
+                    String category = c.getString(1);
+                    if(category != null && !category.isEmpty())
+                        checked_category_list.add(c.getLong(0));
+                }
+            }
+                
+            checked_list.removeAll(checked_category_list);
+            
+            HashMap<Long,Long> copied = new HashMap<Long,Long>(); // key - id elementu kopiowanego, value - id nowego elementu
+            
+            // kopiuje kategorie
+            for(Long checked_category_id : checked_category_list){            	
+                DFS.getElements(checked_category_id);              // ustawia liste DFS.edges
+                
+                if(DFS.edges.size()== 0){						   // dodawana kategoria jest pusta
+                    if(!copied.keySet().contains(checked_category_id)){      
+                        Long parentInUser = checkIfImageAlreadyExistInUserSet(checked_category_id,category_author);// sprawdzam czy zaznaczone podobne obrazki nie s¹ ju¿ zdefiniowane w zbiorze u¿ytkownika, porównujê nazwê pliku i jego opis
+                        if(checked_category_id != parentInUser)
+                            copied.put(checked_category_id, parentInUser);
+                        else{
+	                        uri = Uri.parse(ImageContract.CONTENT_URI+"/"+checked_category_id);
+	                        c = getContentResolver().query(uri, projection, null, null, null);
+	                        c.moveToFirst();
+	                        if(!c.isAfterLast()){
+	                            ContentValues img_cv = createImgContentValue( c.getString(1), c.getString(2), c.getString(3), category_author);
+	                            Uri inserted_image_uri = getContentResolver().insert(ImageContract.CONTENT_URI, img_cv);
+	                            copied.put(checked_category_id, Long.parseLong(inserted_image_uri.getLastPathSegment()));
+	                        }
+	                        c.close();
+                        }
+                    }
+                }else{											 // dodawana kategoria jest grafem
+						for(EdgeModel edge : DFS.edges){
+	                    Long parent = edge.getParent();
+	                    Long child = edge.getChild();
+
+	                    if(!copied.keySet().contains(parent)){                    // parent
+	                    	Long parentInUser = checkIfImageAlreadyExistInUserSet(parent,category_author);
+	                    	if(parent != parentInUser)
+	                    		copied.put(parent, parentInUser);
+	                    	else{
+		                        uri = Uri.parse(ImageContract.CONTENT_URI+"/"+parent);
+		                        c = getContentResolver().query(uri, projection, null, null, null);
+		                        c.moveToFirst();
+		                        if(!c.isAfterLast()){
+		                            ContentValues img_cv = createImgContentValue( c.getString(1), c.getString(2), c.getString(3), category_author);
+		                            Uri inserted_image_uri = getContentResolver().insert(ImageContract.CONTENT_URI, img_cv);
+		                            copied.put(parent, Long.parseLong(inserted_image_uri.getLastPathSegment()));
+		                        }
+		                        c.close();
+	                    	}
+	                    }
+	                    
+	                    if(!copied.keySet().contains(child)){                        // child
+	                        Long childInUser =  checkIfImageAlreadyExistInUserSet(child,category_author);
+	                        if(child != childInUser)
+	                            copied.put(child, childInUser);
+	                        else{
+		                        uri = Uri.parse(ImageContract.CONTENT_URI+"/"+child);
+		                        c = getContentResolver().query(uri, projection, null, null, null);
+		                        c.moveToFirst();
+		                        if(!c.isAfterLast()){
+		                            ContentValues img_cv = createImgContentValue( c.getString(1), c.getString(2), c.getString(3), category_author );
+		                            Uri inserted_image_uri = getContentResolver().insert(ImageContract.CONTENT_URI, img_cv);
+		                            copied.put(child, Long.parseLong(inserted_image_uri.getLastPathSegment()));
+		                        }
+		                        c.close();
+	                        }
+	                    }
+	                    getContentResolver().insert(ParentContract.CONTENT_URI, createParentContentValue(copied.get(child), copied.get(parent)));
+	                }
+				}
+                // dodajê wi¹zanie nowo powsta³ego podgrafu do kategorii
+                getContentResolver().insert(ParentContract.CONTENT_URI, createParentContentValue(copied.get(checked_category_id), executing_category_id));
+                
+            }
+
+            // kopiuje pozosta³e liœcie    
+            for(Long checked_list_item : checked_list){
+                if(!copied.keySet().contains(checked_list_item)){
+                	Long childInUser =  checkIfImageAlreadyExistInUserSet(checked_list_item,category_author);
+                    if(checked_list_item != childInUser)
+                    	copied.put(checked_list_item, childInUser);
+                    else{
+	                    uri = Uri.parse(ImageContract.CONTENT_URI+"/"+checked_list_item);
+	                    c= getContentResolver().query(uri, projection, null, null, null);
+	                    c.moveToFirst();
+	                    if(!c.isAfterLast()){
+	                        ContentValues img_cv = createImgContentValue( c.getString(1), c.getString(2), c.getString(3), category_author );
+	                        if(c.getString(3) != null && !c.getString(3).isEmpty()){
+	                            Log.w(LOG_TAG, "obrazek jest kategori¹, a dodawany jako liœæ");                            
+	                        }
+	                        c.close();
+	                            
+	                        Uri inserted_image_uri = getContentResolver().insert(ImageContract.CONTENT_URI, img_cv);
+	                        copied.put(checked_list_item, Long.parseLong(inserted_image_uri.getLastPathSegment()));
+	                        
+	                        // dodanie wi¹zania na kategoriê do której kopiujê element
+	                        ContentValues parent_cv = new ContentValues();
+	                        parent_cv.put(ParentContract.Columns.IMAGE_FK, inserted_image_uri.getLastPathSegment());
+	                        parent_cv.put(ParentContract.Columns.PARENT_FK, executing_category_id);
+	                        getContentResolver().insert(ParentContract.CONTENT_URI, createParentContentValue(Long.parseLong(inserted_image_uri.getLastPathSegment()), executing_category_id));
+	                    }                     	
+                    }
+                }
+            }
+        
+            for(Long newCopiedId : copied.values())			// dodajê wi¹zanie na s³ownik
+                getContentResolver().insert(ParentContract.CONTENT_URI, createParentContentValue(newCopiedId, Database.getMainDictFk()));
+            
+        }else{ // obrazki nale¿¹ do tego samego u¿ytkownika co kategoria - dodajê jedynie wiazania
+            int i =0;
+            for(Long image_fk :checked_list){
+                ContentValues cv = new ContentValues();
+                cv.put(ParentContract.Columns.IMAGE_FK, image_fk);
+                cv.put(ParentContract.Columns.PARENT_FK, executing_category_id);
+                cvArray[i++] = cv;
+            }
+            getContentResolver().bulkInsert(ParentContract.CONTENT_URI, cvArray);
+        }
+    }
+   
+    /**
+     * Funkcja sprawdza czy u¿ytkownik posiada obrazek o parametrach co obrazek o podanym id img_id (opis, nazwa pliku)
+     *
+     * @param img_id id obrazka z którego pobieram informacjê do porównania
+     * @param user_id id u¿ytkownika którego w którego zbiorze bêdê poszukiwa³ obrazka
+     * @return Long je¿eli znaleŸiono obrazek w zbiorze u¿ytkownika to zwracam jego id, jeœli nie zwracam id podane jako parametr
+     */
+    private Long checkIfImageAlreadyExistInUserSet(Long img_id, Long user_id){
+        Uri uri = Uri.parse(ImageContract.CONTENT_URI + "/" + img_id);
+        String[] projection = {"i."+ImageContract.Columns.FILENAME, "i."+ImageContract.Columns.DESC};
+        String description = null, filename = null;
+        Cursor c = getContentResolver().query(uri, projection , null, null, null);        // pobieram wartoœci kopiowanego obrazka
+        c.moveToFirst();
+        if(!c.isAfterLast()){
+            description = c.getString(1);
+            filename = c.getString(0);
+        }
+        c.close();
+        
+        if(filename != null && description != null){
+	        String selection = "i."+ImageContract.Columns.FILENAME+" = ? AND " + "i."+ImageContract.Columns.DESC + " = ? AND " +"i."+ImageContract.Columns.AUTHOR_FK+" = ? ";    // sprawdzam czy u¿ytkownik posiada w swoim zbiorze obrazek o podanych wartoœciach
+	        String selectionArgs[] = {filename,description, Long.toString(user_id)};
+	        c= getContentResolver().query(ImageContract.CONTENT_URI, new String[]{"i."+ImageContract.Columns._ID}, selection, selectionArgs, null);
+	        c.moveToFirst();
+	        if(!c.isAfterLast()){
+	            img_id = c.getLong(0);
+	            Log.i(LOG_TAG, "filename: " +filename+" description: "+ description+ " already exists in user: "+user_id);
+	        }
+	        c.close();
+        }
+        return img_id;
+    }
 	
 	private ContentValues createParentContentValue(Long image, Long parent){
 		ContentValues bind_cv = new ContentValues();

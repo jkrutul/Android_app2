@@ -13,6 +13,7 @@ import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.util.Log;
 
 public class BitmapCalc {
 	private final static String LOG_TAG = "BitmapCalc";
@@ -41,9 +42,9 @@ public class BitmapCalc {
 				inSampleSize = 2;
 			}
 		}
-		// Log.w(LOG_TAG, "outHeight: "+options.outHeight +
-		// " outWidth:"+options.outWidth +" rH"+ reqHeight +" rW"+ reqWidth
-		// +" inSample:" +inSampleSize);
+		 Log.w(LOG_TAG, "outHeight: "+options.outHeight +
+		 " outWidth:"+options.outWidth +" rH"+ reqHeight +" rW"+ reqWidth
+		 +" inSample:" +inSampleSize);
 		return inSampleSize;
 	}
 
@@ -72,8 +73,7 @@ public class BitmapCalc {
 		BitmapFactory.decodeResource(res, resId, options);
 
 		// Calculate in SampleSize
-		options.inSampleSize = calculateInSampleSize(options, reqWidth,
-				reqHeight);
+		options.inSampleSize = calculateInSampleSize(options, reqWidth, reqWidth/*reqHeight*/);
 
 		// Decode bitmap with inSampleSize set
 		options.inJustDecodeBounds = false;
@@ -81,8 +81,7 @@ public class BitmapCalc {
 		return BitmapFactory.decodeResource(res, resId, options);
 	}
 
-	public static Bitmap decodeSampleBitmapFromFile(String filePath,
-			int reqWidth, int reqHeight) {
+	public static Bitmap decodeSampleBitmapFromFile(String filePath,	int reqWidth, int reqHeight) {
 
 		// First decode with inJustDecodeBounds = true to check dimensions
 		final BitmapFactory.Options options = new BitmapFactory.Options();
@@ -91,8 +90,7 @@ public class BitmapCalc {
 		BitmapFactory.decodeFile(filePath, options);
 
 		// Calculate in SampleSize
-		options.inSampleSize = calculateInSampleSize(options, reqWidth,
-				reqHeight);
+		options.inSampleSize = calculateInSampleSize(options, reqWidth,	 reqWidth/*reqHeight*/);
 		options.inPurgeable = true;
 		// Decode bitmap with inSampleSize set
 		options.inJustDecodeBounds = false;

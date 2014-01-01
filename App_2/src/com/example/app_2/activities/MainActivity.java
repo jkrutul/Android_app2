@@ -1,7 +1,8 @@
 package com.example.app_2.activities;
 
-import android.annotation.SuppressLint;
-import android.annotation.TargetApi;
+import java.io.File;
+import java.io.IOException;
+
 import android.app.ActionBar;
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -9,8 +10,6 @@ import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.graphics.drawable.BitmapDrawable;
-import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.util.Log;
@@ -20,13 +19,9 @@ import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.ShareActionProvider;
 
-import com.example.app_2.App_2;
 import com.example.app_2.R;
-import com.example.app_2.provider.Images;
 import com.example.app_2.storage.Database;
 import com.example.app_2.storage.Storage;
-import com.example.app_2.utils.Utils;
-import com.sonyericsson.util.ScalingUtilities.ScalingLogic;
 
 public class MainActivity extends Activity {
 	private final static String LOG_TAG = "MainActivity";
@@ -82,8 +77,12 @@ public class MainActivity extends Activity {
 					public void onClick(DialogInterface dialog, int which) {
 						Database.open();
 						Database.recreateDB();
+						File directory = Storage.getAppRootDir();
+						try {
+							Storage.delete(directory);
+						} catch (IOException e) {
 						
-						//Images.addImagesToDatabase(Storage.getThumbsMaxDir().getAbsolutePath(), "-1");
+						}
 					}
 		        }).create().show();
 			 break;

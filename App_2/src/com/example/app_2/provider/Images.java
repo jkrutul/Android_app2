@@ -246,7 +246,7 @@ public class Images {
 			return null;
 	}
 
-
+/*
 	public static String getImageThumbsPath(String imageName) {
 		String path = Storage.getThumbsDir() + File.separator + imageName;
 		File f = new File(path);
@@ -295,6 +295,8 @@ public class Images {
 					+ images.get(number).getImageName();
 		return null;
 	}
+	
+	*/
 
 	/**
 	 * checks if a file with the specified path is a picture
@@ -364,7 +366,7 @@ public class Images {
 			for (File image_file : img_files) {
 				publishProgress((int) ((i / (float) count) * 100));
 				
-				uniqueFilenames.add(Storage.scaleAndSaveBitmapFromPath(image_file.getAbsolutePath(), new int[]{1,4,8}, Bitmap.CompressFormat.PNG,100,db, filenameVerification));
+				uniqueFilenames.add(Storage.scaleAndSaveBitmapFromPath(image_file.getAbsolutePath(), new int[]{1,4,8}, Bitmap.CompressFormat.PNG,90,db, filenameVerification));
 				i++;
 				if (isCancelled())
 					break;
@@ -441,6 +443,12 @@ public class Images {
 			return null;
 			*/
 			ArrayList<String> uniqueFilename = new ArrayList<String>();
+			int dev_width=(App_2.getMaxHeight()> App_2.getMaxWidth()) ?	App_2.getMaxWidth() : App_2.getMaxHeight();
+
+
+			
+			
+			
 			uniqueFilename.add(Storage.scaleAndSaveBitmapFromPath(path_toIMG, new int[]{1,4,8}, Bitmap.CompressFormat.PNG,100,db, filenameVerification));
 			addNewEntriesToImageTable(uniqueFilename, null ,null);
 			return null;

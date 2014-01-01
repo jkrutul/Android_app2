@@ -1,6 +1,7 @@
 package com.example.app_2.fragments;
 
-import java.nio.channels.SelectableChannel;
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedList;
 
@@ -8,7 +9,10 @@ import android.animation.Animator;
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.ActionBar;
+import android.app.AlertDialog;
 import android.content.ContentValues;
+import android.content.DialogInterface;
+import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
@@ -45,7 +49,6 @@ import android.widget.TextView;
 import com.example.app_2.App_2;
 import com.example.app_2.R;
 import com.example.app_2.activities.ImageDetailsActivity;
-import com.example.app_2.activities.ImageEditActivity;
 import com.example.app_2.activities.ImageGridActivity;
 import com.example.app_2.contentprovider.ImageContract;
 import com.example.app_2.contentprovider.ImagesOfParentContract;
@@ -53,6 +56,7 @@ import com.example.app_2.contentprovider.ParentContract;
 import com.example.app_2.contentprovider.ParentsOfImageContract;
 import com.example.app_2.models.EdgeModel;
 import com.example.app_2.models.ImageObject;
+import com.example.app_2.storage.Database;
 import com.example.app_2.storage.Storage;
 import com.example.app_2.utils.DFS;
 import com.example.app_2.utils.ImageLoader;
@@ -80,8 +84,8 @@ public class ImageGridFragment extends Fragment implements LoaderCallbacks<Curso
 	
 	public boolean mEditMode = true;
 
-	private static ImageGridActivity executingActivity;
-	private static SharedPreferences sharedPref; 
+	private  ImageGridActivity executingActivity;
+	private  SharedPreferences sharedPref; 
 	
 	private static final int dev_h = App_2.getMaxHeight();
 	private static final int dev_w = App_2.getMaxWidth();
@@ -209,8 +213,10 @@ public class ImageGridFragment extends Fragment implements LoaderCallbacks<Curso
 		@Override
 		public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
 	        switch (item.getItemId()) {
-            case R.id.remove:
+            case R.id.remove:          	
             	removeSelectedBindings();
+            	
+            	
                 mode.finish(); // Action picked, so close the CAB
                 return true;
             case R.id.make_categoies:
@@ -288,20 +294,20 @@ public class ImageGridFragment extends Fragment implements LoaderCallbacks<Curso
 
     	adapter = new SimpleCursorAdapter(executingActivity.getApplicationContext(), R.layout.image_item, null, from, to, 0);
     	adapter.setViewBinder(vb);
-		getLoaderManager().initLoader(LOADER_ID, this.getArguments(), this);
+		//getLoaderManager().initLoader(LOADER_ID, this.getArguments(), this);
 		setHasOptionsMenu(true);
 	}  
     
 	@Override
 	public void onResume(){
 		super.onResume();
-		if(restartLoader){
+		//if(restartLoader){
 			Bundle args = new Bundle();		
 			args.putLong("CATEGORY_ID", ImageGridActivity.actual_category_fk);
 			getLoaderManager().restartLoader(1, args, this);		
 			restartLoader = false;
 			executingActivity.setDrawer();
-		}
+		//}
 
 	}
 	
@@ -398,7 +404,7 @@ public class ImageGridFragment extends Fragment implements LoaderCallbacks<Curso
 		refreshDrawer();
 	}
 	
-	public void removeSelectedBindings(){
+	private void removeSelectedBindings(){
 		boolean isCategory = false;
 		boolean isBindToAnotherCategory = false;
 		String where = ParentContract.Columns.IMAGE_FK+" = ? AND "+ ParentContract.Columns.PARENT_FK+" = ? ";
@@ -406,12 +412,15 @@ public class ImageGridFragment extends Fragment implements LoaderCallbacks<Curso
 		Long main_dict_fk = App_2.getMain_dict_id();
 		Cursor c =null;
 		
-		for(Long l : selected_images_ids){
+		for(final Long l : selected_images_ids){
 			Uri uri = Uri.parse(ImageContract.CONTENT_URI + "/" + l);
+			String categoryName = null;
+			
 			c =getActivity().getContentResolver().query(uri, new String[]{ImageContract.Columns.CATEGORY}, null, null, null);
 			if(c!= null){
 				c.moveToFirst();
-				if(c.getString(0) != null)
+				categoryName = c.getString(0);
+				if(categoryName != null)
 					isCategory = true;
 			}
 
@@ -427,32 +436,42 @@ public class ImageGridFragment extends Fragment implements LoaderCallbacks<Curso
 						parentsOfSelectedImage.add(parents_cursor.getLong(0));
 						parents_cursor.moveToNext();
 					}
-
+					parents_cursor.close();
 					parentsOfSelectedImage.remove(main_dict_fk); // TODO nie trzeba tego usuwaæ bo nie zwraca obiektów króre nie maj¹ autora
 					parentsOfSelectedImage.remove(category_fk);
 					isBindToAnotherCategory = (parentsOfSelectedImage.size()>0) ? true : false;
 				}
 				
 				
-				if(!isBindToAnotherCategory){//jeœli nie to DFS i usuwam wszyskie relacje		
+				
+				if(!isBindToAnotherCategory){//jeœli nic innego nie wskazuje na kategoriê 
 					DFS.getElements(l);
-					for(EdgeModel em : DFS.edges){
-						getActivity().getContentResolver().delete(ParentContract.CONTENT_URI, where , new String[]{String.valueOf(em.getChild()), String.valueOf(em.getParent()) });
-					   ContentValues cv = new ContentValues();
+					boolean isCategoryEmpty = (DFS.edges.size() == 0) ? true : false;	// sprawdzam czy kategoria jest pusta
+					
+					if(isCategoryEmpty){							// jeœli tak usuwam kategoriê ( ustawiam dla obrazka null w polu kategorii )
+						ContentValues cv = new ContentValues();
 						cv.put(ImageContract.Columns.CATEGORY, (Long)null);
-						// jeœli obrazki poddrzewa s¹ kategoriami to ustawiam na "null", ¿eby nie by³y widoczne w DrawerPane
-						Uri p_uri = Uri.parse(ImageContract.CONTENT_URI + "/" + em.getParent());
+						Uri p_uri = Uri.parse(ImageContract.CONTENT_URI + "/" + l);
 						getActivity().getContentResolver().update(p_uri, cv, null, null);
 	
-						//Uri c_uri = Uri.parse(ImageContract.CONTENT_URI + "/" + em.getChild());
-						//getActivity().getContentResolver().update(c_uri, cv, null, null);
-					}					
+					}else{											// kategoria nie jest pusta, pytam u¿ytkownika czy pozostawiæ j¹ w s³owniku						
+						new AlertDialog.Builder(getActivity())
+				        .setTitle("Kategoria \""+ categoryName+"\" nie jest pusta.")
+				        .setMessage("Pozostawiæ j¹ w s³owniku?")
+				        .setNegativeButton("TAK", null)
+				        .setPositiveButton("Nie, usuñ kategoriê ze s³ownika", new OnClickListener() {
+				        	
+
+							@Override
+							public void onClick(DialogInterface dialog, int which) {
+								removeCategoryRelations(l);
+							}
+				        }).create().show();	
+					}
 				}
 				//jeœli tak to usuwam tylko wiazanie na akutaln¹ kategoriê	
 			}		
-				getActivity().getContentResolver().delete(ParentContract.CONTENT_URI, where , new String[]{String.valueOf(l), String.valueOf(category_fk) });
-
-		
+				getActivity().getContentResolver().delete(ParentContract.CONTENT_URI, where , new String[]{String.valueOf(l), String.valueOf(category_fk) });		
 		}
 
 		c.close();
@@ -462,6 +481,24 @@ public class ImageGridFragment extends Fragment implements LoaderCallbacks<Curso
 		refreshDrawer();
 		
 	}
+	
+	private void removeCategoryRelations(Long category){
+		DFS.getElements(category);
+		for(EdgeModel em : DFS.edges){
+			getActivity().getContentResolver().delete(ParentContract.CONTENT_URI, ParentContract.Columns.IMAGE_FK+" = ? AND "+ ParentContract.Columns.PARENT_FK+" = ? " , new String[]{String.valueOf(em.getChild()), String.valueOf(em.getParent()) });
+		   ContentValues cv = new ContentValues();
+			cv.put(ImageContract.Columns.CATEGORY, (Long)null);
+			// jeœli obrazki poddrzewa s¹ kategoriami to ustawiam na "null", ¿eby nie by³y widoczne w DrawerPane
+			Uri p_uri = Uri.parse(ImageContract.CONTENT_URI + "/" + em.getParent());
+			getActivity().getContentResolver().update(p_uri, cv, null, null);
+
+			//Uri c_uri = Uri.parse(ImageContract.CONTENT_URI + "/" + em.getChild());
+			//getActivity().getContentResolver().update(c_uri, cv, null, null);
+		}		
+	}
+	
+	
+	
 	
 	private void refreshDrawer(){
 		executingActivity.setDrawer();

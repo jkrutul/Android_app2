@@ -5,7 +5,6 @@ import java.util.ArrayList;
 
 import android.database.Cursor;
 import android.graphics.Color;
-import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -24,7 +23,6 @@ import android.view.View.OnClickListener;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.CheckBox;
-import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.FilterQueryProvider;
 import android.widget.ImageView;
@@ -43,8 +41,8 @@ import com.example.app_2.storage.Database;
 import com.example.app_2.storage.Storage;
 import com.example.app_2.utils.DFS;
 import com.example.app_2.utils.ImageLoader;
-import com.example.app_2.utils.ImageLoader.BitmapWorkerTask;
 import com.example.app_2.widget.CheckableLinearLayout;
+import com.example.app_2.widget.InertCheckBox;
 
 public class ImagesMultiselectFragment extends ListFragment implements LoaderCallbacks<Cursor>{
 	private final static String LOG_TAG = "ImageMultiselectFragment";
@@ -54,6 +52,7 @@ public class ImagesMultiselectFragment extends ListFragment implements LoaderCal
 	private CheckBox onlyCategoriesCheckBox;
 	private Spinner mSpinner;
 	ArrayList<ImageSpinnerItem> items;
+	ArrayList<Long> imagesInExecutingCategory = new ArrayList<Long>();
 		
 	int mCurCheckPosition = 0;
 	public static Long row_id;
@@ -129,15 +128,15 @@ public class ImagesMultiselectFragment extends ListFragment implements LoaderCal
 																							// SELECT:
 		selection = "p."+ParentContract.Columns.PARENT_FK+" = ? " 							// - obrazki które wskazuj¹ na s³ownik ( czyli wszystkie )
 					+ " AND i." + ImageContract.Columns.AUTHOR_FK + "= ? " 					// - w³aœcicielem jest autor kategorii do której dodajemy obrazki
-					+ " AND i." + ImageContract.Columns._ID + "<> ? ";						// - usuñ mo¿liwoœæ tworzenia pêtli na kategori¹ z kórej wywo³ujemy dodawanie obrazka
+					+ " AND i." + ImageContract.Columns._ID + "<> ? ";						// - usuñ mo¿liwoœæ tworzenia pêtli prostych na kategori¹ z której wywo³ujemy dodawanie obrazka
 	
 		selectionArgs= new String[]{Long.toString(Database.getMainDictFk()),
 									Long.toString(executing_category_author),
 									Long.toString(executing_category_id) 
 									};
 		
-																							// TODO - usuñ mo¿liwoœæ dodawania obrazków kóre s¹ ju¿ tej kategorii lub oznacz jako dodane
-
+		getImageIdsFromCategory(executing_category_id);										// pobieram listê obrazków bêd¹cych ju¿ w kategorii
+		
 	} 
 	
 	@Override
@@ -150,9 +149,7 @@ public class ImagesMultiselectFragment extends ListFragment implements LoaderCal
 		onlyCategoriesCheckBox = (CheckBox) v.findViewById(R.id.show_only_categories_cb);
 		onlyCategoriesCheckBox.setOnClickListener(cb_clickListener);
 
-		
 		addItemsOnUserSpinner();
-		
 		return v;
 	};
 	
@@ -163,7 +160,7 @@ public class ImagesMultiselectFragment extends ListFragment implements LoaderCal
 		selectedItemsOnCreate = new ArrayList<Long>();
 		
 		String[] from = new String[] {ImageContract.Columns._ID,  ImageContract.Columns.FILENAME,  ImageContract.Columns.DESC,  ImageContract.Columns.CATEGORY, UserContract.Columns.USERNAME};
-		int[] to = new int[] { 0, R.id.mc_icon, R.id.mc_text, R.id.mc_dfs, R.id.mc_author }; 
+		int[] to = new int[] {0, R.id.mc_icon, R.id.mc_text, R.id.mc_info, R.id.mc_author }; 
 		
 		listView = getListView();
 		adapter = new SimpleCursorAdapter( getActivity().getApplicationContext(), R.layout.multiple_choice_item, null, from, to, 0);
@@ -197,6 +194,22 @@ public class ImagesMultiselectFragment extends ListFragment implements LoaderCal
 					//	tv.setText("");
 						
 					return true;
+					
+					
+				case R.id.mc_info:
+					TextView tv = (TextView) view;
+					CheckableLinearLayout cl  = (CheckableLinearLayout) view.getParent().getParent().getParent();
+					if(imagesInExecutingCategory.contains(img_id)){
+						tv.setText("Jest w kategorii");
+						cl.setClickable(true);
+					}
+					else{
+						tv.setText("");
+						cl.setClickable(false);
+						}
+					return true;
+								
+					
 
 				default:
 					return false;
@@ -205,9 +218,7 @@ public class ImagesMultiselectFragment extends ListFragment implements LoaderCal
 			}
 		});
 		
-		setListAdapter(adapter);
-
-		
+		setListAdapter(adapter);		
 		getActivity().getSupportLoaderManager().initLoader(LOADER_ID, null, this);
 
 	}
@@ -223,17 +234,6 @@ public class ImagesMultiselectFragment extends ListFragment implements LoaderCal
         }
         return selectedItems;
 	}
-	/*
-	public ArrayList<Long> getUncheckedItemsIds(ArrayList<Long> checkedItemIds){
-		 ArrayList<Long> unSelectedItems  = new ArrayList<Long>();
-		 for(Long l : selectedItemsOnCreate){
-			 if(!checkedItemIds.contains(l))
-				 unSelectedItems.add(l);
-		 }
-		 return unSelectedItems;
-	}
-	*/
-	
 
 	private void addItemsOnUserSpinner(){
 		final LoaderCallbacks<Cursor> lc =  (LoaderCallbacks<Cursor>)this;
@@ -358,11 +358,23 @@ public class ImagesMultiselectFragment extends ListFragment implements LoaderCal
 					final TextView textView = textViewReference.get();
 					textView.setText("zawiera: "+ count + " elementów");	
 			}
-
 		}
-		
 	}
 
+	
+	
+	private void getImageIdsFromCategory(Long category_id){
+		if(executing_category_id != null){
+			Uri uri = Uri.parse(ImagesOfParentContract.CONTENT_URI+"/"+category_id);
+			Cursor c= getActivity().getContentResolver().query(uri, new String[]{"i."+ImageContract.Columns._ID}, null, null, null);
+			c.moveToFirst();
+			while(!c.isAfterLast()){
+				imagesInExecutingCategory.add(c.getLong(0));
+				c.moveToNext();
+			}
+			c.close();
+		}
+	}
 	
 	
 	//		---- L	O	A	D	E	R	----

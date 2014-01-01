@@ -29,9 +29,9 @@ import com.example.app_2.utils.Utils;
 public class Storage {
 	private static final String LOG_TAG = "Storage";
 	
-	public static final String IMG_DIR = "images";				// pobrane obrazki
+	//public static final String IMG_DIR = "images";				// pobrane obrazki
 	public static final String IMG_THUBS = "thumbs";    		// miniatury obrazków
-	public static final String IMG_THUMBS_MAX = "thumbs_max";	// miniatury obrazków które siê mieszcz¹ na ca³ym ekranie tablety/smartfona
+	//public static final String IMG_THUMBS_MAX = "thumbs_max";	// miniatury obrazków które siê mieszcz¹ na ca³ym ekranie tablety/smartfona
 	public static final String TEMP = "temp";
 	public static final int IO_BUFFER_SIZE = 8 * 1024;
 	public static final int dev_width = App_2.getMaxWidth();
@@ -51,6 +51,7 @@ public class Storage {
 		}
 	}
 	
+	/*
 	public static File createImageFile() {
 
 		String JPEG_FILE_PREFIX = "img";
@@ -67,6 +68,7 @@ public class Storage {
 		}
 		return null;
 	}
+	*/
 	
 	public static File createTempImageFile(){
 		String JPEG_FILE_PREFIX = "img";
@@ -111,6 +113,7 @@ public class Storage {
 			return null;
 	}
 	
+	/*
 	public static File getImagesDir(){
 		return getsDir(IMG_DIR);
 		}
@@ -121,14 +124,17 @@ public class Storage {
 		return getsDir(IMG_THUBS);
 		}
 	
-	
+	public static File getThumbsMaxDir(){
+		return getsDir(IMG_THUMBS_MAX);
+	}
+	*/
 	public static File getScaledThumbsDir(String scale, boolean createIfNotExist){
-		File file = new File(getAppRootDir().getAbsolutePath() + File.separator	+ scale);
+		File file = new File(getAppRootDir().getAbsolutePath() + File.separator+ IMG_THUBS+ File.separator+ scale+ File.separator);
 		if(file.exists())
 			return file;
 		else
 			if(createIfNotExist){
-				if (!file.mkdir())
+				if (!file.mkdirs())
 					Log.e(LOG_TAG, "Directory:"+file.getAbsolutePath()+" not created");
 				else
 					return file;
@@ -138,13 +144,13 @@ public class Storage {
 	
 
 	
-	public static File getThumbsMaxDir(){
-		return getsDir(IMG_THUMBS_MAX);
-	}
+
 	
 	public static File getTempDir(){
 		return getsDir(TEMP);
 	}
+	
+	
 	public static File getsDir(String dir) {
 		File file = new File(getAppRootDir().getAbsolutePath() + File.separator	+ dir);
 		if(file.exists()){
@@ -155,6 +161,8 @@ public class Storage {
 		}
 		return file;
 	}
+
+	
 	
 	public static List<File> getFilesListFromDir(File dir){
 		if(!dir.exists()){
@@ -253,6 +261,7 @@ public class Storage {
 				bitmap = BitmapCalc.decodeSampleBitmapFromFile(path_toIMG, new_w, new_h); // mo¿e byæ null
 			else
 				bitmap = BitmapCalc.decodeSampleBitmapFromFile(last_saved_img_path, new_w, new_h);
+			
 			try {
 				// sprawdzam czy plik o podanej nazwie nie istnieje w bazie 
 				if(filenameUniqueVerification){
@@ -266,7 +275,7 @@ public class Storage {
 				last_saved_img_path = app_thumb_dir+ File.separator+filename;
 				FileOutputStream out = new FileOutputStream(last_saved_img_path);
 				bitmap.compress(compressformat, quality, out);
-				Log.i(LOG_TAG,"filename: " + path_toIMG +" saved");
+				Log.i(LOG_TAG,"filename: " + path_toIMG +" saved w: "+new_w+" h: "+new_h);
 				
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -293,7 +302,7 @@ public class Storage {
 			}else
 				scale/=2;
 		}while(scale!=1);
-		//barak obrazka!!!
+		//brak obrazka!!!
 		return null;
 	}
 	
@@ -309,10 +318,12 @@ public class Storage {
 			return null;
 		File img_f = null;
 		int scale = (int) Math.floor(dev_width/width);
+		Log.i(LOG_TAG, "scale request: " + scale);
 		scale  = (scale >= 8) ? 8: scale;
 		do{
 			File f = Storage.getScaledThumbsDir(String.valueOf(scale), false);
 			if(f!= null){											//sprawdzam czy istnieje ju¿ skalowany obrazek
+				//Log.i(LOG_TAG, "scale response:" +scale);
 				String dir_to_scaled = f.getAbsolutePath();
 				img_f = new File(dir_to_scaled + File.separator + filename);
 				if(img_f.exists()){
@@ -329,6 +340,47 @@ public class Storage {
 
 		return null;
 	}
+	
+
+    public static void delete(File file)
+    	throws IOException{
+ 
+    	if(file.isDirectory()){
+ 
+    		//directory is empty, then delete it
+    		if(file.list().length==0){
+ 
+    		   file.delete();
+    		   System.out.println("Directory is deleted : " 
+                                                 + file.getAbsolutePath());
+ 
+    		}else{
+ 
+    		   //list all the directory contents
+        	   String files[] = file.list();
+ 
+        	   for (String temp : files) {
+        	      //construct the file structure
+        	      File fileDelete = new File(file, temp);
+ 
+        	      //recursive delete
+        	     delete(fileDelete);
+        	   }
+ 
+        	   //check the directory again, if empty then delete it
+        	   if(file.list().length==0){
+           	     file.delete();
+        	     System.out.println("Directory is deleted : " 
+                                                  + file.getAbsolutePath());
+        	   }
+    		}
+ 
+    	}else{
+    		//if file, then delete it
+    		file.delete();
+    		System.out.println("File is deleted : " + file.getAbsolutePath());
+    	}
+    }
 
 
 

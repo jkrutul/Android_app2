@@ -80,7 +80,7 @@ import com.sonyericsson.util.ScalingUtilities.ScalingLogic;
  * Simple FragmentActivity to hold the main {@link ImageGridFragment} and not much else.
  */
 public class ImageGridActivity extends FragmentActivity implements TextToSpeech.OnInitListener, OnNavigationListener{
-    private static final String TAG = "ImageGridActivity";
+    private static final String LOG_TAG = "ImageGridActivity";
 
     public static final String GRID_FRAGMENT_TAG = "FragmentGrid";
     private static final String EXPRESSION_FRAGMENT_TAG = "FragmentExpression";
@@ -105,13 +105,13 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 
     private Map<String, Long> mCategoryMap;
 	public TextToSpeech tts;
-    CharSequence mTitle;
-    CharSequence mDrawerTitle;
+    //CharSequence mTitle;
+    //private CharSequence mDrawerTitle;
     public ImageLoader imageLoader;
     public ExpressionListFragment elf;
     Long logged_user_root;
     Long logged_user_id;
-    public static ImageGridFragment igf;
+    public ImageGridFragment igf;
     
 	private static final int TTS_REQUEST_CODE = 1;
     private static final int SETTINGS_REQUEST_CODE = 37;
@@ -136,7 +136,7 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
         mActionBar = getActionBar();
         mActionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_LIST);
         if(mEditMode){
-    		mActionBar.setBackgroundDrawable(new ColorDrawable(0xff000000)); 
+    		mActionBar.setBackgroundDrawable(new ColorDrawable(0xff0084b3)); 
     		mActionBar.setDisplayShowTitleEnabled(false);
     		mActionBar.setDisplayShowTitleEnabled(true);
         }else{
@@ -351,6 +351,11 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 			if(actual_category_fk != id){
 				selectItem(position);
 				igf.finishActionMode();
+				Long firstCategory = fragmentsHistory.get(0);
+				fragmentsHistory.clear();
+				if(firstCategory != null && id!= firstCategory){
+					fragmentsHistory.add(firstCategory);
+				}
 			}
 			else{
 				Toast.makeText(getApplicationContext(), "Jesteœ ju¿ w tej kategorii", Toast.LENGTH_SHORT ).show();
@@ -426,7 +431,7 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 		String[] projection = {"i."+ImageContract.Columns._ID, "i."+ImageContract.Columns.FILENAME, "i."+ImageContract.Columns.CATEGORY};
 		String selection;
 		String[] selectionArgs = {""};
-		mDrawerTitle = "Wybierz kategoriê";
+
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
        mDrawerLayout.getViewTreeObserver().addOnGlobalLayoutListener(vto);
        // Utils.setWallpaper(mDrawerLayout, layout_height, layout_width, null, ScalingLogic.CROP);
@@ -438,15 +443,19 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 	                R.string.drawer_open,  /* "open drawer" description */
 	                R.string.drawer_close  /* "close drawer" description */
                 ) {
+        	
+    		String mActionBarTitle = null;
+    		ActionBar mActionBar = getActionBar();
 
             /** Called when a drawer has settled in a completely closed state. */
             public void onDrawerClosed(View view) {
-                getActionBar().setTitle(mTitle);
+            	mActionBar.setTitle(mActionBarTitle);
             }
 
             /** Called when a drawer has settled in a completely open state. */
             public void onDrawerOpened(View drawerView) {
-				getActionBar().setTitle(mDrawerTitle);
+            	mActionBarTitle = (String) mActionBar.getTitle();
+            	mActionBar.setTitle( "Wybierz kategoriê");
             }
         };
 
@@ -465,7 +474,7 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
         else
         	selection = "i."+ImageContract.Columns.CATEGORY + " IS NOT NULL AND (i."+ImageContract.Columns.CATEGORY +" <> ?)";
         
-        Cursor c = getContentResolver().query(ImageContract.CONTENT_URI, projection, selection, selectionArgs, null);
+        Cursor c = getContentResolver().query(ImageContract.CONTENT_URI, projection, selection, selectionArgs, ImageContract.Columns._ID+", " +ImageContract.Columns.AUTHOR_FK);
         
        // MatrixCursor extras = new MatrixCursor(new String[] {ImageContract.Columns._ID, ImageContract.Columns.FILENAME, ImageContract.Columns.CATEGORY});
         //extras.addRow(new String[]{"-1","1.jpg", "HOME"});
@@ -479,6 +488,7 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
         	mCategoryTitles.add(category);
         	c.moveToNext();
         }
+      
        
 		String[] from = new String[] {
 				   ImageContract.Columns._ID, 
@@ -512,7 +522,8 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 	public void onBackPressed() {
 		if(fragmentsHistory.size()>0){
 			Long previousFragmentId = fragmentsHistory.get(fragmentsHistory.size()-1);
-			replaceGridFragment(previousFragmentId, true, true);
+			
+			replaceGridFragment(previousFragmentId, true, false);
 		}
 		else{ // opuszczam aplikacje
 			if (doubleBackToExitPressedOnce) {
@@ -570,13 +581,15 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 		Bundle args = new Bundle();			
 		args.putLong("CATEGORY_ID", category_id);
 		igf.setArguments(args);
-		
 		Long prevCategoryFk = actual_category_fk;
 		actual_category_fk = category_id;
+		
+		
 
 	     
 	    if(gotoPreviousFragment){
 	    	fragmentsHistory.remove(fragmentsHistory.size()-1);
+			setActionBarTitleFromCategoryId(category_id);
 			final FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
 			ft.setCustomAnimations(android.R.anim.slide_in_left, android.R.anim.slide_out_right);//R.anim.slide_in_right, R.anim.slide_out_left);
 		    ft.replace(R.id.content_frame, igf, ImageGridActivity.GRID_FRAGMENT_TAG);
@@ -591,6 +604,21 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 		    ft.commit();	
 	    }
         
+	}
+	
+	
+	private void setActionBarTitleFromCategoryId(Long category_id){
+		Uri uri = Uri.parse(ImageContract.CONTENT_URI+"/"+category_id);
+		Cursor c = getApplicationContext().getContentResolver().query(uri, new String[]{ImageContract.Columns.DESC},null,null,null);
+		if(c != null){
+			c.moveToFirst();
+			if(!c.isAfterLast()){
+				getActionBar().setTitle(c.getString(0));
+			}
+			c.close();
+		}
+
+		
 	}
 
 }

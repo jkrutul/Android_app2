@@ -28,6 +28,7 @@ import com.example.app_2.intents.ImageIntents;
 import com.example.app_2.provider.Images.AddingImageTask;
 import com.example.app_2.storage.Database;
 import com.example.app_2.storage.Storage;
+import com.example.app_2.utils.ImageLoader;
 import com.example.app_2.utils.Utils;
 import com.sonyericsson.util.ScalingUtilities;
 import com.sonyericsson.util.ScalingUtilities.ScalingLogic;
@@ -131,7 +132,8 @@ public class AddUserActivity extends Activity {
 				else
 					pathToNewImage = Storage.readFromPreferences(null,"photoPath", this, Activity.MODE_PRIVATE);
 				
-				mUserImage.setImageBitmap(ScalingUtilities.decodeFile(pathToNewImage, mUserImage.getWidth(), mUserImage.getHeight(), ScalingLogic.FIT));
+				//mUserImage.setImageBitmap(ScalingUtilities.decodeFile(pathToNewImage, 300, 300, ScalingLogic.FIT));
+				ImageLoader.loadBitmap(pathToNewImage, mUserImage);
 				mHintText.setVisibility(View.INVISIBLE);
 				Toast.makeText(this, pathToNewImage, Toast.LENGTH_LONG).show();		
 				
@@ -149,6 +151,7 @@ public class AddUserActivity extends Activity {
 	private void addNewUserToDb(String username, int ismale, String user_img){
 		ContentValues img_val = new ContentValues();								// stworzenie nowego korzenia dla u¿ytkownika
 		img_val.put(ImageContract.Columns.FILENAME, user_img);
+		img_val.put(ImageContract.Columns.DESC, username + " - G³ówna");
 		img_val.put(ImageContract.Columns.CATEGORY, username + " - G³ówna");
 		Uri img_uri = getContentResolver().insert(ImageContract.CONTENT_URI, img_val);
 		
