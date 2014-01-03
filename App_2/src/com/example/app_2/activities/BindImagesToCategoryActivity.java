@@ -192,10 +192,10 @@ public class BindImagesToCategoryActivity extends FragmentActivity implements On
 	                        c.close();
                         }
                     }
-                }else{											 // dodawana kategoria jest grafem
-						for(EdgeModel edge : DFS.edges){
-	                    Long parent = edge.getParent();
-	                    Long child = edge.getChild();
+                }else{                	// dodawana kategoria jest grafem
+					for(EdgeModel edge : DFS.edges){
+						Long parent = edge.getParent();
+		                Long child = edge.getChild();
 
 	                    if(!copied.keySet().contains(parent)){                    // parent
 	                    	Long parentInUser = checkIfImageAlreadyExistInUserSet(parent,category_author);

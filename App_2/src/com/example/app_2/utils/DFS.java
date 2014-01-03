@@ -18,6 +18,13 @@ public class DFS {
 	public static LinkedList<Long> visited = new LinkedList<Long>();
 	public static LinkedList<Long> stack = new LinkedList<Long>();
 	public static LinkedList<EdgeModel> edges = new LinkedList<EdgeModel>();
+	
+	
+	/**
+	 * Metoda przeszukiwania grafu w g³¹b od jego korzenia. Po przeszukaniu ustalone listy wierzcho³ków i krawêdzi (wraz z korzeniem)
+	 * @param  root - id korzenia grafu
+	 * @return int - liczbê wierzcho³ków grafu wraz z korzeniem
+	 */
 
 	public static int getElements(Long root) {
 		int element_counter = 0;

@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
@@ -22,6 +23,7 @@ import android.util.Log;
 
 
 import com.example.app_2.App_2;
+import com.example.app_2.utils.AsyncTask;
 import com.example.app_2.utils.BitmapCalc;
 import com.example.app_2.utils.Utils;
 
@@ -36,6 +38,12 @@ public class Storage {
 	public static final int IO_BUFFER_SIZE = 8 * 1024;
 	public static final int dev_width = App_2.getMaxWidth();
 	public static final int dev_height = App_2.getMaxHeight();
+	public static final int[] scaleTab = new int[]{1,4,8};
+	
+	
+	
+
+	
 	
 	/**
 	 * AppRootDirecotory is /Android/data/[packageName]/files/
@@ -142,6 +150,28 @@ public class Storage {
 		return null;
 	}
 	
+	
+	public static boolean removeThumbFile(String filename){
+		LinkedList<File> filesToRemove = new LinkedList<File>();
+		for(int scale :scaleTab){
+			File fileToRemove=  new File (getScaledThumbsDir(Integer.toString(scale), false).getAbsoluteFile() + File.separator + filename);
+			if(fileToRemove != null && fileToRemove.exists())
+				filesToRemove.add(fileToRemove);
+			
+		}
+		
+		
+		
+		
+		
+		
+		return false;
+	}
+
+	
+
+	
+	
 
 	
 
@@ -247,7 +277,7 @@ public class Storage {
 	}
 
 	
-	public static String scaleAndSaveBitmapFromPath(String path_toIMG, int[] scaleTab, Bitmap.CompressFormat compressformat, int quality,Database db, boolean filenameUniqueVerification ){
+	public static String scaleAndSaveBitmapFromPath(String path_toIMG,  Bitmap.CompressFormat compressformat, int quality,Database db, boolean filenameUniqueVerification ){
 		Bitmap bitmap;
 		String last_saved_img_path = null;
 		String filename = Utils.getFilenameFromPath(path_toIMG);

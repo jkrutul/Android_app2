@@ -1,5 +1,6 @@
 package com.example.app_2.fragments;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.LinkedList;
 
@@ -22,6 +23,7 @@ import android.support.v4.content.Loader;
 import android.support.v4.widget.SimpleCursorAdapter;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.Menu;
@@ -39,6 +41,7 @@ import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.example.app_2.App_2;
 import com.example.app_2.R;
@@ -54,6 +57,7 @@ import com.example.app_2.spinner.adapter.ImageSpinnerAdapter;
 import com.example.app_2.spinner.model.ImageSpinnerItem;
 import com.example.app_2.storage.Database;
 import com.example.app_2.storage.Storage;
+import com.example.app_2.utils.AsyncTask;
 import com.example.app_2.utils.DFS;
 import com.example.app_2.utils.ImageLoader;
 
@@ -365,8 +369,10 @@ public class ImageListFragment extends ListFragment implements LoaderCallbacks<C
 		switch (item.getItemId()) {
 		case DELETE_ID:		//TODO usuwanie z aplikacji obrazka
 			AdapterContextMenuInfo info = (AdapterContextMenuInfo) item.getMenuInfo();
-			Uri uri = Uri.parse(ImageContract.CONTENT_URI + "/"	+ info.id);
-			getActivity().getContentResolver().delete(uri, null, null);
+			removeImageFromApp(info.id, true);
+			
+			//Uri uri = Uri.parse(ImageContract.CONTENT_URI + "/"	+ info.id);
+			//getActivity().getContentResolver().delete(uri, null, null);
 			getLoaderManager().restartLoader(0, this.getArguments(), this);
 			return true;
 		}
@@ -465,86 +471,238 @@ public class ImageListFragment extends ListFragment implements LoaderCallbacks<C
 		adapter.swapCursor(null);
 	}
 
-	/*
-	private boolean removeImageFromApp(Long l){
-		boolean isCategory = false;
-		boolean isBindToAnotherCategory = false;
-		String where = ParentContract.Columns.IMAGE_FK+" = ? AND "+ ParentContract.Columns.PARENT_FK+" = ? ";
-		Long main_dict_fk = App_2.getMain_dict_id();
-		Cursor c =null;
-		
+	/***
+	 * Usuwa obrazek z bazy danych i dysku, jeœli usuwana jest kategoria, usuwa podkategorie których nikt nie u¿ywa 
+	 * @param l id usuwanego obrazka
+	 * @return true - jeœli usuniêto, false - w przeciwnym wypadku
+	*/
+	private boolean removeImageFromApp(Long id_to_delete, boolean removeGraphics){	
+		Long main_dict_fk = Database.getMainDictFk();
+		removeParentsEdges(id_to_delete);
 
-			Uri uri = Uri.parse(ImageContract.CONTENT_URI + "/" + l);
-			String categoryName = null;
-			
-			c =getActivity().getContentResolver().query(uri, new String[]{ImageContract.Columns.CATEGORY}, null, null, null);
-			if(c!= null){
-				c.moveToFirst();
-				categoryName = c.getString(0);
-				if(categoryName != null)
-					isCategory = true;
-			}
-
-			if(isCategory){
-				LinkedList<Long> parentsOfSelectedImage = new LinkedList<Long>();
-				//sprawdzam czy kategoria oprócz s³ownika i aktualnej kategorii wskazuje na coœ jeszcze,
-			
-				Uri parents_of_image_uri = Uri.parse(ParentsOfImageContract.CONTENT_URI+"/"+l);
-				Cursor parents_cursor= getActivity().getContentResolver().query(parents_of_image_uri, new String[]{"p."+ParentContract.Columns.PARENT_FK}, null, null, null);
-				if(parents_cursor!=null){
-					parents_cursor.moveToFirst();
-					while(!parents_cursor.isAfterLast()){
-						parentsOfSelectedImage.add(parents_cursor.getLong(0));
-						parents_cursor.moveToNext();
-					}
-					parents_cursor.close();
-					parentsOfSelectedImage.remove(main_dict_fk); // TODO nie trzeba tego usuwaæ bo nie zwraca obiektów króre nie maj¹ autora
-					parentsOfSelectedImage.remove(category_fk);
-					isBindToAnotherCategory = (parentsOfSelectedImage.size()>0) ? true : false;
-				}
+		if(isCategory(id_to_delete)){			
+				DFS.getElements(id_to_delete);
 				
-				
-				
-				if(!isBindToAnotherCategory){//jeœli nic innego nie wskazuje na kategoriê 
-					DFS.getElements(l);
-					boolean isCategoryEmpty = (DFS.edges.size() == 0) ? true : false;	// sprawdzam czy kategoria jest pusta
+				boolean isCategoryEmpty = (DFS.edges.size() == 0) ? true : false;	// sprawdzam czy kategoria jest pusta			
+				if(isCategoryEmpty)												// jeœli tak usuwam kategoriê ( ustawiam dla obrazka null w polu kategorii )
+					deleteImage(id_to_delete, removeGraphics);
+				else{																// kategoria nie jest pusta		
+					LinkedList<Long> dfs_list = DFS.visited;
+					dfs_list.remove(id_to_delete);
+					LinkedList<Long> imagesToDelete = filterNotUsedImages(dfs_list);
+					imagesToDelete.add(id_to_delete);
 					
-					if(isCategoryEmpty){							// jeœli tak usuwam kategoriê ( ustawiam dla obrazka null w polu kategorii )
-						ContentValues cv = new ContentValues();
-						cv.put(ImageContract.Columns.CATEGORY, (Long)null);
-						Uri p_uri = Uri.parse(ImageContract.CONTENT_URI + "/" + l);
-						getActivity().getContentResolver().update(p_uri, cv, null, null);
-	
-					}else{											// kategoria nie jest pusta				
-						DFS.getElements(l);
-						for(EdgeModel em : DFS.edges){
-							getActivity().getContentResolver().delete(ParentContract.CONTENT_URI, ParentContract.Columns.IMAGE_FK+" = ? AND "+ ParentContract.Columns.PARENT_FK+" = ? " , new String[]{String.valueOf(em.getChild()), String.valueOf(em.getParent()) });
-						   ContentValues cv = new ContentValues();
-							cv.put(ImageContract.Columns.CATEGORY, (Long)null);
-							// jeœli obrazki poddrzewa s¹ kategoriami to ustawiam na "null", ¿eby nie by³y widoczne w DrawerPane
-							Uri p_uri = Uri.parse(ImageContract.CONTENT_URI + "/" + em.getParent());
-							getActivity().getContentResolver().update(p_uri, cv, null, null);
-
-							//Uri c_uri = Uri.parse(ImageContract.CONTENT_URI + "/" + em.getChild());
-							//getActivity().getContentResolver().update(c_uri, cv, null, null);
-						}	
+					for(Long l : imagesToDelete){
+						removeParentsEdges(l);
+						removeChildEdges(l);
+						deleteImage(l, removeGraphics);
 					}
-				}
-				//jeœli tak to usuwam tylko wiazanie na akutaln¹ kategoriê	
-			}		
-			
-				
-				getActivity().getContentResolver().delete(ParentContract.CONTENT_URI, where , new String[]{String.valueOf(l), String.valueOf(category_fk) });		
-		
+				}	
+		}else{
+			deleteImage(id_to_delete, removeGraphics);
+		}
 
-		c.close();
-		Bundle args = new Bundle();		
-		args.putLong("CATEGORY_ID", category_fk);
-		getLoaderManager().restartLoader(1, args, this);
-		refreshDrawer();
-		
-		
 		return false;
 	}
-	*/
+	
+	private LinkedList<Long> filterNotUsedImages(LinkedList<Long> dfs_list){
+		LinkedList<Long> inSet = new LinkedList<Long>();
+		
+		for(Long e : dfs_list){
+			LinkedList<Long> ll = getParents(e);
+			ll.remove(Database.getMainDictFk());
+			ll.removeAll(dfs_list);
+			if(ll.size() == 0){
+				inSet.add(e);
+			}
+		}
+		return inSet;
+	}
+
+	/**
+	 * Usuwa obrazek z bazy i grafikê z dysku, nie usuwa wi¹zañ!
+	 * @param l - id pustej kategorii
+	 * @return true - operacja siê powiod³a, false - wyst¹pi³ b³¹d
+	 */
+	private boolean deleteImage(Long l, boolean removeGraphics){
+		String filename= null;
+		Uri cat_uri = Uri.parse(ImageContract.CONTENT_URI + "/" + l);
+		
+		if(removeGraphics){
+			// pobieram nazê pliku z bazy dla kategorii
+			Cursor c = getActivity().getContentResolver().query(cat_uri, new String[]{ImageContract.Columns.FILENAME}, null, null, null);
+			if(c!=null){
+				c.moveToFirst();
+				if(!c.isAfterLast())
+					filename = c.getString(0);
+				c.close();
+			}
+	
+			if(filename != null){
+				ArrayList<String> filesToDelete = new ArrayList<String>();
+				filesToDelete.add(filename);
+				RemoveFilesTask rft = new RemoveFilesTask();
+				rft.execute(filesToDelete);
+			}			
+		}
+
+		
+		int row_deleted = getActivity().getContentResolver().delete(cat_uri,  null, null);
+		if(row_deleted == 1 && filename !=null)		// TODO poprawiæ spr
+			return true;
+		else
+			return false;
+	}
+	
+	/***
+	 * Usuwa obrazek o podanym id ze wszyskich kategorii w których by³ dostêpny, tak¿e ze s³ownika
+	 * @param l - id usuwanego obrazka
+	 * @return void
+	 */
+	private void removeParentsEdges(Long l){
+		LinkedList<Long> parentsOfSelectedImage = new LinkedList<Long>();				//sprawdzam gdzie dostêpna jest kategoria
+		Uri parents_of_image_uri = Uri.parse(ParentsOfImageContract.CONTENT_URI+"/"+l);
+		Cursor parents_cursor= getActivity().getContentResolver().query(parents_of_image_uri, new String[]{"p."+ParentContract.Columns.PARENT_FK}, null, null, null);
+		if(parents_cursor!=null){
+			parents_cursor.moveToFirst();
+			while(!parents_cursor.isAfterLast()){
+				parentsOfSelectedImage.add(parents_cursor.getLong(0));
+				parents_cursor.moveToNext();
+			}
+			parents_cursor.close();
+		}
+		
+		int countUsingCategories = parentsOfSelectedImage.size();
+		Log.i(LOG_TAG, "Usuwany obrazek jest u¿ywany w: "+ (countUsingCategories - 1) +" kategoriach");
+		
+		if(countUsingCategories <= 0){
+			return;
+		}
+		
+		String selection = ParentContract.Columns.IMAGE_FK+" = " + l;
+		String projection[] = {ParentContract.Columns._ID};
+		LinkedList<Long> imageToParentEdgesId = new LinkedList<Long>();
+		
+		for(Long parentId : parentsOfSelectedImage){
+			selection +=" AND " +ParentContract.Columns.PARENT_FK+ " = ? ";
+			Cursor c = getActivity().getContentResolver().query(ParentContract.CONTENT_URI, projection , selection, new String[]{String.valueOf(parentId)}, null);
+			if(c != null){
+				c.moveToFirst();
+				while(!c.isAfterLast()){
+					imageToParentEdgesId.add(c.getLong(0));
+					c.moveToNext();
+				}
+				c.close();
+			}
+		}
+		
+		for(Long id : imageToParentEdgesId){
+			Uri uri = Uri.parse(ParentContract.CONTENT_URI+"/"+id);
+			getActivity().getContentResolver().delete(uri,null, null);
+		}
+	}
+	
+	/***
+	 * Usuwa wi¹zania elementów na kategoriê l
+	 * @param l - id kategorii z kórej wi¹zania usun¹æ
+	 * @return lista obrazków które by³y w kategorii
+	 */
+	private LinkedList<Long> removeChildEdges(Long l){
+		LinkedList<Long> childsOfSelectedImage = new LinkedList<Long>();
+		Uri childs_of_image_uri = Uri.parse(ImagesOfParentContract.CONTENT_URI+"/"+l);
+		Cursor childs_cursor = getActivity().getContentResolver().query(childs_of_image_uri, new String[]{"p."+ParentContract.Columns.IMAGE_FK} ,null, null, null);
+		if(childs_cursor != null){
+			childs_cursor.moveToFirst();
+			while(!childs_cursor.isAfterLast()){
+				childsOfSelectedImage.add(childs_cursor.getLong(0));
+				childs_cursor.moveToNext();
+			}
+			childs_cursor.close();
+		}
+		
+		int countImagesInCategory = childsOfSelectedImage.size();
+		Log.i(LOG_TAG, "Usuwana kategoria zawiera: " + countImagesInCategory+" obrazków");
+		
+		if(countImagesInCategory <=0){
+			return childsOfSelectedImage;
+		}
+
+		String selection = ParentContract.Columns.PARENT_FK+" = " + l;
+		String projection[] = {ParentContract.Columns._ID};
+		LinkedList<Long> imageToChildEdgesId = new LinkedList<Long>();
+		
+		for(Long child_id : childsOfSelectedImage){
+			selection +=" AND " +ParentContract.Columns.IMAGE_FK+ " = ? ";
+			Cursor c = getActivity().getContentResolver().query(ParentContract.CONTENT_URI, projection , selection, new String[]{String.valueOf(child_id)}, null);
+			if(c != null){
+				c.moveToFirst();
+				while(!c.isAfterLast()){
+					imageToChildEdgesId.add(c.getLong(0));
+					c.moveToNext();
+				}
+				c.close();
+			}
+		}
+		
+		for(Long id : childsOfSelectedImage ){
+			Uri uri = Uri.parse(ParentContract.CONTENT_URI+"/"+id);
+			getActivity().getContentResolver().delete(uri,null, null);
+		}
+		return childsOfSelectedImage;
+	}
+	
+	private LinkedList<Long> getParents(Long image_id){
+		LinkedList<Long> parentsOfSelectedImage = new LinkedList<Long>();
+		Uri parents_of_image_uri = Uri.parse(ParentsOfImageContract.CONTENT_URI+"/"+image_id);
+		Cursor parents_cursor= getActivity().getContentResolver().query(parents_of_image_uri, new String[]{"p."+ParentContract.Columns.PARENT_FK}, null, null, null);
+		if(parents_cursor!=null){
+			parents_cursor.moveToFirst();
+			while(!parents_cursor.isAfterLast()){
+				parentsOfSelectedImage.add(parents_cursor.getLong(0));
+				parents_cursor.moveToNext();
+			}
+			parents_cursor.close();
+		}
+		return parentsOfSelectedImage;
+	}
+	
+	/***
+	 * Sprawdza czy obrazek o podanym id jest kategori¹
+	 * @param l - id obrazka
+	 * @return true - jeœli jest kategori¹, false jeœli nie jest
+	 */
+	private boolean isCategory(Long l){
+		Uri uri = Uri.parse(ImageContract.CONTENT_URI + "/" + l);			
+		Cursor c =getActivity().getContentResolver().query(uri, new String[]{ImageContract.Columns.CATEGORY}, null, null, null);
+		if(c!= null){
+			c.moveToFirst();
+			String filename = c.getString(0);
+			c.close();
+			if(filename!= null)
+				return true;
+		}
+		return false;
+	}
+	
+	
+	public static class RemoveFilesTask extends AsyncTask<ArrayList<String>, String, Void>{
+		@Override
+		protected Void doInBackground(ArrayList<String>... params) {
+			ArrayList<String> filenames = params[0];
+			for(int scale : Storage.scaleTab){
+				String pathToDir = Storage.getScaledThumbsDir(Integer.toString(scale), false).getAbsolutePath() + File.separator;
+				for(String filename : filenames){
+					File fileToRemove = new File( pathToDir + filename);
+					if(fileToRemove != null && fileToRemove.exists())
+						if(fileToRemove.delete())
+							Log.i(LOG_TAG, filename + " - removed" );
+						else
+							Log.w(LOG_TAG, filename + " - not removed");
+					else
+						Log.w(LOG_TAG, filename + " not exist");
+				}
+			}
+			return null;
+		}
+	}
 }

@@ -48,6 +48,7 @@ public class ImageContentProvider extends ContentProvider{
 		case IMAGE_ID:
 			whereClause = ImageContract.Columns._ID + "="+id+(!TextUtils.isEmpty(selection) ? " AND ("+selection+')' : "");
 			rowsDeleted = db.delete(ImageContract.TABLE_IMAGE, whereClause, selectionArgs);
+			break;
 		default:
 		    throw new IllegalArgumentException("Unknown URI: " + uri);
 		}

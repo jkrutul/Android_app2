@@ -36,7 +36,12 @@ import com.example.app_2.utils.BitmapCalc;
 import com.example.app_2.utils.ImageLoader;
 import com.example.app_2.utils.Utils;
 
-public class Images {
+public final class Images {
+	
+	
+	
+	private Images(){}
+	
 	public static List<ImageObject> images = new LinkedList<ImageObject>(); // list
 																			// of
 																			// ImageObject
@@ -366,7 +371,7 @@ public class Images {
 			for (File image_file : img_files) {
 				publishProgress((int) ((i / (float) count) * 100));
 				
-				uniqueFilenames.add(Storage.scaleAndSaveBitmapFromPath(image_file.getAbsolutePath(), new int[]{1,4,8}, Bitmap.CompressFormat.PNG,90,db, filenameVerification));
+				uniqueFilenames.add(Storage.scaleAndSaveBitmapFromPath(image_file.getAbsolutePath(), Bitmap.CompressFormat.PNG,90,db, filenameVerification));
 				i++;
 				if (isCancelled())
 					break;
@@ -449,7 +454,7 @@ public class Images {
 			
 			
 			
-			uniqueFilename.add(Storage.scaleAndSaveBitmapFromPath(path_toIMG, new int[]{1,4,8}, Bitmap.CompressFormat.PNG,100,db, filenameVerification));
+			uniqueFilename.add(Storage.scaleAndSaveBitmapFromPath(path_toIMG, Bitmap.CompressFormat.PNG,100,db, filenameVerification));
 			addNewEntriesToImageTable(uniqueFilename, null ,null);
 			return null;
 		}
