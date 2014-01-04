@@ -115,11 +115,13 @@ public class ImageListFragment extends ListFragment implements LoaderCallbacks<C
 	
 	*/
 	
-	private String[] projection = new String[] { "i."+ImageContract.Columns._ID,
-			 "i."+ImageContract.Columns.FILENAME,
-			 "i."+ImageContract.Columns.DESC,
-			 "i."+ImageContract.Columns.CATEGORY,
-			 "u."+UserContract.Columns.USERNAME};
+	private String[] projection = new String[] { 
+			 "i."+ImageContract.Columns._ID, 					//0
+			 "i."+ImageContract.Columns.FILENAME,				//1
+			 "i."+ImageContract.Columns.DESC,					//2
+			 "i."+ImageContract.Columns.CATEGORY,				//3
+			 "i."+ImageContract.Columns.IS_CONTEXTUAL_CATEGORY,	//4
+			 "u."+UserContract.Columns.USERNAME};				//5
 	private String selection;
 	private String[] selectionArgs;
 	public String sortOrder;
@@ -275,8 +277,8 @@ public class ImageListFragment extends ListFragment implements LoaderCallbacks<C
 		super.onActivityCreated(savedInstanceState);
 		new ImageLoader(getActivity());
 
-		String[] from = new String[] {ImageContract.Columns._ID,  ImageContract.Columns.FILENAME,  ImageContract.Columns.DESC,  ImageContract.Columns.CATEGORY, UserContract.Columns.USERNAME};
-		int[] to = new int[] { 0, R.id.mc_icon, R.id.mc_text, R.id.mc_dfs, R.id.mc_author }; 
+		String[] from = new String[] {ImageContract.Columns._ID,  ImageContract.Columns.FILENAME,  ImageContract.Columns.DESC,  ImageContract.Columns.CATEGORY, UserContract.Columns.USERNAME, ImageContract.Columns.IS_CONTEXTUAL_CATEGORY};
+		int[] to = new int[] { 0, R.id.mc_icon, R.id.mc_text, R.id.mc_dfs, R.id.mc_author, 0 }; 
 		
 		
 		adapter = new SimpleCursorAdapter( getActivity().getApplicationContext(), R.layout.images_list_row, null, from, to, 0);
@@ -292,8 +294,12 @@ public class ImageListFragment extends ListFragment implements LoaderCallbacks<C
 				case R.id.mc_icon:
 					ImageLoader.loadBitmap(path, (ImageView) view);
 					LinearLayout ll = (LinearLayout)view.getParent();
-					if(isCategory)
-						ll.setBackgroundColor(Color.argb(120, 0, 255, 0));
+					if(isCategory){				
+						if(cursor.getInt(4) == 1)
+							ll.setBackgroundColor(Color.argb(120, 149,39,225));
+						else
+							ll.setBackgroundColor(Color.argb(120, 0, 255, 0));
+					}
 					else
 						ll.setBackgroundColor(Color.TRANSPARENT);
 					return true;

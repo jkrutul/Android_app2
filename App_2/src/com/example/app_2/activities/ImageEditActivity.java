@@ -8,6 +8,7 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentTransaction;
+import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -51,55 +52,22 @@ public class ImageEditActivity extends FragmentActivity{
             ft.replace(R.id.fcontainer, ilf, IMAGE_LIST_FRAGMENT);
             ft.commit();
         }
-
-
-        
+       
     }
-     
-    /*
-	private void addItemsOnSpinner() {
-
-		mSpinner.setOnItemSelectedListener(new OnItemSelectedListener() {
-			Bundle bundle = new Bundle();
-			@Override
-			public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int position, long id) {
-				ImageSpinnerItem data = items.get(position);
-				if(data.isHint()){
-					TextView tv = (TextView)selectedItemView;
-					if(tv!=null)
-						tv.setTextColor(Color.rgb(148, 150, 148));
-				}
-				bundle.putLong("cat_id", data.getItemId());
-				getSupportLoaderManager().restartLoader(0, bundle, ilf);
-			}
-			@Override
-			public void onNothingSelected(AdapterView<?> parentView) {
-				bundle.putLong("cat_id", -1);
-				getSupportLoaderManager().restartLoader(0, bundle, ilf);
-			}
-
-		});
-		
-		items =  new ArrayList<ImageSpinnerItem>();
-		items.add(new ImageSpinnerItem(null,"Wybierz kategoriê", Long.valueOf(-1), true));
-		String[] projection = { "i."+ImageContract.Columns._ID, "i."+ImageContract.Columns.CATEGORY, "i."+ImageContract.Columns.FILENAME };
-		String selection = "i."+ImageContract.Columns.CATEGORY + " IS NOT NULL";
-		Cursor c = getContentResolver().query(ImageContract.CONTENT_URI, projection, selection, null, null);
-		c.moveToFirst();
-		while (!c.isAfterLast()) {
-			items.add(new ImageSpinnerItem(c.getString(2), c.getString(1), c.getLong(0),false));
-			c.moveToNext();
-		}
-		c.close();
-		
-		ImageSpinnerAdapter mySpinnerAdapter = new ImageSpinnerAdapter(this, android.R.layout.simple_spinner_item, items);
-		mySpinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-		mSpinner.setAdapter(mySpinnerAdapter);
-		mSpinner.setSelection(0);
-	}
-	*/
-
     
+    
+    @Override
+    protected void onResume() {
+    	super.onResume();
+		getSupportLoaderManager().initLoader(0, null, (LoaderCallbacks<Cursor>)ilf);
+    }
+    
+    @Override
+    protected void onDestroy() {
+    	super.onDestroy();
+    	ilf = null;
+    };
+         
 	// Create the menu based on the XML defintion
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
@@ -157,4 +125,5 @@ public class ImageEditActivity extends FragmentActivity{
 
 			}
 		}
+		
 }

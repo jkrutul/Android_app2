@@ -97,24 +97,22 @@ public class ImageGridFragment extends Fragment implements LoaderCallbacks<Curso
 	private static String[] from = new String[] {  ImageContract.Columns.FILENAME,   ImageContract.Columns.DESC	};
 	private static int[] to = new int[] {R.id.recycling_image, R.id.image_desc };
 
-	private static String[] loader_projection = new String[] { "i."+ImageContract.Columns._ID,
-															   "i."+ImageContract.Columns.FILENAME,
-															   "i."+ImageContract.Columns.DESC,
-															   "i."+ImageContract.Columns.CATEGORY,
-														       "i."+ImageContract.Columns.MODIFIED,
-															   "i."+ImageContract.Columns.TIME_USED};	
+	private static String[] loader_projection = new String[] { "i."+ImageContract.Columns._ID,						//0
+															   "i."+ImageContract.Columns.FILENAME,					//1
+															   "i."+ImageContract.Columns.DESC,						//2
+															   "i."+ImageContract.Columns.CATEGORY,					//3
+															   "i."+ImageContract.Columns.IS_CONTEXTUAL_CATEGORY,	//4
+														       "i."+ImageContract.Columns.MODIFIED,					//5
+															   "i."+ImageContract.Columns.TIME_USED};				//6
 	
 	private OnItemLongClickListener ilcL = new OnItemLongClickListener(){
 		@Override
 		public boolean onItemLongClick(AdapterView<?> parent, final  View thumbView, int position, long i) {
     		Cursor c = (Cursor) adapter.getItem(position);						
-    		ImageObject img_object= new ImageObject();
-    		img_object.setImageName(c.getString(c.getColumnIndex(ImageContract.Columns.FILENAME)));
-    		img_object.setDescription( c.getString(c.getColumnIndex(ImageContract.Columns.DESC)));
-    		img_object.setCategory(c.getString(c.getColumnIndex(ImageContract.Columns.CATEGORY)));
+
     			if(expandedImageView!=null){
     				expandedImageView.bringToFront();
-    				 String path = Storage.getPathToScaledBitmap(img_object.getImageName(), dev_w);
+    				 String path = Storage.getPathToScaledBitmap(c.getString(1), dev_w);
     		         Bitmap unscaledBitmap = ScalingUtilities.decodeFile(path, App_2.getMaxWidth(), App_2.getMaxHeight(), ScalingLogic.FIT);
     		         Bitmap bitmap = ScalingUtilities.createScaledBitmap(unscaledBitmap, App_2.getMaxWidth(), App_2.getMaxHeight(), ScalingLogic.FIT);
     		         unscaledBitmap.recycle();
@@ -168,7 +166,10 @@ public class ImageGridFragment extends Fragment implements LoaderCallbacks<Curso
 					boolean isCategory = (category != null  && !category.isEmpty() ) ? true : false; 
 					ImageLoader.loadBitmap(path, iv);
 					if(isCategory)
-						view.setBackgroundColor(Color.argb(120, 0, 255, 0));
+						if(cursor.getInt(4) == 1)
+							view.setBackgroundColor(Color.argb(120, 149,39,225));
+						else
+							view.setBackgroundColor(Color.argb(120, 0, 255, 0));
 					else
 						view.setBackgroundColor(Color.TRANSPARENT);
 					if(selected_images_ids.contains(cursor.getLong(0)))
@@ -178,7 +179,8 @@ public class ImageGridFragment extends Fragment implements LoaderCallbacks<Curso
 
 				case R.id.image_desc:
 					TextView tv = (TextView) view;
-					tv.setTextSize(mImageFontSize);
+					if(tv.getTextSize() != mImageFontSize)
+						tv.setTextSize(mImageFontSize);
 					return false;
 					
 				default:
@@ -263,6 +265,7 @@ public class ImageGridFragment extends Fragment implements LoaderCallbacks<Curso
 			img_object.setDescription( c.getString(c.getColumnIndex(ImageContract.Columns.DESC)));
 			img_object.setCategory(c.getString(c.getColumnIndex(ImageContract.Columns.CATEGORY)));
 			img_object.setTimes_used(c.getLong(c.getColumnIndex(ImageContract.Columns.TIME_USED)));
+			img_object.setIsContextualCategory(c.getInt(c.getColumnIndex(ImageContract.Columns.IS_CONTEXTUAL_CATEGORY)));
 							
 			if(img_object.getCategory() == null || img_object.getCategory().isEmpty())
 				executingActivity.addImageToAdapter(img_object);
@@ -276,6 +279,10 @@ public class ImageGridFragment extends Fragment implements LoaderCallbacks<Curso
 				executingActivity.replaceGridFragment(l, false, true);
 				ActionBar actionBar = executingActivity.getActionBar();
 				actionBar.setTitle(category);
+				if(img_object.getIsContextualCategory() == 1){
+					executingActivity.addImageToAdapter(img_object);
+				}
+				
 			}				
 	 }
 	};

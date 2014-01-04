@@ -8,6 +8,7 @@ public class ImageObject { //ID imageName, AUDIOPATH, DESCRIPTION, times_used, m
 	private String modified;
 	private String last_used;
 	private String category;
+	private int isContextualCategory;
 	private Long author_fk;
 	
 	public String getCategory() {
@@ -45,6 +46,14 @@ public class ImageObject { //ID imageName, AUDIOPATH, DESCRIPTION, times_used, m
 	
 	}
 
+	public ImageObject(String imageName, String description,String category, boolean isContextualCategory){
+		this.imageName = imageName;
+
+		this.description = description;
+		this.category = category;
+		this.setIsContextualCategory((isContextualCategory) ? 1 : 0);
+	
+	}
 	public String getImageName() {
 		return imageName;
 	}
@@ -86,6 +95,12 @@ public class ImageObject { //ID imageName, AUDIOPATH, DESCRIPTION, times_used, m
 	}
 	public void setAuthor_fk(Long author_fk) {
 		this.author_fk = author_fk;
+	}
+	public int getIsContextualCategory() {
+		return isContextualCategory;
+	}
+	public void setIsContextualCategory(int isContextualCategory) {
+		this.isContextualCategory = isContextualCategory;
 	}
 
 }

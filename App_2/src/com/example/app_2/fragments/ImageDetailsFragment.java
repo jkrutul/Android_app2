@@ -28,6 +28,7 @@ import android.widget.TextView;
 
 import com.example.app_2.R;
 import com.example.app_2.activities.ImageDetailsActivity;
+import com.example.app_2.activities.ImageEditActivity;
 import com.example.app_2.contentprovider.ImageContract;
 import com.example.app_2.contentprovider.ParentContract;
 import com.example.app_2.contentprovider.ParentsOfImageContract;
@@ -49,7 +50,7 @@ public class ImageDetailsFragment extends Fragment{
 	private Button mButton;
 	public  ImageView mImage;
 	private static Bitmap bitmap;
-	private CheckBox mCreateCategoryCheckBox;
+	private CheckBox mCreateCategoryCheckBox, mIsContextualCategory;
 	private String pathToNewImage;
 	private String filename;
 
@@ -113,11 +114,9 @@ public class ImageDetailsFragment extends Fragment{
 		mParents = (TextView) view.findViewById(R.id.parents);
 		mAuthor = (TextView) view.findViewById(R.id.image_author);
 		
-
-		mCreateCategoryCheckBox = (CheckBox) view
-				.findViewById(R.id.create_category);
-		mCreateCategoryCheckBox
-				.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+		mIsContextualCategory = (CheckBox) view.findViewById(R.id.is_contextual_category);
+		mCreateCategoryCheckBox = (CheckBox) view.findViewById(R.id.create_category);
+		mCreateCategoryCheckBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
 
 					@Override
 					public void onCheckedChanged(CompoundButton buttonView,
@@ -126,9 +125,11 @@ public class ImageDetailsFragment extends Fragment{
 							String image_description = mDescText.getText().toString();
 							mCategory.setText(image_description);
 							mCategory.setVisibility(View.VISIBLE);
+							//mIsContextualCategory.setVisibility(View.VISIBLE);
 							}
 						else
 							mCategory.setVisibility(View.INVISIBLE);
+							//mIsContextualCategory.setVisibility(View.INVISIBLE);
 					}
 				});
 
@@ -137,7 +138,8 @@ public class ImageDetailsFragment extends Fragment{
 		categories_map = new HashMap<String, Long>();
 		String[] projection = { 
 				"i."+ImageContract.Columns._ID,
-				"i."+ImageContract.Columns.CATEGORY };
+				"i."+ImageContract.Columns.CATEGORY,
+				"i."+ImageContract.Columns.IS_CONTEXTUAL_CATEGORY};
 		String selection = "i."+ImageContract.Columns.CATEGORY + " IS NOT NULL";
 		Cursor c = executing_activity.getContentResolver().query(ImageContract.CONTENT_URI, projection, selection, null, null);
 		c.moveToFirst();
@@ -278,11 +280,12 @@ public class ImageDetailsFragment extends Fragment{
 	private void fillData(Long id) {
 		Uri uri = Uri.parse(ImageContract.CONTENT_URI + "/" + id);
 		String[] projection = { 
-				"i."+ImageContract.Columns._ID,
-				"i."+ImageContract.Columns.FILENAME,
-				"i."+ImageContract.Columns.DESC,
-				"i."+ImageContract.Columns.CATEGORY,
-				"u."+UserContract.Columns.USERNAME};
+				"i."+ImageContract.Columns._ID,						//0
+				"i."+ImageContract.Columns.FILENAME,				//1
+				"i."+ImageContract.Columns.DESC,					//2
+				"i."+ImageContract.Columns.CATEGORY,				//3
+				"i."+ImageContract.Columns.IS_CONTEXTUAL_CATEGORY, 	//4
+				"u."+UserContract.Columns.USERNAME};				//5
 		Cursor cursor = executing_activity.getContentResolver().query(uri,	projection, null, null, null);
 		if (cursor != null) {
 			cursor.moveToFirst();
@@ -293,13 +296,20 @@ public class ImageDetailsFragment extends Fragment{
 			if (category != null)
 				if (!category.equals("")) {
 					mCreateCategoryCheckBox.setChecked(true);
+					if(cursor.getInt(4) == 0){
+						mIsContextualCategory.setChecked(false);
+					}
+					else{
+						mIsContextualCategory.setChecked(true);
+					}
+					
 					mCategory.setText(category);
 				}
 
 			String imgName = cursor.getString(1);
 			mTitleText.setText(imgName);
 			mDescText.setText(cursor.getString(2));
-			mAuthor.setText(cursor.getString(4));
+			mAuthor.setText(cursor.getString(5));
 			cursor.close();
 			
 			ImageLoader.loadBitmap(Storage.getPathToScaledBitmap(imgName, 300), mImage);
@@ -349,12 +359,17 @@ public class ImageDetailsFragment extends Fragment{
 
 	private void saveState() {
 		String category = null;
-
+		int isContextualCategory=0 ;
 		if (mCreateCategoryCheckBox.isChecked()) {
 			category = mCategory.getText().toString();
 			if (category.equals("")) {
 				category = null;
+			}else{
+				if(mIsContextualCategory.isChecked()){
+					isContextualCategory = 1;
+				}
 			}
+
 		}
 
 		String description = mDescText.getText().toString();
@@ -362,6 +377,7 @@ public class ImageDetailsFragment extends Fragment{
 		ContentValues values = new ContentValues();
 		values.put(ImageContract.Columns.CATEGORY, category);
 		values.put(ImageContract.Columns.DESC, description);
+		values.put(ImageContract.Columns.IS_CONTEXTUAL_CATEGORY, isContextualCategory);
 
 		if (row_id == null && this.filename!=null) {
 			values.put(ImageContract.Columns.FILENAME, this.filename);
@@ -369,5 +385,7 @@ public class ImageDetailsFragment extends Fragment{
 		} else {
 			executing_activity.getContentResolver().update(imageUri, values, null,	null);
 		}
+		
+
 	}
 }

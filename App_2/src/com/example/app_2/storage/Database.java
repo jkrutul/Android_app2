@@ -53,6 +53,7 @@ public class Database {
 			ImageContract.Columns.TIME_USED+ " INTEGER DEFAULT 0 ,"+
 			ImageContract.Columns.LAST_USED+ " DATETIME, "+
 			ImageContract.Columns.CATEGORY+ " TEXT, "+
+			ImageContract.Columns.IS_CONTEXTUAL_CATEGORY+ " INTEGER DEFAULT 0,"+
 			ImageContract.Columns.AUTHOR_FK+ " INTEGER "+
 	");";
 	

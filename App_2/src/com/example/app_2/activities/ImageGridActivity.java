@@ -395,14 +395,12 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 			Locale pol_loc = new Locale("pl", "pl_PL");
 			if(TextToSpeech.LANG_AVAILABLE ==tts.isLanguageAvailable(pol_loc)){
 				result = tts.setLanguage(pol_loc);
+				if (result == TextToSpeech.LANG_MISSING_DATA|| result == TextToSpeech.LANG_NOT_SUPPORTED){
+					Log.e("TTS", "LANG_NOT_SUPPORTED");
+				}
 			}else{
 				result=tts.setLanguage(Locale.ENGLISH);
-			}
-				
-			if (result == TextToSpeech.LANG_MISSING_DATA|| result == TextToSpeech.LANG_NOT_SUPPORTED) {
-				Log.e("TTS", "LANG_NOT_SUPPORTED");
-			} else {
-			}
+			}			
 		} else {
 			Log.e("TTS", "Initialization Failed");
 		}
