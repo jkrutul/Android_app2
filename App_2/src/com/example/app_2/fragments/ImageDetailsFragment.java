@@ -26,6 +26,7 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.example.app_2.App_2;
 import com.example.app_2.R;
 import com.example.app_2.activities.ImageDetailsActivity;
 import com.example.app_2.activities.ImageEditActivity;
@@ -253,12 +254,12 @@ public class ImageDetailsFragment extends Fragment{
 					new DialogInterface.OnClickListener() {
 						public void onClick(DialogInterface dialog, int id) {
 
-							ImageIntents.cameraIntent(a, f, TAKE_PIC_REQUEST);
+							ImageIntents.cameraIntent(a, f, TAKE_PIC_REQUEST, App_2.maxWidth, App_2.getMaxWidth());
 						}
 					});
 			builder.setNegativeButton("wybierz obrazek",new DialogInterface.OnClickListener() {
 						public void onClick(DialogInterface dialog, int id) {
-							ImageIntents.selectImageIntent(a, f , FILE_SELECT_REQUEST);
+							ImageIntents.selectImageIntent(a, f , FILE_SELECT_REQUEST, App_2.maxWidth, App_2.getMaxWidth());
 						}
 					});
 

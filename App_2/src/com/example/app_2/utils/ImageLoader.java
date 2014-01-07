@@ -31,11 +31,6 @@ import com.sonyericsson.util.ScalingUtilities.ScalingLogic;
 
 public class ImageLoader {
 	private static String LOG_TAG = "ImageLoader";
-	
-	private static DiskLruImageCache mDiskLruCache;
-	private final static Object mDiskCacheLock = new Object();
-	private static boolean mDiskCacheStarting = true;
-	private static final int DISK_CACHE_SIZE = 1024 * 1024 * 10; // 10MB
 	public static int  mWidth=100;
 	public static int mHeight=100;
 	int maxWidth;
@@ -46,7 +41,7 @@ public class ImageLoader {
 
 
 	// Use 1/8th of the available memory for this memory cache.
-	final int cacheSize = maxMemory / 8;
+	final int cacheSize = maxMemory / 2;
 
 	private static LruCache<String, Bitmap> mMemoryCache;
 	
@@ -68,12 +63,10 @@ public class ImageLoader {
 			}
 		};
 		
-		/* INITIALIZE DISK CACHE */
-	  //  File cacheDir = Storage.getDiskCacheDir(DISK_CACHE_SUBDIR);
-	  //  new InitDiskCacheTask().execute(cacheDir);
+
 	}
 
-	public void addBitmapToMemoryCache(String key, Bitmap bitmap) {
+	public static void addBitmapToMemoryCache(String key, Bitmap bitmap) {
 		if(key!=null && bitmap != null){
 			if (getBitmapFromMemCache(key) == null) {
 				mMemoryCache.put(key, bitmap);
@@ -101,7 +94,8 @@ public class ImageLoader {
 		}
 		Bitmap value = null;
 		if(mMemoryCache!= null){
-			value = mMemoryCache.get(Utils.getFilenameFromPath(path));
+			value = getBitmapFromMemCache(Utils.getFilenameFromPath(path));
+			//value = mMemoryCache.get(Utils.getFilenameFromPath(path));
 		}
 		if(value != null){
 			imageView.setImageBitmap(value);
@@ -188,33 +182,11 @@ public class ImageLoader {
 	        		return null;
 	        	
 	        	//Log.i(LOG_TAG, "filename: "+ path +" decoded image h:"+bitmap.getHeight()+" w:"+bitmap.getWidth());
-		        addBitmapToCache(imageKey,bitmap);
+	        	
+		        addBitmapToMemoryCache(imageKey,bitmap);
 	        return bitmap;
 	    }
-	    
-	    public void addBitmapToCache(String key, Bitmap bitmap) {
-	    	if(key !=null && bitmap != null){
-		        if (getBitmapFromMemCache(key) == null) {
-		            mMemoryCache.put(key, bitmap);
-		        }
-	        }
-	    }
-
-	    public Bitmap getBitmapFromDiskCache(String key) {
-	        synchronized (mDiskCacheLock) {
-	            // Wait while disk cache is started from background thread
-	            while (mDiskCacheStarting) {
-	                try {
-	                    mDiskCacheLock.wait();
-	                } catch (InterruptedException e) {}
-	            }
-	            if (mDiskLruCache != null) {
-	                return mDiskLruCache.getBitmap(key);
-	            }
-	        }
-	        return null;
-	    }
-	    
+	    	    
 	    private void setImageDrawable(ImageView imageView, Bitmap bitmap) {
 	    	BitmapDrawable bd  =new BitmapDrawable(App_2.getAppContext().getResources(), bitmap);
             // Transition drawable with a transparent drawable and the final drawable
@@ -260,18 +232,6 @@ public class ImageLoader {
 	    }
 	}
 
-	class InitDiskCacheTask extends AsyncTask<File, Void, Void> {
-	    @Override
-	    protected Void doInBackground(File... params) {
-	        synchronized (mDiskCacheLock) {
-	            File cacheDir = params[0];
-	            mDiskLruCache = new DiskLruImageCache(cacheDir, DISK_CACHE_SIZE, CompressFormat.JPEG, 100);
-	            mDiskCacheStarting = false; // Finished initialization
-	            mDiskCacheLock.notifyAll(); // Wake any waiting threads
-	        }
-	        return null;
-	    }
-	}
 	
 
 	public static void setImageSize(int height) {

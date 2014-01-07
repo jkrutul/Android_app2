@@ -29,6 +29,7 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.app_2.App_2;
 import com.example.app_2.R;
 import com.example.app_2.contentprovider.ImageContract;
 import com.example.app_2.fragments.ImageDetailsFragment;
@@ -165,12 +166,12 @@ public class NewImgTemplateActivity extends Activity {
 			builder.setPositiveButton("zrób zdjêcie",
 					new DialogInterface.OnClickListener() {
 						public void onClick(DialogInterface dialog, int id) {
-							ImageIntents.cameraIntent(a, TAKE_PIC_REQUEST);
+							ImageIntents.cameraIntent(a, TAKE_PIC_REQUEST, App_2.maxWidth, App_2.maxWidth);
 						}
 					});
 			builder.setNegativeButton("wybierz obrazek",new DialogInterface.OnClickListener() {
 						public void onClick(DialogInterface dialog, int id) {
-							ImageIntents.selectImageIntent(a, FILE_SELECT_REQUEST);
+							ImageIntents.selectImageIntent(a, FILE_SELECT_REQUEST, App_2.maxWidth, App_2.maxWidth);
 						}
 					});
 

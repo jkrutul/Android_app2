@@ -35,6 +35,7 @@ import android.graphics.BitmapFactory.Options;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Rect;
+import android.util.Log;
 
 /**
  * Class containing static utility methods for bitmap decoding and scaling
@@ -91,6 +92,7 @@ public class ScalingUtilities {
      * @return New scaled bitmap object
      */
     public static Bitmap createScaledBitmap(Bitmap unscaledBitmap, int dstWidth, int dstHeight,   ScalingLogic scalingLogic) {
+
         Rect srcRect = calculateSrcRect(unscaledBitmap.getWidth(), unscaledBitmap.getHeight(),
                 dstWidth, dstHeight, scalingLogic);
         Rect dstRect = calculateDstRect(unscaledBitmap.getWidth(), unscaledBitmap.getHeight(),
@@ -99,7 +101,7 @@ public class ScalingUtilities {
                 Config.ARGB_8888);
         Canvas canvas = new Canvas(scaledBitmap);
         canvas.drawBitmap(unscaledBitmap, srcRect, dstRect, new Paint(Paint.FILTER_BITMAP_FLAG));
-
+    	Log.i("ScalingUtikuties", "w: "+ unscaledBitmap.getWidth() + " h: " + unscaledBitmap.getHeight() + " -> " + "w: "+ scaledBitmap.getWidth() + " h: " + scaledBitmap.getHeight());
         return scaledBitmap;
     }
 

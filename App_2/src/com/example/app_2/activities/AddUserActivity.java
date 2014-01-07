@@ -20,6 +20,7 @@ import android.widget.RadioButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.app_2.App_2;
 import com.example.app_2.R;
 import com.example.app_2.contentprovider.ImageContract;
 import com.example.app_2.contentprovider.ParentContract;
@@ -103,13 +104,13 @@ public class AddUserActivity extends Activity {
 			builder.setPositiveButton("zrób zdjêcie",
 					new DialogInterface.OnClickListener() {
 						public void onClick(DialogInterface dialog, int id) {
-							ImageIntents.cameraIntent(a, TAKE_PIC_REQUEST);
+							ImageIntents.cameraIntent(a, TAKE_PIC_REQUEST, App_2.maxWidth, App_2.getMaxWidth());
 						}
 					});
 			builder.setNegativeButton("wybierz obrazek",
 					new DialogInterface.OnClickListener() {
 						public void onClick(DialogInterface dialog, int id) {
-							ImageIntents.selectImageIntent(a,FILE_SELECT_REQUEST);
+							ImageIntents.selectImageIntent(a,FILE_SELECT_REQUEST, App_2.maxWidth, App_2.getMaxWidth());
 						}
 					});
 
@@ -155,6 +156,8 @@ public class AddUserActivity extends Activity {
 		img_val.put(ImageContract.Columns.CATEGORY, username + " - G³ówna");
 		Uri img_uri = getContentResolver().insert(ImageContract.CONTENT_URI, img_val);
 		
+
+		
 		ContentValues parent_root = new ContentValues();							// powi¹zanie korzenia u¿ytkownika z g³ównym korzeniem
 		parent_root.put(ParentContract.Columns.IMAGE_FK, img_uri.getLastPathSegment());
 		parent_root.put(ParentContract.Columns.PARENT_FK, Database.getMainRootFk());
@@ -168,8 +171,25 @@ public class AddUserActivity extends Activity {
 		user_val.put(UserContract.Columns.ROOT_FK, user_root_fk);
 		Uri user_uri = getContentResolver().insert(UserContract.CONTENT_URI, user_val);
 
-		img_val.put(ImageContract.Columns.AUTHOR_FK,user_uri.getLastPathSegment()); // powi¹zanie u¿ytkownika z jego korzeniem
+		Long user_id = Long.parseLong(user_uri.getLastPathSegment());
+		
+		img_val.put(ImageContract.Columns.AUTHOR_FK,user_id); 					// powi¹zanie u¿ytkownika z jego korzeniem
 		getContentResolver().update(img_uri, img_val, null, null);
+		
+		
+		ContentValues me_val = new ContentValues();								// dodanie symbolu "JA"
+		me_val.put(ImageContract.Columns.FILENAME, user_img);
+		me_val.put(ImageContract.Columns.DESC, "Ja");
+		me_val.put(ImageContract.Columns.AUTHOR_FK,user_id);
+		Uri me_uri = getContentResolver().insert(ImageContract.CONTENT_URI, me_val);
+		
+		ContentValues me_parent = new ContentValues();							// dodanie symbolu do s³ownika
+		me_parent.put(ParentContract.Columns.IMAGE_FK, me_uri.getLastPathSegment());
+		me_parent.put(ParentContract.Columns.PARENT_FK, Database.getMainDictFk());
+		getContentResolver().insert(ParentContract.CONTENT_URI, me_parent);
+		
+		
+																				
 		Storage.saveToPreferences(null, "photoPath", this, Activity.MODE_PRIVATE); 	// clear preferences
 	}
 }

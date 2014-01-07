@@ -19,15 +19,15 @@ public class ImageIntents {
 		public static final int TAKE_PIC_REQUEST = 24;
 		
 
-	public static void selectImageIntent(Activity a, int requestCode){
+	public static void selectImageIntent(Activity a, int requestCode, int outX, int outY){
 		Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
 		File f = Storage.createTempImageFile(); // tworzy tymczasowy plik
 		String mCurrentPhotoPath = f.getAbsolutePath();
 		Storage.saveToPreferences(mCurrentPhotoPath,"photoPath", a, Activity.MODE_PRIVATE);
 		intent.setType("image/*");
 		intent.putExtra("crop", "true");
-		intent.putExtra("outputX", 300);
-		intent.putExtra("outputY", 300);
+		intent.putExtra("outputX", outX);
+		intent.putExtra("outputY", outY);
 		intent.putExtra("aspectX",1);
 		intent.putExtra("aspectY", 1);
 		intent.putExtra("scale", true);
@@ -42,15 +42,15 @@ public class ImageIntents {
 	}
 	
 
-	public static void cameraIntent(Activity a, int requestCode){
+	public static void cameraIntent(Activity a, int requestCode, int outX, int outY){
 		Intent camera = new Intent(	MediaStore.ACTION_IMAGE_CAPTURE);
 		if (Utils.verifyResolves(camera)) {
 			File f = Storage.createTempImageFile(); // tworzy tymczasowy plik
 			String mCurrentPhotoPath = f.getAbsolutePath();
 			Storage.saveToPreferences(mCurrentPhotoPath,"photoPath", a, Activity.MODE_PRIVATE);
 			camera.putExtra("crop", "true");
-			camera.putExtra("outputX", 300);
-			camera.putExtra("outputY", 300);
+			camera.putExtra("outputX", outX);
+			camera.putExtra("outputY", outY);
 			camera.putExtra("aspectX",1);
 			camera.putExtra("aspectY", 1);
 			camera.putExtra("scale", true);
@@ -65,15 +65,15 @@ public class ImageIntents {
 		}		
 	}
 	
-	public static void selectImageIntent(Activity a, Fragment f, int requestCode){
+	public static void selectImageIntent(Activity a, Fragment f, int requestCode, int outX, int outY){
 		Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
 		File tmp_f = Storage.createTempImageFile(); // tworzy tymczasowy plik
 		String mCurrentPhotoPath = tmp_f.getAbsolutePath();
 		Storage.saveToPreferences(mCurrentPhotoPath,"photoPath", a, Activity.MODE_PRIVATE);
 		intent.setType("image/*");
 		intent.putExtra("crop", "true");
-		intent.putExtra("outputX", 300);
-		intent.putExtra("outputY", 300);
+		intent.putExtra("outputX", outX);
+		intent.putExtra("outputY", outY);
 		intent.putExtra("aspectX",1);
 		intent.putExtra("aspectY", 1);
 		intent.putExtra("scale", true);
@@ -88,15 +88,15 @@ public class ImageIntents {
 	}
 	
 
-	public static void cameraIntent(Activity a, Fragment f, int requestCode){
+	public static void cameraIntent(Activity a, Fragment f, int requestCode, int outX, int outY){
 		Intent camera = new Intent(	MediaStore.ACTION_IMAGE_CAPTURE);
 		if (Utils.verifyResolves(camera)) {
 			File tmp_f = Storage.createTempImageFile(); // tworzy tymczasowy plik
 			String mCurrentPhotoPath = tmp_f.getAbsolutePath();
 			Storage.saveToPreferences(mCurrentPhotoPath,"photoPath", a, Activity.MODE_PRIVATE);
 			camera.putExtra("crop", "true");
-			camera.putExtra("outputX", 300);
-			camera.putExtra("outputY", 300);
+			camera.putExtra("outputX", outX);
+			camera.putExtra("outputY", outY);
 			camera.putExtra("aspectX",1);
 			camera.putExtra("aspectY", 1);
 			camera.putExtra("scale", true);

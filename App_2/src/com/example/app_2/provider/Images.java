@@ -110,9 +110,6 @@ public final class Images {
 		
 	}
 	
-	public static void addImageToDatabase(String pathToImage, String parent_id){
-		
-	}
 	
 	public static void addNewEntriesToImageTable(List<String> filenames, ArrayList<Long> categories, Long user_id){
 		Database db = Database.getInstance(App_2.getAppContext());

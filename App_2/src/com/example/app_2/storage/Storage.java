@@ -348,7 +348,7 @@ public class Storage {
 			return null;
 		File img_f = null;
 		int scale = (int) Math.floor(dev_width/width);
-		Log.i(LOG_TAG, "scale request: " + scale);
+		//Log.i(LOG_TAG, "scale request: " + scale);
 		scale  = (scale >= 8) ? 8: scale;
 		do{
 			File f = Storage.getScaledThumbsDir(String.valueOf(scale), false);
