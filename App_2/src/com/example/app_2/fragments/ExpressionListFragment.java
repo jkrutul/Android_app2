@@ -30,7 +30,7 @@ public class ExpressionListFragment extends Fragment implements OnItemClickListe
 		listview.setAdapter(mAdapter);
 		listview.setOnItemClickListener(this);
 		
-		new ImageLoader(getActivity());	
+		//new ImageLoader(getActivity());	
 	}
 	
 	public void addImageToExAdapter(ImageObject image_object){

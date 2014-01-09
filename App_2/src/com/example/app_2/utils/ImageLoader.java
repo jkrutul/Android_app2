@@ -41,7 +41,7 @@ public class ImageLoader {
 
 
 	// Use 1/8th of the available memory for this memory cache.
-	final int cacheSize = maxMemory / 2;
+	final int cacheSize = maxMemory / 8;
 
 	private static LruCache<String, Bitmap> mMemoryCache;
 	

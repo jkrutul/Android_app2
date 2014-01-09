@@ -499,8 +499,6 @@ public class ImageGridFragment extends Fragment implements LoaderCallbacks<Curso
 			Uri p_uri = Uri.parse(ImageContract.CONTENT_URI + "/" + em.getParent());
 			getActivity().getContentResolver().update(p_uri, cv, null, null);
 
-			//Uri c_uri = Uri.parse(ImageContract.CONTENT_URI + "/" + em.getChild());
-			//getActivity().getContentResolver().update(c_uri, cv, null, null);
 		}		
 	}
 	

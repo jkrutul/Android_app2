@@ -68,7 +68,7 @@ public class ParentMultiselectFragment extends ListFragment implements LoaderCal
 	@Override
 	public void onActivityCreated(Bundle savedInstanceState) {
 		super.onActivityCreated(savedInstanceState);
-		new ImageLoader(getActivity());
+		//new ImageLoader(getActivity());
 		selectedItemsOnCreate = new ArrayList<Long>();
 		
 		String[] from = new String[] { ImageContract.Columns._ID,ImageContract.Columns.FILENAME, ImageContract.Columns.CATEGORY};

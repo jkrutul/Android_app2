@@ -275,7 +275,7 @@ public class ImageListFragment extends ListFragment implements LoaderCallbacks<C
 	@Override
 	public void onActivityCreated(Bundle savedInstanceState) {
 		super.onActivityCreated(savedInstanceState);
-		new ImageLoader(getActivity());
+		//new ImageLoader(getActivity());
 
 		String[] from = new String[] {ImageContract.Columns._ID,  ImageContract.Columns.FILENAME,  ImageContract.Columns.DESC,  ImageContract.Columns.CATEGORY, UserContract.Columns.USERNAME, ImageContract.Columns.IS_CONTEXTUAL_CATEGORY};
 		int[] to = new int[] { 0, R.id.mc_icon, R.id.mc_text, R.id.mc_dfs, R.id.mc_author, 0 }; 

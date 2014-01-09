@@ -15,6 +15,7 @@ import android.view.WindowManager;
 
 import com.example.app_2.storage.Database;
 import com.example.app_2.utils.BitmapCalc;
+import com.example.app_2.utils.ImageLoader;
 import com.sonyericsson.util.ScalingUtilities;
 import com.sonyericsson.util.ScalingUtilities.ScalingLogic;
 
@@ -30,8 +31,9 @@ public class App_2 extends Application{
 	
 	public void onCreate(){
 		super.onCreate();
-
+		
 		App_2.context = getApplicationContext();
+		ImageLoader il = new ImageLoader(context);
 		WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
 		Display display = wm.getDefaultDisplay();
 		maxWidth = display.getWidth();

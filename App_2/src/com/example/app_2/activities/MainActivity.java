@@ -22,6 +22,7 @@ import android.widget.ShareActionProvider;
 import com.example.app_2.R;
 import com.example.app_2.storage.Database;
 import com.example.app_2.storage.Storage;
+import com.example.app_2.utils.ImageLoader;
 
 public class MainActivity extends Activity {
 	private final static String LOG_TAG = "MainActivity";
@@ -33,7 +34,7 @@ public class MainActivity extends Activity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 		PreferenceManager.setDefaultValues(this, R.xml.preferences, false);
-		
+
 		
 		LinearLayout ll = (LinearLayout) findViewById(R.id.main_activity);
 		//Utils.setWallpaper(ll, App_2.maxHeight, App_2.getMaxWidth(), null, ScalingLogic.CROP);

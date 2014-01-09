@@ -107,7 +107,7 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 	public TextToSpeech tts;
     //CharSequence mTitle;
     //private CharSequence mDrawerTitle;
-    public ImageLoader imageLoader;
+    //public ImageLoader imageLoader;
     public ExpressionListFragment elf;
     Long logged_user_root;
     Long logged_user_id;
@@ -184,7 +184,7 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
         
 		// ustawienie drawera
         //expandedImageView = (ImageView) findViewById(R.id.expanded_image);
-		imageLoader = new ImageLoader(getApplicationContext());	
+		//imageLoader = new ImageLoader(getApplicationContext());	
         setDrawer();
         
         // za³adowanie do content_frame ImageGridFragment

@@ -42,7 +42,7 @@ public class UsersActivity extends FragmentActivity implements LoaderCallbacks<C
 		empty = (TextView) findViewById(android.R.id.empty);
 		
 		
-		new ImageLoader(this);
+		//new ImageLoader(this);
 
 		String[] from = new String[] {
 				UserContract.Columns._ID,
