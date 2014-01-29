@@ -268,6 +268,14 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 	        	startActivity(bind_intent);
 	        	return true;
 	        	
+	        case R.id.action_add_new_image:
+	        	Intent new_imageIntent = new Intent(this, AddImageActivity.class);
+	        	Bundle bundle = new Bundle();
+	        	bundle.putLong("cat_fk",actual_category_fk);
+	        	new_imageIntent.putExtras(bundle);
+	        	startActivity(new_imageIntent);
+	        	return true;
+	        	
             case R.id.action_settings:
     			Intent intent = new Intent(this, SettingsActivity.class);
     			startActivity(intent);

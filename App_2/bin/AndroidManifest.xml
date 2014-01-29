@@ -123,6 +123,42 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.example.app_2.activities.MainActivity" />
         </activity>
+        <activity
+            android:name="com.example.app_2.activities.AddImageActivity"
+            android:label="AddImageActivity" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.example.app_2.activities.MainActivity" />
+        </activity>
+        <activity
+            android:name="com.example.app_2.activities.HandleIncomingContentActivity"
+            android:label="HandleIncomingContentActivity" >
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+
+                <data android:mimeType="image/*" />
+            </intent-filter>
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.example.app_2.activities.MainActivity" />
+        </activity>
+        <activity
+            android:name="com.ipaulpro.afilechooser.FileChooserActivity"
+            android:enabled="true"
+            android:exported="true"
+            android:icon="@drawable/add_new_image"
+            android:label="Wybierz plik" >
+            <intent-filter>
+                <action android:name="android.intent.action.GET_CONTENT" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.OPENABLE" />
+
+                <data android:mimeType="*/*" />
+            </intent-filter>
+        </activity>
 
         <provider
             android:name="com.example.app_2.contentprovider.ImageContentProvider"

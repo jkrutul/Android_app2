@@ -276,7 +276,16 @@ public class Storage {
 		return value;
 	}
 
-	
+	/***
+	 * Skaluje obrazek do kilku rozmiarów i zapisuje w folderach aplikacji ustawiaj¹æ unikan¹ nazwê
+	 * 
+	 * @param path_toIMG - œcie¿ka do obrazka 
+	 * @param compressformat
+	 * @param quality - jakoœæ
+	 * @param db	- baza danych w której do sprawdzenia czy nazwa obrazka nie istniej
+	 * @param filenameUniqueVerification 
+	 * @return String - nazwa nowego obrazka
+	 */
 	public static String scaleAndSaveBitmapFromPath(String path_toIMG,  Bitmap.CompressFormat compressformat, int quality,Database db, boolean filenameUniqueVerification ){
 		Bitmap bitmap;
 		String last_saved_img_path = null;

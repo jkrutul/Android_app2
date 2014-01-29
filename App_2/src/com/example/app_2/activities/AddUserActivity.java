@@ -1,13 +1,19 @@
 package com.example.app_2.activities;
 
+import java.util.ArrayList;
+
 import javax.crypto.spec.OAEPParameterSpec;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.Dialog;
+import android.app.ProgressDialog;
 import android.content.ContentValues;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -27,6 +33,8 @@ import com.example.app_2.contentprovider.ParentContract;
 import com.example.app_2.contentprovider.UserContract;
 import com.example.app_2.intents.ImageIntents;
 import com.example.app_2.provider.Images.AddingImageTask;
+import com.example.app_2.provider.Images.ProcessBitmapsTask;
+import com.example.app_2.provider.Images.ProcessOneBitmapTask;
 import com.example.app_2.storage.Database;
 import com.example.app_2.storage.Storage;
 import com.example.app_2.utils.ImageLoader;
@@ -35,24 +43,34 @@ import com.sonyericsson.util.ScalingUtilities;
 import com.sonyericsson.util.ScalingUtilities.ScalingLogic;
 
 public class AddUserActivity extends Activity {
-	EditText mUserName;
-	TextView mHintText;
-	RadioButton mMaleRB, mFemaleRB;
+	private EditText mUserName;
+	private TextView mHintText;
+	private RadioButton mMaleRB, mFemaleRB;
+
 	private Button mSubmit_button;
 	private ImageView mUserImage;
-
+	
+	private String image_path;
 	private final int FILE_SELECT_REQUEST = 12;
 	private final int TAKE_PIC_REQUEST = 24;
+	public static final int PLEASE_WAIT_DIALOG = 97;
+	public static ProgressDialog dialog;
+	
 	private String pathToNewImage;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_adduser);
-
+		initViews();
+	
+	}
+	
+	private void initViews(){
 		getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
 		
 		mMaleRB = (RadioButton) findViewById(R.id.radioMale);
+		mFemaleRB = (RadioButton) findViewById(R.id.radioFemale);
 		mUserImage = (ImageView) findViewById(R.id.user_image);
 		mSubmit_button = (Button) findViewById(R.id.adduser_button);
 		mHintText = (TextView) findViewById(R.id.user_img_hint);
@@ -67,14 +85,6 @@ public class AddUserActivity extends Activity {
 					mSubmit_button.setEnabled(true);
 			}
 		});
-		if(savedInstanceState!= null){
-			pathToNewImage = (String) savedInstanceState.get("photoPath");
-			if(pathToNewImage!= null){
-				mHintText.setVisibility(View.INVISIBLE);
-				mUserImage.setImageBitmap(ScalingUtilities.decodeFile(pathToNewImage, 150, 150, ScalingLogic.FIT));
-			}
-		}
-	
 	}
 
 	public void onButtonClick(View view) {
@@ -84,13 +94,13 @@ public class AddUserActivity extends Activity {
 			String filename = null;
 			int ismale = mMaleRB.isChecked() == true ? 1 : 0;
 			if (pathToNewImage != null) {
+				
+				ScaleAddImageTask sait = new ScaleAddImageTask(this, username, mMaleRB.isChecked());
+				sait.execute(pathToNewImage);
 				filename = Utils.getFilenameFromPath(pathToNewImage);
-				AddingImageTask ait = new AddingImageTask(this);		// dodanie obrazka do katalogu aplikacji
-				ait.filenameVerification = false;
-				ait.execute(pathToNewImage);
+				
 			}
-			addNewUserToDb(username, ismale, filename);
-			finish();
+
 			break;
 
 		case R.id.cancel_adduser_button:
@@ -101,13 +111,15 @@ public class AddUserActivity extends Activity {
 		case R.id.user_image:
 			final Activity a = this;
 			AlertDialog.Builder builder = new AlertDialog.Builder(this); // Add the buttons
-			builder.setPositiveButton("zrób zdjêcie",
+			builder.setTitle("Wybierz...");
+			builder.setMessage("Sk¹d pobraæ obrazek?");
+			builder.setPositiveButton("Wykonaj zdjêcie",
 					new DialogInterface.OnClickListener() {
 						public void onClick(DialogInterface dialog, int id) {
 							ImageIntents.cameraIntent(a, TAKE_PIC_REQUEST, App_2.maxWidth, App_2.getMaxWidth());
 						}
 					});
-			builder.setNegativeButton("wybierz obrazek",
+			builder.setNegativeButton("Wybierz obrazek z dysku",
 					new DialogInterface.OnClickListener() {
 						public void onClick(DialogInterface dialog, int id) {
 							ImageIntents.selectImageIntent(a,FILE_SELECT_REQUEST, App_2.maxWidth, App_2.getMaxWidth());
@@ -133,23 +145,72 @@ public class AddUserActivity extends Activity {
 				else
 					pathToNewImage = Storage.readFromPreferences(null,"photoPath", this, Activity.MODE_PRIVATE);
 				
-				//mUserImage.setImageBitmap(ScalingUtilities.decodeFile(pathToNewImage, 300, 300, ScalingLogic.FIT));
-				ImageLoader.loadBitmap(pathToNewImage, mUserImage);
-				mHintText.setVisibility(View.INVISIBLE);
-				Toast.makeText(this, pathToNewImage, Toast.LENGTH_LONG).show();		
+				
+				setImage(pathToNewImage);
+			
+				Toast.makeText(this, pathToNewImage, Toast.LENGTH_SHORT).show();		
 				
 			}
 		}
 	}
+	
+	@Override
+    public Dialog onCreateDialog(int dialogId) {
+	        switch (dialogId) {
+	        case PLEASE_WAIT_DIALOG:
+	        	dialog = new ProgressDialog(this);
+	            dialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+	            dialog.setCancelable(false);
+	            dialog.setTitle("Dodawanie nowego obrazka");
+	            dialog.setMessage("Proszê czekaæ....");
+	            return dialog;
+	        default:
+	            break;
+	        }
+	        return null;
+	    }
 
 	@Override
 	protected void onSaveInstanceState(Bundle outState) {
 		super.onSaveInstanceState(outState);
-		if(pathToNewImage!= null)
-			outState.putString("photoPath", pathToNewImage);
+		outState.putString("pathToImage", pathToNewImage);
+		outState.putString("userName", mUserName.getText().toString());
+		outState.putBoolean("isMale", mMaleRB.isChecked());
 	}
 	
-	private void addNewUserToDb(String username, int ismale, String user_img){
+	@Override
+	protected void onRestoreInstanceState(Bundle savedInstanceState) {
+		super.onRestoreInstanceState(savedInstanceState);
+		pathToNewImage = savedInstanceState.getString("pathToImage");
+		String userName = savedInstanceState.getString("userName");
+		Boolean isMale = savedInstanceState.getBoolean("isMale");
+		
+		
+		if(pathToNewImage != null)
+			setImage(pathToNewImage);
+		
+		mUserName.setText(userName);
+		
+		if(isMale){
+			mMaleRB.setChecked(true);
+			mFemaleRB.setChecked(false);
+		}else{
+			mMaleRB.setChecked(false);
+			mFemaleRB.setChecked(true);
+		}
+		
+
+		
+	}
+	
+	private void setImage(String path){
+
+        Bitmap b = ScalingUtilities.decodeFile(path, 150, 150, ScalingLogic.FIT);
+        mUserImage.setImageBitmap(b);
+        image_path = path;
+        mHintText.setVisibility(View.INVISIBLE);
+	}
+	private void addNewUserToDb(String username, boolean ismale, String user_img){
 		ContentValues img_val = new ContentValues();								// stworzenie nowego korzenia dla u¿ytkownika
 		img_val.put(ImageContract.Columns.FILENAME, user_img);
 		img_val.put(ImageContract.Columns.DESC, username + " - G³ówna");
@@ -166,7 +227,8 @@ public class AddUserActivity extends Activity {
 		Long user_root_fk = Long.valueOf(img_uri.getLastPathSegment()); 			// dodanie nowego u¿ytkownika do bazy
 		ContentValues user_val = new ContentValues();
 		user_val.put(UserContract.Columns.USERNAME, username);
-		user_val.put(UserContract.Columns.ISMALE, ismale);
+		int isMale = (ismale)  ? 1 : 0;
+		user_val.put(UserContract.Columns.ISMALE, isMale);
 		user_val.put(UserContract.Columns.IMG_FILENAME, user_img);
 		user_val.put(UserContract.Columns.ROOT_FK, user_root_fk);
 		Uri user_uri = getContentResolver().insert(UserContract.CONTENT_URI, user_val);
@@ -191,5 +253,43 @@ public class AddUserActivity extends Activity {
 		
 																				
 		Storage.saveToPreferences(null, "photoPath", this, Activity.MODE_PRIVATE); 	// clear preferences
+	}
+	
+	
+	public class ScaleAddImageTask extends AsyncTask<String, Void, Void>{
+		private Activity executing_activity;
+		private String username;
+		private Boolean isMale;
+		
+		public ScaleAddImageTask(Activity a, String username, Boolean isMale){
+			this.executing_activity = a;
+			this.isMale = isMale;
+			this.username = username;
+			
+		}
+		
+		@Override
+		protected void onPreExecute() {
+			this.executing_activity.showDialog(AddUserActivity.PLEASE_WAIT_DIALOG,null);
+		}
+		
+		@Override
+		protected Void doInBackground(String... params) {
+			String path = params[0];
+			Database db = Database.getInstance(App_2.getAppContext());
+			Database.open();
+			Storage.scaleAndSaveBitmapFromPath(path,Bitmap.CompressFormat.PNG,90,db, false);
+			addNewUserToDb(username, isMale, Utils.getFilenameFromPath(path));
+
+			return null;
+		}
+		
+		
+		@Override
+		protected void onPostExecute(Void result){
+			this.executing_activity.removeDialog(AddUserActivity.PLEASE_WAIT_DIALOG);
+			executing_activity.finish();
+		}
+
 	}
 }

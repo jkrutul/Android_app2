@@ -19,6 +19,28 @@ public class ImageIntents {
 		public static final int TAKE_PIC_REQUEST = 24;
 		
 
+	public static void selectAndScaleImageIntent(Activity a, int requestCode, int outX, int outY){
+		Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+		File f = Storage.createTempImageFile(); // tworzy tymczasowy plik
+		String mCurrentPhotoPath = f.getAbsolutePath();
+		Storage.saveToPreferences(mCurrentPhotoPath,"photoPath", a, Activity.MODE_PRIVATE);
+		intent.setType("image/*");
+		intent.putExtra("crop", "true");
+		intent.putExtra("outputX", outX);
+		intent.putExtra("outputY", outY);
+		intent.putExtra("aspectX",1);
+		intent.putExtra("aspectY", 1);
+		intent.putExtra("scale", true);
+		intent.putExtra("return-data", true);
+		intent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(f));
+		intent.putExtra("outputFormat", Bitmap.CompressFormat.JPEG);
+		try {
+			a.startActivityForResult(Intent.createChooser(intent, "Wybierz obrazek"),	requestCode);
+		} catch (android.content.ActivityNotFoundException ex) {
+			Toast.makeText(a.getApplicationContext(),"Proszê zainstalowaæ menad¿er plików", Toast.LENGTH_SHORT).show();
+		}
+	}
+	
 	public static void selectImageIntent(Activity a, int requestCode, int outX, int outY){
 		Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
 		File f = Storage.createTempImageFile(); // tworzy tymczasowy plik

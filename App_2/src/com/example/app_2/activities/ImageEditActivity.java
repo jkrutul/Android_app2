@@ -29,7 +29,7 @@ import com.example.app_2.spinner.model.ImageSpinnerItem;
 
 public class ImageEditActivity extends FragmentActivity{
 	private static ImageListFragment ilf;
-	private Spinner mSpinner;
+	//private Spinner mSpinner;
 	
 	ArrayList<ImageSpinnerItem> items;
 	private final static int TAKE_PIC_REQUEST = 86;

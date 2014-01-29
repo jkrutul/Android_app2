@@ -171,7 +171,7 @@ public class NewImgTemplateActivity extends Activity {
 					});
 			builder.setNegativeButton("wybierz obrazek",new DialogInterface.OnClickListener() {
 						public void onClick(DialogInterface dialog, int id) {
-							ImageIntents.selectImageIntent(a, FILE_SELECT_REQUEST, App_2.maxWidth, App_2.maxWidth);
+							ImageIntents.selectAndScaleImageIntent(a, FILE_SELECT_REQUEST, App_2.maxWidth, App_2.maxWidth);
 						}
 					});
 

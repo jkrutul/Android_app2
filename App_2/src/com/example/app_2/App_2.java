@@ -1,23 +1,14 @@
 package com.example.app_2;
 
-import android.annotation.SuppressLint;
-import android.annotation.TargetApi;
 import android.app.Application;
-import android.app.WallpaperManager;
 import android.content.Context;
-import android.content.res.Resources;
 import android.graphics.Bitmap;
-import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
-import android.os.Build;
 import android.view.Display;
 import android.view.WindowManager;
 
 import com.example.app_2.storage.Database;
 import com.example.app_2.utils.BitmapCalc;
 import com.example.app_2.utils.ImageLoader;
-import com.sonyericsson.util.ScalingUtilities;
-import com.sonyericsson.util.ScalingUtilities.ScalingLogic;
 
 
 public class App_2 extends Application{

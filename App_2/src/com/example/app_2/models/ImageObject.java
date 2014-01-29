@@ -38,6 +38,14 @@ public class ImageObject { //ID imageName, AUDIOPATH, DESCRIPTION, times_used, m
 		this.author_fk = author_id;
 	}
 	
+	
+	public ImageObject(String imageName, String description, Long author_id){ 					// konstruktor dla liœcia
+		this.imageName = imageName;
+		this.author_fk = author_id;
+		this.description = description;
+	}
+	
+	
 	public ImageObject(String imageName, String description,String category){
 		this.imageName = imageName;
 

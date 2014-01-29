@@ -42,19 +42,15 @@ public final class Images {
 	
 	private Images(){}
 	
-	public static List<ImageObject> images = new LinkedList<ImageObject>(); // list
-																			// of
-																			// ImageObject
-																			// selected
-																			// by
-																			// category
-																			// id
+
 	public static List<Uri> imageUris = new ArrayList<Uri>();
 	public ImageLoader il = new ImageLoader(App_2.getAppContext());
 	public static long img_dir_last_read = Long.valueOf(Storage
 			.readFromSharedPreferences(String.valueOf(0), "imgDirLastRead",
 					"imgDirLastRead", App_2.getAppContext(),
 					Context.MODE_PRIVATE));
+	
+	
 	public static long imgLastModified;
 	private static final String LOG_TAG = "Images";
 
@@ -141,7 +137,7 @@ public final class Images {
 				ContentValues[] cvArray  = new ContentValues[cvSize];
 				int i =0;
 				for(Long category_fk :categories){
-					category_fk = categories.get(i);
+					//category_fk = categories.get(i);
 					ContentValues cv = new ContentValues();
 					cv.put(ParentContract.Columns.IMAGE_FK, inserted_id);
 					cv.put(ParentContract.Columns.PARENT_FK, category_fk);
@@ -150,6 +146,33 @@ public final class Images {
 				App_2.getAppContext().getContentResolver().bulkInsert(ParentContract.CONTENT_URI, cvArray);
 			}
 		}
+		
+	}
+	
+	
+	public static void addNewEntryToImageTable(String filename, String image_description, Long category_fk, Long user_id){
+		Database db = Database.getInstance(App_2.getAppContext());
+		db.open();
+		Long main_dict_id = db.getMainDictFk();
+		LinkedList<Long> categories = new LinkedList<Long>();
+		categories.add(main_dict_id);
+		if(category_fk != null)
+			categories.add(category_fk);
+
+
+		Long inserted_id = db.insertImage(new ImageObject(filename, image_description, user_id));
+		if(inserted_id!= -1){
+			ContentValues[] cvArray  = new ContentValues[categories.size()];
+			int i =0;
+			for(Long c_fk :categories){
+				ContentValues cv = new ContentValues();
+				cv.put(ParentContract.Columns.IMAGE_FK, inserted_id);
+				cv.put(ParentContract.Columns.PARENT_FK, c_fk);
+				cvArray[i++] = cv;
+			}
+			App_2.getAppContext().getContentResolver().bulkInsert(ParentContract.CONTENT_URI, cvArray);
+		}
+		
 		
 	}
 	
@@ -225,7 +248,7 @@ public final class Images {
 	public static List<String> getImagesFileNames(List<String> paths) {
 		Iterator<String> li = paths.iterator();
 		while (li.hasNext()) { // sprawdŸ czy pliki s¹ obrazkami
-			if (isImgFile(li.next()) == false)
+			if (Utils.isImgFile(li.next()) == false)
 				li.remove();
 		}
 		return paths;
@@ -240,7 +263,7 @@ public final class Images {
 		
 		if(files_from_dir != null){	
 			for(File f:files_from_dir){
-				if(isImgFile(dir+File.separator+f.getName()))
+				if(Utils.isImgFile(dir+File.separator+f.getName()))
 					images_from_dir.add(f);
 			}
 			return images_from_dir;
@@ -300,21 +323,7 @@ public final class Images {
 	
 	*/
 
-	/**
-	 * checks if a file with the specified path is a picture
-	 * @param path to file
-	 * @return true - is file is image else false
-	 */
-	private static boolean isImgFile(String path) {
-		BitmapFactory.Options options = new BitmapFactory.Options();
-		options.inJustDecodeBounds = true;
-		Bitmap bitmap = BitmapFactory.decodeFile(path, options);
-		if (options.outWidth != -1 && options.outHeight != -1) {
-			return true;
-		} else {
-			return false;
-		}
-	}
+
 
 	/*
 	 * Dodawanie obrazków z wybranego folderu, do s³ownika i wybranej kategorii
@@ -336,7 +345,7 @@ public final class Images {
 			if (executing_activity instanceof ImageGridActivity)
 				executing_activity
 						.showDialog(ImageGridActivity.PLEASE_WAIT_DIALOG);
-			else
+			else if(executing_activity instanceof AddImagesFromFolderActivity)
 				executing_activity
 						.showDialog(AddImagesFromFolderActivity.PLEASE_WAIT_DIALOG);
 		}
@@ -347,12 +356,12 @@ public final class Images {
 			boolean filenameVerification = true;
 			ArrayList<String> argsList = arg[0];
 			
-			int parents_count = argsList.size();
-			parents_count--;
+			//int parents_count = argsList.size();
+			//parents_count--;
 			String path_to_dir = (String) argsList.get(0);
 			ArrayList<Long> parents_fk = new ArrayList<Long>();
 			
-			for(int i=1, j=0; i<argsList.size(); i++, j++){
+			for(int i=1; i<argsList.size(); i++){
 				try{
 					parents_fk.add(Long.parseLong((String) argsList.get(i)));
 				}catch(NumberFormatException e){
@@ -389,10 +398,39 @@ public final class Images {
 			if (executing_activity instanceof ImageGridActivity)
 				executing_activity
 						.removeDialog(ImageGridActivity.PLEASE_WAIT_DIALOG);
-			else
+			else if (executing_activity instanceof AddImagesFromFolderActivity)
 				executing_activity
 						.removeDialog(AddImagesFromFolderActivity.PLEASE_WAIT_DIALOG);
 		}
+	}
+	
+	
+	
+	
+	public static class ProcessOneBitmapTask extends	AsyncTask<ArrayList<String>, Integer, Void> {
+		Database db;
+		Long user_id= null;
+
+		public ProcessOneBitmapTask(Context context, Long user_id) {
+			db = Database.getInstance(context);
+			db.open();
+			this.user_id = user_id;
+
+		}
+
+		@Override
+		protected Void doInBackground(ArrayList<String>... arg) {
+			boolean filenameVerification = true;
+			ArrayList<String> argsList = arg[0];
+			String path_to_file = (String) argsList.get(0);
+			LinkedList<String> uniqueFilenames = new LinkedList<String>();
+			File image_file = new File(path_to_file);
+			uniqueFilenames.add(Storage.scaleAndSaveBitmapFromPath(image_file.getAbsolutePath(), Bitmap.CompressFormat.PNG,90,db, filenameVerification));
+			Log.i(LOG_TAG, "doInBackground");
+			addNewEntriesToImageTable(uniqueFilenames, null , null);
+			return null;
+		}
+
 	}
 
 	/* dodanie jednego obrazka do bazy */

@@ -67,7 +67,7 @@ public class ImageListFragment extends ListFragment implements LoaderCallbacks<C
 	private ListView listView;
 	private CheckBox onlyCategoriesCheckBox;
 	private Spinner mSpinner;
-	ArrayList<ImageSpinnerItem> items;
+	private ArrayList<ImageSpinnerItem> items;
 	private Long selected_user_id = null;
 	
 	private Long logged_user_id;
