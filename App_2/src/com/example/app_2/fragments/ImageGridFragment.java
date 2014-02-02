@@ -329,7 +329,8 @@ public class ImageGridFragment extends Fragment implements LoaderCallbacks<Curso
 	  
 	    if(executingActivity.mEditMode){
 	    	mGridView.setMultiChoiceModeListener(mMultiChoiceModeListener);
-	    	mGridView.setChoiceMode(GridView.CHOICE_MODE_MULTIPLE_MODAL);	
+	    	mGridView.setChoiceMode(GridView.CHOICE_MODE_MULTIPLE_MODAL);
+	    	
 	    }
 	    else
 	    	mGridView.setOnItemLongClickListener(ilcL);
@@ -370,7 +371,10 @@ public class ImageGridFragment extends Fragment implements LoaderCallbacks<Curso
 	}
 
 	@Override
-	public void onLoadFinished(Loader<Cursor> arg0, Cursor data) { adapter.swapCursor(data);}
+	public void onLoadFinished(Loader<Cursor> arg0, Cursor data) { 
+		adapter.swapCursor(data);
+		
+		}
 
 	@Override
 	public void onLoaderReset(Loader<Cursor> loader) { 

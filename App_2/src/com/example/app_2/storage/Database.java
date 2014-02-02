@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.text.SimpleDateFormat;
@@ -11,6 +12,7 @@ import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 
+import android.R.integer;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
@@ -39,6 +41,8 @@ public class Database {
 	private static Date date;
 	
 	private static final String DATABASE_NAME="myDatabase.db";
+	public static String DB_FILEPATH = "/data/data/com.example.app_2/databases/"+DATABASE_NAME;
+	
 	private static Database db_instance = null;
 	private static final String LOG_TAG = "Database";			
 	private static final int DATABASE_VERSION = 1;
@@ -130,6 +134,20 @@ public class Database {
 	}
 	
 	
+	public static String backupDb(String filename){
+		String dbDirPath = Storage.getAppRootDir()+File.separator+"backups"+File.separator;
+		filename+=".db";
+		dbDirPath+=filename;
+		try {
+
+			if(dbHelper.exportDatabase(dbDirPath))
+				return filename;
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+	
 	public boolean filenameVerification(String _filename){
 		int count = -1;
 		Cursor c = null;
@@ -145,6 +163,16 @@ public class Database {
 				c.close();
 			}
 		}
+	}
+	
+	
+	public static boolean importDb(String dbPath){
+		try {
+			return dbHelper.importDatabase(dbPath);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return false;
 	}
 	
 	/* I M A G E */
@@ -257,58 +285,7 @@ public class Database {
 			return cursorToImage(c);
 		return null;
 	}
-/*	
-	public List<ImageObject> getAllImagesByCategory(long category_id){
-		ImageObject mio;
-		String selection = ImageContract.Columns.PARENTS+ " = ?";
-		String[] selectionArgs = {""};
-		selectionArgs[0] = String.valueOf(category_id);
-		List<ImageObject> images = new LinkedList<ImageObject>();
-		Cursor c = db.query(ImageContract.TABLE_IMAGE, null,selection, selectionArgs, null,null, null,null);
-		c.moveToFirst();
-		while(!c.isAfterLast()){
-			mio = cursorToImage(c);
-			images.add(mio);
-			c.moveToNext();
-		}
-		c.close();
-		
-		return images;
-	}
 
-
-	public List<String> getAllImagePathByCategory(long category_id ){
-		List<String> img_paths = new LinkedList<String>();
-		List<ImageObject> img_o = getAllImagesByCategory(category_id);
-		for(ImageObject i : img_o){
-			img_paths.add(i.getImageName());
-		}
-		return img_paths;
-	}
-	*/	
-	
-	/*
-	public ImageObject getRootCategory(){
-		ImageObject category =null;
-
-		String[] columns = {ImageContract.Columns._ID, ImageContract.Columns.FILENAME, ImageContract.Columns.CATEGORY};
-		String selection =ImageContract.Columns.CATEGORY+"=\'ROOT\'";
-		//String[] selectionArgs = {""};
-		//selectionArgs[0] = "\'ROOT\'";
-
-		try{
-			Cursor c = db.query(ImageContract.TABLE_IMAGE, columns,selection, null,null, null,null);
-			c.moveToFirst();
-			while(!c.isAfterLast()){
-				category = cursorToCategory(c);
-				c.moveToNext();
-			}
-			c.close();
-		}
-		catch(SQLException ex){Log.w(LOG_TAG,ex);}
-		return category;
-	}
-*/	
 	public List<ImageObject> getAllImages(){
 		ImageObject mio;
 		
@@ -357,115 +334,7 @@ public class Database {
 		else
 			return null;
 	}
-	
-/*	
-	public static Cursor getCursorOfAllImages(){
-		String selection =ImageContract.Columns.CATEGORY+" NOT LIKE \'ROOT\'";
-		String[] selectionArgs = {""};
-		selectionArgs[0] = "\'ROOT\'";		
-		
-		try{
-			if(db == null)
-				open();
-			return db.query(ImageContract.TABLE_IMAGE, null, selection, null,null, null,null);
-			}
-		catch(SQLException ex){
-			Log.w(LOG_TAG,ex);
-		}
-		return null;
-	}
-	
-	public List<ImageObject> getAllCategories(){
-		ImageObject category;
-		List<ImageObject> categories = new LinkedList<ImageObject>();
-		String[] columns = {ImageContract.Columns._ID, ImageContract.Columns.FILENAME, ImageContract.Columns.CATEGORY};
-		String selection = ImageContract.Columns.CATEGORY + " IS NOT NULL ";
-		try{
-			Cursor c = db.query(ImageContract.TABLE_IMAGE, columns,selection, null,null, null,null);
-			c.moveToFirst();
-			while(!c.isAfterLast()){
-				category = cursorToImage(c);
-				//category = c.getString(c.getColumnIndex(ImageContract.Columns.CATEGORY));
-				categories.add(category);
-				c.moveToNext();
-			}
-			c.close();
-		}
-		catch(SQLException ex){Log.w(LOG_TAG,ex);}
-		
-		return categories;
-	}
-	*/
-/*	
-	public List<ImageObject> getSubcategories(Long img_id){
-		ImageObject category = new ImageObject();
-		List<ImageObject> categories = new LinkedList<ImageObject>();
 
-		String[] columns = {ImageContract.Columns._ID, ImageContract.Columns.PATH, ImageContract.Columns.CATEGORY};
-		//String selection = ImageContract.Columns.CATEGORY + " NOTNULL AND "+ImageContract.Columns.PARENTS+"="+img_id.toString();
-		String selection = ImageContract.Columns.CATEGORY + " != ? AND " +ImageContract.Columns.PARENTS+"="+img_id.toString();
-		try{
-			Cursor c = db.query(ImageContract.TABLE_IMAGE, columns,selection, new String[] {"null"},null, null,null);
-			//Cursor c = db.rawQuery("SELECT "+ImageContract.Columns._ID+","+ImageContract.Columns.PATH+","+ImageContract.Columns.CATEGORY+" FROM "+ImageContract.TABLE_IMAGE+" WHERE ("+ ImageContract.Columns.CATEGORY+" IS NOT NULL) AND "+ImageContract.Columns.PARENTS+ " = " + img_id.toString()+";", null);
-			c.moveToFirst();
-			while(!c.isAfterLast()){
-				category.setId(			c.getLong(		0));
-				category.setImageName(	c.getString(	1));
-				category.setCategory(	c.getString(	2));
-				//category = c.getString(c.getColumnIndex(ImageContract.Columns.CATEGORY));
-				categories.add(category);
-				c.moveToNext();
-			}
-			c.close();
-		}
-		catch(SQLException ex){Log.w(LOG_TAG,ex);}
-		return categories;
-	}
-	
-	public List<ImageObject> getCategoryLeafs(Long img_id){
-		ImageObject category;
-		List<ImageObject> categories = new LinkedList<ImageObject>();
-
-		String[] columns = {ImageContract.Columns._ID, ImageContract.Columns.PATH, ImageContract.Columns.CATEGORY};
-		String selection = ImageContract.Columns.CATEGORY + " IS NULL AND "+ImageContract.Columns.PARENTS+"="+img_id.toString();
-		try{
-			Cursor c = db.query(ImageContract.TABLE_IMAGE, columns,selection, null,null, null,null);
-			c.moveToFirst();
-			while(!c.isAfterLast()){
-				category = cursorToImage(c);
-				//category = c.getString(c.getColumnIndex(ImageContract.Columns.CATEGORY));
-				categories.add(category);
-				c.moveToNext();
-			}
-			c.close();
-		}
-		catch(SQLException ex){Log.w(LOG_TAG,ex);}
-		return categories;
-	}
-	
-	public List<ImageObject> getParentCategory(Long img_id){
-		ImageObject category = new ImageObject();
-		List<ImageObject> categories = new LinkedList<ImageObject>();
-		String[] columns = {ImageContract.Columns._ID, ImageContract.Columns.PATH, ImageContract.Columns.CATEGORY};
-		String selection = ImageContract.Columns._ID +"=(SELECT "+ImageContract.Columns.PARENTS+" FROM " +ImageContract.TABLE_IMAGE+" WHERE "+ImageContract.Columns._ID+"="+img_id.toString()+");";                    //ImageContract.Columns.CATEGORY + "IS NOT NULL AND "+COL_; //SELECT * FROM IMAGE WHERE ID = (SELECT ImageContract.Columns.PARENTS FROM IMAGE WHERE ID = 
-		try{
-			Cursor c = db.query(ImageContract.TABLE_IMAGE, columns,selection, null,null, null,null);
-			c.moveToFirst();
-			while(!c.isAfterLast()){		
-				category.setId(			c.getLong(		0));
-				category.setImageName(	c.getString(	1));
-				category.setCategory(	c.getString(	2));
-				//category = c.getString(c.getColumnIndex(ImageContract.Columns.CATEGORY));
-				categories.add(category);
-				c.moveToNext();
-			}
-			c.close();
-		}
-		catch(SQLException ex){Log.w(LOG_TAG,ex);}
-
-		return categories;
-	}
-*/	
 	/* image - cursor */
 	private static ImageObject cursorToImage(Cursor cursor){
 		ImageObject mio = new ImageObject();
@@ -527,7 +396,7 @@ public class Database {
 	
 	//----
 	public static class myDbHelper extends SQLiteOpenHelper{
-		
+
 		@Override
 		public void onOpen(SQLiteDatabase db) {
 		    super.onOpen(db);
@@ -608,5 +477,43 @@ public class Database {
 			onCreate(db);
 			
 		}
+	
+	
+	public boolean exportDatabase(String exDbPath) throws IOException{
+		close();
+		File savedDb = new File(exDbPath);
+		File currentDb = new File(DB_FILEPATH);
+		if(!currentDb.exists())
+			return false;
+
+		if(savedDb.createNewFile()){
+			Storage.copyFile(new FileInputStream(currentDb), new FileOutputStream(savedDb));
+			return true;
+		}
+		else
+			return false;
 	}
+		 
+	/**
+	 * Copies the database file at the specified location over the current
+	 * internal application database.
+	 * */
+	public boolean importDatabase(String dbPath) throws IOException {
+	
+	    // Close the SQLiteOpenHelper so it will commit the created empty
+	    // database to internal storage.
+	    close();
+	    File newDb = new File(dbPath);
+	    File oldDb = new File(DB_FILEPATH);
+	    if (newDb.exists()) {
+	        Storage.copyFile(new FileInputStream(newDb), new FileOutputStream(oldDb));
+	        // Access the copied database so SQLiteHelper will cache it and mark
+	        // it as created.
+	        getWritableDatabase().close();
+	        return true;
+	    }
+	    return false;}
+	}
+		
+		
 }

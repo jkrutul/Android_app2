@@ -1,10 +1,11 @@
 package com.example.app_2.storage;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.channels.FileChannel;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
@@ -14,16 +15,12 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
-import android.graphics.Bitmap.CompressFormat;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Environment;
-import android.provider.MediaStore.Images;
 import android.util.Log;
 
-
 import com.example.app_2.App_2;
-import com.example.app_2.utils.AsyncTask;
 import com.example.app_2.utils.BitmapCalc;
 import com.example.app_2.utils.Utils;
 
@@ -35,6 +32,7 @@ public class Storage {
 	public static final String IMG_THUBS = "thumbs";    		// miniatury obrazków
 	//public static final String IMG_THUMBS_MAX = "thumbs_max";	// miniatury obrazków które siê mieszcz¹ na ca³ym ekranie tablety/smartfona
 	public static final String TEMP = "temp";
+	public static final String BACKUPS = "backups";
 	public static final int IO_BUFFER_SIZE = 8 * 1024;
 	public static final int dev_width = App_2.getMaxWidth();
 	public static final int dev_height = App_2.getMaxHeight();
@@ -422,5 +420,40 @@ public class Storage {
     }
 
 
+    /**
+     * Creates the specified <code>toFile</code> as a byte for byte copy of the
+     * <code>fromFile</code>. If <code>toFile</code> already exists, then it
+     * will be replaced with a copy of <code>fromFile</code>. The name and path
+     * of <code>toFile</code> will be that of <code>toFile</code>.<br/>
+     * <br/>
+     * <i> Note: <code>fromFile</code> and <code>toFile</code> will be closed by
+     * this function.</i>
+     * 
+     * @param fromFile
+     *            - FileInputStream for the file to copy from.
+     * @param toFile
+     *            - FileInputStream for the file to copy to.
+     */
+    public static void copyFile(FileInputStream fromFile, FileOutputStream toFile) throws IOException {
+        FileChannel fromChannel = null;
+        FileChannel toChannel = null;
+        try {
+            fromChannel = fromFile.getChannel();
+            toChannel = toFile.getChannel();
+            fromChannel.transferTo(0, fromChannel.size(), toChannel);
+        } finally {
+            try {
+                if (fromChannel != null) {
+                    fromChannel.close();
+                }
+            } finally {
+                if (toChannel != null) {
+                    toChannel.close();
+                }
+            }
+        }
+    }
+
+    
 
 }

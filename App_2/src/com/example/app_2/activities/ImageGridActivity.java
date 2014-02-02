@@ -164,15 +164,15 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 		mActionBar.setListNavigationCallbacks(title_nav_adapter, this);
 		
 		igf = new ImageGridFragment();
+		Bundle args = new Bundle();		
 		
-		if(logged_user_root != null){
-			Bundle args = new Bundle();		
+		if(actual_category_fk!=null)
+			args.putLong("CATEGORY_ID", actual_category_fk);
+		else if(logged_user_root != null){	
 			actual_category_fk = logged_user_root;
-			args.putLong("CATEGORY_ID", logged_user_root);
-			igf.setArguments(args);
-			//fragmentsHistory.add(logged_user_root);
+			args.putLong("CATEGORY_ID", logged_user_root);	
 		}
-		
+		igf.setArguments(args);
 
         setContentView(R.layout.activity_grid);
 		mCategoryMap = new HashMap<String, Long>();
@@ -182,10 +182,12 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 		checkIntent.setAction(TextToSpeech.Engine.ACTION_CHECK_TTS_DATA);
 		startActivityForResult(checkIntent, TTS_REQUEST_CODE);
         
+		
+		
 		// ustawienie drawera
-        //expandedImageView = (ImageView) findViewById(R.id.expanded_image);
-		//imageLoader = new ImageLoader(getApplicationContext());	
         setDrawer();
+        
+        
         
         // za³adowanie do content_frame ImageGridFragment
         if (getSupportFragmentManager().findFragmentByTag(GRID_FRAGMENT_TAG) == null) {
@@ -418,6 +420,16 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 		tts.speak(text, TextToSpeech.QUEUE_FLUSH, null);
 	}
 	
+	@Override
+	protected void onSaveInstanceState(Bundle outState) {
+		outState.putLong("actual_category_fk", actual_category_fk);
+	};
+	
+	@Override
+	protected void onRestoreInstanceState(Bundle savedInstanceState) {
+		actual_category_fk = savedInstanceState.getLong("actual_category_fk");
+	};
+	
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		if (requestCode == TTS_REQUEST_CODE) {
 			if (resultCode == TextToSpeech.Engine.CHECK_VOICE_DATA_PASS) {
@@ -594,6 +606,7 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 
 	     
 	    if(gotoPreviousFragment){
+			igf.setArguments(args);
 	    	fragmentsHistory.remove(fragmentsHistory.size()-1);
 			setActionBarTitleFromCategoryId(category_id);
 			final FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
@@ -602,6 +615,7 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 		    ft.commit();	
 	    }
 	    else{
+			igf.setArguments(args);
 	    	if(addPreviousToHistory)
 	    		fragmentsHistory.add(prevCategoryFk);
 			final FragmentTransaction ft = getSupportFragmentManager().beginTransaction();

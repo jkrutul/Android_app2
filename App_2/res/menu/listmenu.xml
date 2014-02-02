@@ -1,24 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android" >
-        
-    <item 
-        android:id = "@+id/adduser"
-        android:showAsAction="always"
+
+    <item
+        android:id="@+id/adduser"
         android:icon="@drawable/add_person"
+        android:showAsAction="always"
         android:title="Dodaj użytkownika">
-	</item>
-    <item 
-        android:id = "@+id/take_pic"
-        android:showAsAction="always"
+    </item>
+    <item
+        android:id="@+id/take_pic"
         android:icon="@drawable/add_new_image"
-        android:title="Dodaj zdjęcie">
-	</item>
-	
-    <item 
-        android:id = "@+id/add_folder"
         android:showAsAction="always"
+        android:title="Dodaj zdjęcie">
+    </item>
+    <item
+        android:id="@+id/add_folder"
         android:icon="@drawable/add_from_folder"
+        android:showAsAction="always"
         android:title="Dodaj folder">
-	</item>
-	
+    </item>
+    <item
+        android:id="@+id/backup_db"
+        android:icon="@drawable/ic_action_save"
+        android:showAsAction="ifRoom"
+        android:title="Zapisz bazę">
+    </item>
+    <item
+        android:id="@+id/import_db"
+        android:icon="@drawable/ic_action_import_export"
+        android:showAsAction="ifRoom"
+        android:title="Importuj bazę">
+    </item>
+
 </menu>

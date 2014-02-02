@@ -1,10 +1,14 @@
 package com.example.app_2.activities;
 
+import java.io.File;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentTransaction;
@@ -14,26 +18,26 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
-import android.widget.AdapterView;
-import android.widget.AdapterView.OnItemSelectedListener;
-import android.widget.Spinner;
-import android.widget.TextView;
+import android.widget.EditText;
 import android.widget.Toast;
 
 import com.example.app_2.R;
-import com.example.app_2.contentprovider.ImageContract;
 import com.example.app_2.fragments.ImageDetailsFragment;
 import com.example.app_2.fragments.ImageListFragment;
-import com.example.app_2.spinner.adapter.ImageSpinnerAdapter;
 import com.example.app_2.spinner.model.ImageSpinnerItem;
+import com.example.app_2.storage.Database;
+import com.example.app_2.storage.Storage;
+import com.example.app_2.utils.Utils;
 
 public class ImageEditActivity extends FragmentActivity{
 	private static ImageListFragment ilf;
 	//private Spinner mSpinner;
+	String newDbFilePath;
 	
 	ArrayList<ImageSpinnerItem> items;
 	private final static int TAKE_PIC_REQUEST = 86;
 	private final static int FILE_SELECT_REQUEST = 25;
+	private final static int DB_SELECT_REQUEST = 24;
 	
 	private final static String IMAGE_LIST_FRAGMENT= "image_list_fragment";
 	
@@ -92,7 +96,62 @@ public class ImageEditActivity extends FragmentActivity{
 			i = new Intent(this, AddUserActivity.class);
 			startActivity(i);
 			return true;
+			
+		case R.id.backup_db:
+			 AlertDialog.Builder alert = new AlertDialog.Builder(this);
+
+			  alert.setTitle("Tworzenie kopii zapasowej bazy danych");
+			  alert.setMessage("Nazwa pliku kopii bazy danych");
+
+			  // Set an EditText view to get user input 
+			  final EditText input = new EditText(this);
+
+			  
+			  SimpleDateFormat dateFormat= new SimpleDateFormat("HH_mm_ss_dd_MM_yyyy");
+			  Date date = new Date();
+			  input.setText(dateFormat.format(date));
+			  alert.setView(input);
+
+			  alert.setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+			  public void onClick(DialogInterface dialog, int whichButton) {
+				    String user_filename = input.getText().toString();
+				    Database.backupDb(user_filename);
+					Toast.makeText(getApplicationContext(), "Baza "+user_filename+" zosta³a zapisana", Toast.LENGTH_LONG).show();
+					Database.open();
+			    }
+			  });
+
+			  alert.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
+			    public void onClick(DialogInterface dialog, int whichButton) {
+			      // Canceled.
+			    }
+			  });
+
+			  alert.show();
+			  		
+			return true;
+		
+		case R.id.import_db:
+			i = new Intent(this, FilesSelectActivity.class);
+			Bundle bundle = new Bundle();
+			bundle.putString("DIR_PATH", Storage.getAppRootDir().getAbsolutePath()+File.separator+Storage.BACKUPS);
+			i.putExtras(bundle);
+			startActivityForResult(i, DB_SELECT_REQUEST);
+			/*
+			if(Database.importDb(newDbFilePath)){
+				Toast.makeText(getApplicationContext(), "Baza zosta³a zapisana", Toast.LENGTH_LONG).show();
+				Database.open();
+			}else{
+				Toast.makeText(getApplicationContext(), "Baza nie zosta³a zapisana", Toast.LENGTH_LONG).show();
+			}
+			*/
+			return true;
+
+			
 		}
+		
+
+			
 		return super.onOptionsItemSelected(item);
 	}
 
@@ -107,8 +166,12 @@ public class ImageEditActivity extends FragmentActivity{
 			}
 	  }
 	  
+
+	  
 		@Override
 		protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+			super.onActivityResult(requestCode, resultCode, data);
+			
 			switch (requestCode) {
 			case FILE_SELECT_REQUEST:
 				if (resultCode == RESULT_OK) {
@@ -120,6 +183,21 @@ public class ImageEditActivity extends FragmentActivity{
 				if (resultCode == RESULT_OK) {
 					Intent i = new Intent(this, NewImgTemplateActivity.class);
 					startActivity(i);
+				}
+				break;
+			
+			case DB_SELECT_REQUEST:
+				if (resultCode == RESULT_OK) {
+					if(data.getExtras().containsKey("SELECTED_FILE_DIR")){
+						String pathToImportedDb = data.getStringExtra("SELECTED_FILE_DIR");
+						if(Utils.getExtention(Utils.getFilenameFromPath(pathToImportedDb)).equals("db") && Database.importDb(pathToImportedDb)){
+							Toast.makeText(getApplicationContext(), "Baza zosta³a zaimportowana", Toast.LENGTH_LONG).show();
+							Database.open();
+						}else{
+							Toast.makeText(getApplicationContext(), "Wyst¹pi³ b³¹d, importowanie bazy nie powiod³o siê", Toast.LENGTH_LONG).show();
+						}
+					}
+						
 				}
 				break;
 
