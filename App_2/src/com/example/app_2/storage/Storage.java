@@ -56,26 +56,7 @@ public class Storage {
 			return new File(Environment.getExternalStorageDirectory().getPath()	+ cacheDir);
 		}
 	}
-	
-	/*
-	public static File createImageFile() {
-
-		String JPEG_FILE_PREFIX = "img";
-		String JPEG_FILE_SUFIX = ".jpg";
-		// create a image file name
-		String timeStamp = new SimpleDateFormat("yyyyyMMdd_HHmmss")
-				.format(new Date());
-		String imageFileName = JPEG_FILE_PREFIX + timeStamp + "_";
-		try {
-			File image = File.createTempFile(imageFileName, JPEG_FILE_SUFIX,getImagesDir());
-			return image;
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		return null;
-	}
-	*/
-	
+		
 	public static File createTempImageFile(){
 		String JPEG_FILE_PREFIX = "img";
 		String JPEG_FILE_SUFIX = ".jpg";
@@ -119,21 +100,10 @@ public class Storage {
 			return null;
 	}
 	
-	/*
-	public static File getImagesDir(){
-		return getsDir(IMG_DIR);
-		}
-	
-
-	
 	public static File getThumbsDir(){
 		return getsDir(IMG_THUBS);
-		}
-	
-	public static File getThumbsMaxDir(){
-		return getsDir(IMG_THUMBS_MAX);
 	}
-	*/
+	
 	public static File getScaledThumbsDir(String scale, boolean createIfNotExist){
 		File file = new File(getAppRootDir().getAbsolutePath() + File.separator+ IMG_THUBS+ File.separator+ scale+ File.separator);
 		if(file.exists())
@@ -157,25 +127,16 @@ public class Storage {
 				filesToRemove.add(fileToRemove);
 			
 		}
-		
-		
-		
-		
-		
-		
 		return false;
 	}
 
 	
-
-	
-	
-
-	
-
-	
 	public static File getTempDir(){
 		return getsDir(TEMP);
+	}
+	
+	public static File getBackupDir(){
+		return getsDir(BACKUPS);
 	}
 	
 	
@@ -453,6 +414,9 @@ public class Storage {
             }
         }
     }
+    
+    
+
 
     
 

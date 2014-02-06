@@ -18,11 +18,15 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
 		addPreferencesFromResource(R.xml.preferences);
 		
 		SharedPreferences sp = getPreferenceScreen().getSharedPreferences();
-		Preference pref = findPreference("pref_img_size");
-		pref.setSummary(sp.getString("pref_img_size", ""));
-		pref = findPreference("pref_img_desc_font_size");
-		pref.setSummary(sp.getString("pref_img_desc_font_size", ""));
-		pref = findPreference("pref_img_crop");
+
+		//Preference pref = findPreference("pref_img_size");
+		
+		//pref.setSummary(String.valueOf(sp.getInt("pref_img_size", 100)));
+		//pref = findPreference("pref_img_desc_font_size");
+		//pref.setSummary(String.valueOf(sp.getInt("pref_img_desc_font_size", 15)));
+		
+		Preference pref = findPreference("pref_img_crop");
+		
 		if(sp.getBoolean("pref_img_crop", false))
 			pref.setSummary("tak");
 		else
@@ -34,15 +38,18 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
 
 	@Override
 	public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+		/*
 		if(key.equals("pref_img_size")){
 			Preference pref = findPreference(key);
-			pref.setSummary(sharedPreferences.getString(key, ""));
+			pref.setSummary(String.valueOf(sharedPreferences.getInt(key, 100)));
 		}
 		else if(key.equals("pref_img_desc_font_size")){
 			Preference pref = findPreference(key);
-			pref.setSummary(sharedPreferences.getString(key, ""));
+			pref.setSummary(String.valueOf(sharedPreferences.getInt(key, 15)));
 		}
-		else if(key.equals("pref_img_crop")){
+		else 
+		*/
+		if(key.equals("pref_img_crop")){
 			Preference pref = findPreference(key);
 			if(sharedPreferences.getBoolean("pref_img_crop", false))
 				pref.setSummary("tak");

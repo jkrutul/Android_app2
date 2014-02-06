@@ -122,6 +122,18 @@ public class UsersActivity extends FragmentActivity implements LoaderCallbacks<C
 		return super.onOptionsItemSelected(item);
 	}
 	
+	
+	public void addNewUser(View view){
+		switch (view.getId()) {
+		case android.R.id.empty:
+			Intent i = new Intent(this, AddUserActivity.class);
+			startActivity(i);
+			break;
+
+		default:
+			break;
+		}
+	}
 
 
 

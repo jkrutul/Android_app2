@@ -96,13 +96,22 @@ public class UserLoginActivity extends Activity {
 			editor.commit();
 			
 			Uri uri = Uri.parse(UserContract.CONTENT_URI + "/"	+ user_id);
-			Cursor c = getContentResolver().query(uri, new String[]{UserContract.Columns.FONT_SIZE, UserContract.Columns.IMG_SIZE},null, null, null);
+			Cursor c = getContentResolver().query(uri, new String[]{UserContract.Columns.FONT_SIZE, UserContract.Columns.IMG_SIZE, UserContract.Columns.CAT_BACKGROUND, UserContract.Columns.CONTEXT_CAT_BACKGROUND},null, null, null);
 			c.moveToFirst();
 			if(!c.isAfterLast()){
 				SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this.getApplicationContext());
 				SharedPreferences.Editor e = sp.edit();
-				e.putString("pref_img_size", c.getString(1));
-				e.putString("pref_img_desc_font_size", c.getString(0));
+				e.putInt("pref_img_size", Integer.valueOf(c.getString(1)));
+				e.putInt("pref_img_desc_font_size", Integer.valueOf(c.getString(0)));
+				
+				String catColorValue = c.getString(2);
+				String ctxColorValue = c.getString(3);
+				
+				if(catColorValue!=null)
+					e.putInt("category_view_background", Integer.valueOf(catColorValue));
+				if(ctxColorValue!=null)
+					e.putInt("context_category_view_background", Integer.valueOf(ctxColorValue));
+
 				e.commit();
 			}
 			c.close();

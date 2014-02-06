@@ -60,7 +60,7 @@ public class BindImagesToCategoryActivity extends FragmentActivity implements On
 		//logged_user_id = sharedPref.getLong("logged_user_id", 0);
 		
 		getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
-		executing_category_id = ImageGridActivity.actual_category_fk;	
+		executing_category_id = ImageGridActivity.actual_category_fk.getCategoryId();	
 		setContentView(R.layout.activity_bind_images_to_category);
 		parent_category_imageView = (ImageView) findViewById(R.id.parent_category_image);
 		category_name_textView = (TextView) findViewById(R.id.txt_cat_info);
@@ -126,7 +126,7 @@ public class BindImagesToCategoryActivity extends FragmentActivity implements On
         boolean copy_images = true;
         Long category_author = null, selected_items_author = null;
    
-        Uri uri = Uri.parse(ImageContract.CONTENT_URI + "/"+ImageGridActivity.actual_category_fk);                 // znaleŸenie autora kategorii do której dodawane bêd¹ obrazki
+        Uri uri = Uri.parse(ImageContract.CONTENT_URI + "/"+ImageGridActivity.actual_category_fk.getCategoryId());                 // znaleŸenie autora kategorii do której dodawane bêd¹ obrazki
         Cursor c = getContentResolver().query(uri, new String[]{"i."+ImageContract.Columns.AUTHOR_FK}, null,null, null);
         c.moveToFirst(); // TODO dodaæ else
         if(!c.isAfterLast())

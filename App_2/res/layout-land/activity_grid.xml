@@ -1,71 +1,67 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="horizontal">
-    
-    <ListView 
-        android:id="@+id/left_list_of_categories"
-        android:layout_height="match_parent"
+    android:orientation="horizontal" >
+
+    <ListView
+        android:id="@+id/categories_list"
         android:layout_width="0dp"
+        android:layout_height="match_parent"
         android:layout_weight="3"
-        android:background="#20000000"></ListView>
-    
-<LinearLayout
-    android:id="@+id/main_grid"
-    android:layout_width="0dp"
-    android:layout_height="match_parent"
-    android:layout_weight="10"
-    android:background="#20000000"
-    android:orientation="vertical" >
-    
+        android:background="#000000" >
+    </ListView>
+
     <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:background="#80000000" >
+        android:id="@+id/main_grid"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="10"
+        android:background="#20000000"
+        android:orientation="vertical" >
 
-        <com.example.app_2.views.HorizontalListView
-            android:id="@+id/horizontal_listview"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:background="#80000000" >
 
-        <Button
-            android:id="@+id/clear_ex_button"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:background="@drawable/remove_button"
-            android:onClick="onButtonClick" />
+            <com.example.app_2.views.HorizontalListView
+                android:id="@+id/horizontal_listview"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1" />
 
-        <Button
-            android:id="@+id/play_button"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:background="@drawable/speak"
-            android:onClick="onButtonClick" />
+            <Button
+                android:id="@+id/clear_ex_button"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:background="@drawable/remove_button"
+                android:onClick="onButtonClick" />
+
+            <Button
+                android:id="@+id/play_button"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:background="@drawable/speak"
+                android:onClick="onButtonClick" />
+        </LinearLayout>
+
+        <FrameLayout
+            android:id="@+id/content_frame"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="5" >
+
+            <ImageView
+                android:id="@+id/expanded_image"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="#a0000000"
+                android:clickable="true"
+                android:contentDescription="description_zoom_touch_close"
+                android:visibility="invisible" />
+        </FrameLayout>
     </LinearLayout>
 
-    <FrameLayout
-        android:id="@+id/content_frame"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="5" >
-
-        <ImageView
-            android:id="@+id/expanded_image"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:background="#a0000000"
-            android:clickable="true"
-            android:contentDescription="description_zoom_touch_close"
-            android:visibility="invisible" />
-    </FrameLayout>
-
-</LinearLayout>    
-    
-    
 </LinearLayout>
-
-

@@ -342,12 +342,7 @@ public final class Images {
 
 		@Override
 		protected void onPreExecute() {
-			if (executing_activity instanceof ImageGridActivity)
-				executing_activity
-						.showDialog(ImageGridActivity.PLEASE_WAIT_DIALOG);
-			else if(executing_activity instanceof AddImagesFromFolderActivity)
-				executing_activity
-						.showDialog(AddImagesFromFolderActivity.PLEASE_WAIT_DIALOG);
+				executing_activity.showDialog(AddImagesFromFolderActivity.PLEASE_WAIT_DIALOG);
 		}
 
 		@Override
@@ -395,12 +390,7 @@ public final class Images {
 		}
 
 		protected void onPostExecute(Void result) {
-			if (executing_activity instanceof ImageGridActivity)
-				executing_activity
-						.removeDialog(ImageGridActivity.PLEASE_WAIT_DIALOG);
-			else if (executing_activity instanceof AddImagesFromFolderActivity)
-				executing_activity
-						.removeDialog(AddImagesFromFolderActivity.PLEASE_WAIT_DIALOG);
+				executing_activity.removeDialog(AddImagesFromFolderActivity.PLEASE_WAIT_DIALOG);
 		}
 	}
 	

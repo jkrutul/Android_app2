@@ -48,6 +48,7 @@ import android.widget.TextView;
 
 import com.example.app_2.App_2;
 import com.example.app_2.R;
+import com.example.app_2.actionbar.model.IdPositionModel;
 import com.example.app_2.activities.ImageDetailsActivity;
 import com.example.app_2.activities.ImageGridActivity;
 import com.example.app_2.contentprovider.ImageContract;
@@ -70,6 +71,8 @@ public class ImageGridFragment extends Fragment implements LoaderCallbacks<Curso
     private ImageView expandedImageView;
     private int mImageThumbSize;
     private int mImageThumbSpacing;
+    private int mCategoryBackgroundColor;
+    private int mContextCategoryBackgroundColor;
 	private int mImageFontSize = 20;
     private SimpleCursorAdapter adapter;
     private ArrayList<Long> selected_images_ids = new ArrayList<Long>();
@@ -109,30 +112,25 @@ public class ImageGridFragment extends Fragment implements LoaderCallbacks<Curso
 		@Override
 		public boolean onItemLongClick(AdapterView<?> parent, final  View thumbView, int position, long i) {
     		Cursor c = (Cursor) adapter.getItem(position);						
-
-    			if(expandedImageView!=null){
-    				expandedImageView.bringToFront();
-    				 String path = Storage.getPathToScaledBitmap(c.getString(1), dev_w);
-    		         Bitmap unscaledBitmap = ScalingUtilities.decodeFile(path, App_2.getMaxWidth(), App_2.getMaxHeight(), ScalingLogic.FIT);
-    		         Bitmap bitmap = ScalingUtilities.createScaledBitmap(unscaledBitmap, App_2.getMaxWidth(), App_2.getMaxHeight(), ScalingLogic.FIT);
-    		         unscaledBitmap.recycle();
-    		         expandedImageView.setImageBitmap(bitmap);
-    			}
-
-    		    thumbView.setAlpha(0f);
-    		    expandedImageView.setVisibility(View.VISIBLE);
-    		    expandedImageView.setOnClickListener(new View.OnClickListener() {
-    		        @SuppressLint("NewApi")
-    				@Override
-    		        public void onClick(View view) {
-    		        	thumbView.setAlpha(1f);
-    		            expandedImageView.setVisibility(View.GONE);
-    		        }
-    		    });
-    		    return true;  			
-    		
-
-        	
+   			if(expandedImageView!=null){
+   				expandedImageView.bringToFront();
+   				 String path = Storage.getPathToScaledBitmap(c.getString(1), dev_w);
+   		         Bitmap unscaledBitmap = ScalingUtilities.decodeFile(path, App_2.getMaxWidth(), App_2.getMaxHeight(), ScalingLogic.FIT);
+   		         Bitmap bitmap = ScalingUtilities.createScaledBitmap(unscaledBitmap, App_2.getMaxWidth(), App_2.getMaxHeight(), ScalingLogic.FIT);
+   		         unscaledBitmap.recycle();
+   		         expandedImageView.setImageBitmap(bitmap);
+   			}
+   		    thumbView.setAlpha(0f);
+   		    expandedImageView.setVisibility(View.VISIBLE);
+   		    expandedImageView.setOnClickListener(new View.OnClickListener() {
+   		        @SuppressLint("NewApi")
+   				@Override
+   		        public void onClick(View view) {
+   		        	thumbView.setAlpha(1f);
+   		            expandedImageView.setVisibility(View.GONE);
+   		        }
+   		    });
+   		    return true;  			        	
     	}
 	};
 	
@@ -167,9 +165,11 @@ public class ImageGridFragment extends Fragment implements LoaderCallbacks<Curso
 					ImageLoader.loadBitmap(path, iv);
 					if(isCategory)
 						if(cursor.getInt(4) == 1)
-							view.setBackgroundColor(Color.argb(120, 149,39,225));
+							//view.setBackgroundColor(Color.argb(120, 149,39,225));
+							view.setBackgroundColor(mCategoryBackgroundColor);
 						else
-							view.setBackgroundColor(Color.argb(120, 0, 255, 0));
+							//view.setBackgroundColor(Color.argb(120, 0, 255, 0));
+							view.setBackgroundColor(mContextCategoryBackgroundColor);
 					else
 						view.setBackgroundColor(Color.TRANSPARENT);
 					if(selected_images_ids.contains(cursor.getLong(0)))
@@ -276,7 +276,7 @@ public class ImageGridFragment extends Fragment implements LoaderCallbacks<Curso
 			String category = img_object.getCategory();
 			if(category!=null){
 				Long l = c.getLong(c.getColumnIndex(ImageContract.Columns._ID));
-				executingActivity.replaceGridFragment(l, false, true);
+				executingActivity.replaceCategory(l, position, true);
 				ActionBar actionBar = executingActivity.getActionBar();
 				actionBar.setTitle(category);
 				if(img_object.getIsContextualCategory() == 1){
@@ -294,8 +294,15 @@ public class ImageGridFragment extends Fragment implements LoaderCallbacks<Curso
 		super.onCreate(savedInstanceState);
 		executingActivity = (ImageGridActivity) getActivity();
 		sharedPref = PreferenceManager.getDefaultSharedPreferences(executingActivity);
-		mImageThumbSize = Integer.valueOf(sharedPref.getString("pref_img_size", "150"));
-		mImageFontSize = Integer.valueOf(sharedPref.getString("pref_img_desc_font_size", "15"));
+		mImageThumbSize =sharedPref.getInt("pref_img_size",150);
+		mImageFontSize = sharedPref.getInt("pref_img_desc_font_size", 15);
+		/*
+		mCategoryBackgroundColor = Integer.valueOf(sharedPref.getString("category_view_background", "0xff33b5e5"));
+		mContextCategoryBackgroundColor = Integer.valueOf(sharedPref.getString("context_category_view_background","0xffe446ff"));
+		*/
+		mCategoryBackgroundColor =sharedPref.getInt("category_view_background", 0xff33b5e5);
+		mContextCategoryBackgroundColor =sharedPref.getInt("context_category_view_background",0xffe446ff);
+		
         mImageThumbSpacing = getResources().getDimensionPixelSize(R.dimen.image_thumbnail_spacing);	
 		mChangeNumColumns = true;
 
@@ -309,11 +316,15 @@ public class ImageGridFragment extends Fragment implements LoaderCallbacks<Curso
 	public void onResume(){
 		super.onResume();
 		//if(restartLoader){
+		/*
 			Bundle args = new Bundle();		
-			args.putLong("CATEGORY_ID", ImageGridActivity.actual_category_fk);
-			getLoaderManager().restartLoader(1, args, this);		
+			args.putLong("CATEGORY_ID", ImageGridActivity.actual_category_fk.getCategoryId());
+			args.putInt("RET_POSITION",  ImageGridActivity.actual_category_fk.getNextCatPosition());
+		*/
+			getLoaderManager().restartLoader(1, null, this);		
 			restartLoader = false;
-			executingActivity.setDrawer();
+			executingActivity.setDrawerOrLeftList();
+		
 		//}
 
 	}
@@ -363,8 +374,16 @@ public class ImageGridFragment extends Fragment implements LoaderCallbacks<Curso
 	public Loader<Cursor> onCreateLoader(int arg0, Bundle bundle) {
 
 			//TODO login user root id
-			ImageGridActivity.actual_category_fk = (bundle!= null) ?  bundle.getLong("CATEGORY_ID", 1)	: 1;
-			Uri uri = Uri.parse(ImagesOfParentContract.CONTENT_URI + "/" + ImageGridActivity.actual_category_fk);
+		/*
+		if(bundle!= null){
+			Long category_id = bundle.getLong("CATEGORY_ID", Long.valueOf(1));
+			int position = bundle.getInt("RET_POSITION", 0);
+			//ImageGridActivity.actual_category_fk = new IdPositionModel(category_id, position);
+		}
+		*/
+
+		
+			Uri uri = Uri.parse(ImagesOfParentContract.CONTENT_URI + "/" + ImageGridActivity.actual_category_fk.getCategoryId());
 			return new CursorLoader(executingActivity.getApplicationContext(),uri, loader_projection, null, null ,sortOrder);			
 		
 
@@ -372,8 +391,18 @@ public class ImageGridFragment extends Fragment implements LoaderCallbacks<Curso
 
 	@Override
 	public void onLoadFinished(Loader<Cursor> arg0, Cursor data) { 
-		adapter.swapCursor(data);
-		
+		adapter.swapCursor(data);	
+		adapter.notifyDataSetChanged();
+		mGridView.post( new Runnable() {
+		    @Override
+		    public void run() {
+				int posToScrool = ImageGridActivity.actual_category_fk.getNextCatPosition();
+				Long categoryId = ImageGridActivity.actual_category_fk.getCategoryId();
+				Log.i(LOG_TAG, "Category id: "+categoryId+" Scrool to pos: "+posToScrool );
+				mGridView.smoothScrollToPositionFromTop(posToScrool, 10, 0);
+		    }
+		  });
+
 		}
 
 	@Override
@@ -410,7 +439,7 @@ public class ImageGridFragment extends Fragment implements LoaderCallbacks<Curso
 		c.close();
 
 		Bundle args = new Bundle();		
-		args.putLong("CATEGORY_ID", ImageGridActivity.actual_category_fk);
+		args.putLong("CATEGORY_ID", ImageGridActivity.actual_category_fk.getCategoryId());
 		getLoaderManager().restartLoader(1, args, this);
 		refreshDrawer();
 	}
@@ -419,7 +448,7 @@ public class ImageGridFragment extends Fragment implements LoaderCallbacks<Curso
 		boolean isCategory = false;
 		boolean isBindToAnotherCategory = false;
 		String where = ParentContract.Columns.IMAGE_FK+" = ? AND "+ ParentContract.Columns.PARENT_FK+" = ? ";
-		Long category_fk = ImageGridActivity.actual_category_fk;
+		Long category_fk = ImageGridActivity.actual_category_fk.getCategoryId();
 		Long main_dict_fk = App_2.getMain_dict_id();
 		Cursor c =null;
 		
@@ -510,6 +539,6 @@ public class ImageGridFragment extends Fragment implements LoaderCallbacks<Curso
 	
 	
 	private void refreshDrawer(){
-		executingActivity.setDrawer();
+		executingActivity.setDrawerOrLeftList();
 	}
 }

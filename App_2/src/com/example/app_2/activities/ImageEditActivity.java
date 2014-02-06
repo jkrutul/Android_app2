@@ -134,7 +134,7 @@ public class ImageEditActivity extends FragmentActivity{
 		case R.id.import_db:
 			i = new Intent(this, FilesSelectActivity.class);
 			Bundle bundle = new Bundle();
-			bundle.putString("DIR_PATH", Storage.getAppRootDir().getAbsolutePath()+File.separator+Storage.BACKUPS);
+			bundle.putString("DIR_PATH", Storage.getBackupDir().getAbsolutePath());
 			i.putExtras(bundle);
 			startActivityForResult(i, DB_SELECT_REQUEST);
 			/*

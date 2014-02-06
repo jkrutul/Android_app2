@@ -51,6 +51,7 @@ import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v4.widget.SimpleCursorAdapter;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -63,6 +64,7 @@ import android.widget.Toast;
 
 import com.example.app_2.R;
 import com.example.app_2.actionbar.adapter.TitleNavigationAdapter;
+import com.example.app_2.actionbar.model.IdPositionModel;
 import com.example.app_2.actionbar.model.SpinnerNavItem;
 import com.example.app_2.contentprovider.ImageContract;
 import com.example.app_2.contentprovider.UserContract;
@@ -72,7 +74,6 @@ import com.example.app_2.models.ImageObject;
 import com.example.app_2.storage.Database;
 import com.example.app_2.storage.Storage;
 import com.example.app_2.utils.ImageLoader;
-import com.example.app_2.utils.Utils;
 import com.sonyericsson.util.ScalingUtilities;
 import com.sonyericsson.util.ScalingUtilities.ScalingLogic;
 
@@ -83,13 +84,14 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
     private static final String LOG_TAG = "ImageGridActivity";
 
     public static final String GRID_FRAGMENT_TAG = "FragmentGrid";
+    public static final String LIST_FRAGMENT_TAG = "FragmentList";
     private static final String EXPRESSION_FRAGMENT_TAG = "FragmentExpression";
     public static final int PLEASE_WAIT_DIALOG = 1;
     public static ProgressDialog dialog;
     private static boolean doubleBackToExitPressedOnce = false;
-	public static Long actual_category_fk;
+	public static IdPositionModel actual_category_fk = new IdPositionModel();
     
-    public static List<Long> fragmentsHistory = new LinkedList<Long>();
+    public static List<IdPositionModel> fragmentsHistory = new LinkedList<IdPositionModel>();
     private List<String> mCategoryTitles = new LinkedList<String>();
     private DrawerLayout mDrawerLayout;
     private int layout_width = 0 , layout_height = 0;
@@ -102,8 +104,9 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
     private TitleNavigationAdapter title_nav_adapter;
     
     private  ListView mDrawerList;
+  
 
-    private Map<String, Long> mCategoryMap;
+    private Map<String, Long> mCategoryMap  = new HashMap<String, Long>();
 	public TextToSpeech tts;
     //CharSequence mTitle;
     //private CharSequence mDrawerTitle;
@@ -112,6 +115,9 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
     Long logged_user_root;
     Long logged_user_id;
     public ImageGridFragment igf;
+
+    
+    protected boolean mDualPane = false;
     
 	private static final int TTS_REQUEST_CODE = 1;
     private static final int SETTINGS_REQUEST_CODE = 37;
@@ -123,7 +129,8 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 	@Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-      
+        setContentView(R.layout.activity_grid);
+
 		SharedPreferences sharedPref = getApplicationContext().getSharedPreferences("USER",Context.MODE_PRIVATE);			// pobranie informacji o zalogowanym u¿ytkowniku
 		logged_user_root = sharedPref.getLong("logged_user_root", Database.getMainRootFk());
 		logged_user_id = sharedPref.getLong("logged_user_id", 0);
@@ -133,59 +140,34 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 		else
 			mEditMode = false;
 		
-        mActionBar = getActionBar();
-        mActionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_LIST);
-        if(mEditMode){
-    		mActionBar.setBackgroundDrawable(new ColorDrawable(0xff0084b3)); 
-    		mActionBar.setDisplayShowTitleEnabled(false);
-    		mActionBar.setDisplayShowTitleEnabled(true);
-        }else{
-    		mActionBar.setBackgroundDrawable(new ColorDrawable(0xff4d055e)); 
-    		mActionBar.setDisplayShowTitleEnabled(false);
-    		mActionBar.setDisplayShowTitleEnabled(true);
-    		Uri uri = Uri.parse(UserContract.CONTENT_URI+"/"+logged_user_id);
-    		Cursor c = getContentResolver().query(uri, new String[]{UserContract.Columns.IMG_FILENAME}, null ,null, null);
-    		c.moveToFirst();
-    		if(!c.isAfterLast()){
-    			String path = Storage.getPathToScaledBitmap(c.getString(0), 50);
-    			Bitmap user_icon = ScalingUtilities.decodeFile(path, 50, 50, ScalingLogic.FIT);
-    			mActionBar.setIcon(new BitmapDrawable(getResources(),user_icon));
-    		}
-    		c.close();
-        }
-        	
-     
-		navSpinner = new ArrayList<SpinnerNavItem>();
-		navSpinner.add(new SpinnerNavItem("Alfabetycznie", R.drawable.sort_ascend));
-		navSpinner.add(new SpinnerNavItem("Ostatnio zmodyfikowane", R.drawable.clock));
-		navSpinner.add(new SpinnerNavItem("Najczêœciej u¿ywane", R.drawable.favourites));
+        setActionBar();
+		getTTS();
 		
-		title_nav_adapter = new TitleNavigationAdapter(getApplicationContext(), navSpinner);
-		mActionBar.setListNavigationCallbacks(title_nav_adapter, this);
 		
 		igf = new ImageGridFragment();
-		Bundle args = new Bundle();		
+		//Bundle args = new Bundle();		
 		
-		if(actual_category_fk!=null)
-			args.putLong("CATEGORY_ID", actual_category_fk);
-		else if(logged_user_root != null){	
-			actual_category_fk = logged_user_root;
-			args.putLong("CATEGORY_ID", logged_user_root);	
-		}
-		igf.setArguments(args);
+		//if(actual_category_fk.getCategoryId()!=null)
+			//args.putLong("CATEGORY_ID", actual_category_fk.getCategoryId());
+		//else if(logged_user_root != null){	
+		//	actual_category_fk.setCategoryId(logged_user_root);
+			//args.putLong("CATEGORY_ID", logged_user_root);	
+		//}
+    
+    	if(logged_user_root != null)
+    		actual_category_fk.setCategoryId(logged_user_root);
+    	
+		//igf.setArguments(args);
 
-        setContentView(R.layout.activity_grid);
-		mCategoryMap = new HashMap<String, Long>();
-		
-        // pobranie syntezatora mowy
-		Intent checkIntent = new Intent();
-		checkIntent.setAction(TextToSpeech.Engine.ACTION_CHECK_TTS_DATA);
-		startActivityForResult(checkIntent, TTS_REQUEST_CODE);
+
+
         
 		
+		ListView categoriesListView = (ListView) findViewById(R.id.categories_list);		
+		if(categoriesListView != null)
+			mDualPane = categoriesListView.getVisibility() == View.VISIBLE;
 		
-		// ustawienie drawera
-        setDrawer();
+		setDrawerOrLeftList();// ustawienie drawera lub listy kategorii z lewej strony
         
         
         
@@ -205,6 +187,45 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
         
 
     }
+        
+    private void getTTS(){
+    	// pobranie syntezatora mowy
+		Intent checkIntent = new Intent();
+		checkIntent.setAction(TextToSpeech.Engine.ACTION_CHECK_TTS_DATA);
+		startActivityForResult(checkIntent, TTS_REQUEST_CODE);
+    }
+    
+    private void setActionBar(){
+    	  mActionBar = getActionBar();
+          mActionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_LIST);
+          if(mEditMode){
+      		mActionBar.setBackgroundDrawable(new ColorDrawable(0xff0084b3)); 
+      		mActionBar.setDisplayShowTitleEnabled(false);
+      		mActionBar.setDisplayShowTitleEnabled(true);
+          }else{
+      		mActionBar.setBackgroundDrawable(new ColorDrawable(0xff4d055e)); 
+      		mActionBar.setDisplayShowTitleEnabled(false);
+      		mActionBar.setDisplayShowTitleEnabled(true);
+      		Uri uri = Uri.parse(UserContract.CONTENT_URI+"/"+logged_user_id);
+      		Cursor c = getContentResolver().query(uri, new String[]{UserContract.Columns.IMG_FILENAME}, null ,null, null);
+      		c.moveToFirst();
+      		if(!c.isAfterLast()){
+      			String path = Storage.getPathToScaledBitmap(c.getString(0), 50);
+      			Bitmap user_icon = ScalingUtilities.decodeFile(path, 50, 50, ScalingLogic.FIT);
+      			mActionBar.setIcon(new BitmapDrawable(getResources(),user_icon));
+      		}
+      		c.close();
+          }
+          	
+       
+  		navSpinner = new ArrayList<SpinnerNavItem>();
+  		navSpinner.add(new SpinnerNavItem("Alfabetycznie", R.drawable.sort_ascend));
+  		navSpinner.add(new SpinnerNavItem("Ostatnio zmodyfikowane", R.drawable.clock));
+  		navSpinner.add(new SpinnerNavItem("Najczêœciej u¿ywane", R.drawable.favourites));
+  		
+  		title_nav_adapter = new TitleNavigationAdapter(getApplicationContext(), navSpinner);
+  		mActionBar.setListNavigationCallbacks(title_nav_adapter, this);
+    }
     
     public void onButtonClick(View v){
     	switch (v.getId()) {
@@ -219,7 +240,7 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 			break;
 		}
     }
-    
+    /*
     @Override
     public Dialog onCreateDialog(int dialogId) {
         switch (dialogId) {
@@ -236,44 +257,48 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
         }
         return null;
     }
+    */
     
     @Override
     protected void onPostCreate(Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
         // Sync the toggle state after onRestoreInstanceState has occurred.
-        mDrawerToggle.syncState();
+        if(!mDualPane)
+        	mDrawerToggle.syncState();
     }
 
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
-        mDrawerToggle.onConfigurationChanged(newConfig);
+        if(!mDualPane)
+        	mDrawerToggle.onConfigurationChanged(newConfig);
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         // Pass the event to ActionBarDrawerToggle, if it returns
         // true, then it has handled the app icon touch event
-        if (mDrawerToggle.onOptionsItemSelected(item)) {
-          return true;
-        }
+        if(!mDualPane)
+	        if (mDrawerToggle.onOptionsItemSelected(item)) {
+	          return true;
+	        }
 
         // Handle presses on the action bar items
         switch (item.getItemId()) {
 	        case R.id.action_add_image:// TODO dodawanie nowych obrazków 
 	        	Intent bind_intent = new Intent(this, BindImagesToCategoryActivity.class);
-	        	if(actual_category_fk== Database.getMainRootFk()){
+	        	if(actual_category_fk.getCategoryId()== Database.getMainRootFk()){
 	        		Toast.makeText(getApplicationContext(), "Tutaj nie mo¿na dodawaæ obrazków, wybierz najpierw u¿ytkownika", Toast.LENGTH_LONG).show();
 	        		return true;
 	        	}
-	        	bind_intent.putExtra("executing_category_id", actual_category_fk);
+	        	bind_intent.putExtra("executing_category_id", actual_category_fk.getCategoryId());
 	        	startActivity(bind_intent);
 	        	return true;
 	        	
 	        case R.id.action_add_new_image:
 	        	Intent new_imageIntent = new Intent(this, AddImageActivity.class);
 	        	Bundle bundle = new Bundle();
-	        	bundle.putLong("cat_fk",actual_category_fk);
+	        	bundle.putLong("cat_fk",actual_category_fk.getCategoryId());
 	        	new_imageIntent.putExtras(bundle);
 	        	startActivity(new_imageIntent);
 	        	return true;
@@ -294,8 +319,10 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
     			//zapisanie usawieñ u¿ytkownika do bazy
     			Uri uri = Uri.parse(UserContract.CONTENT_URI + "/" + sharedPref.getLong("logged_user_id", 0));
     			ContentValues cv = new ContentValues();
-    			cv.put(UserContract.Columns.FONT_SIZE, Integer.parseInt(sp.getString("pref_img_desc_font_size", "15")));
-    			cv.put(UserContract.Columns.IMG_SIZE, Integer.parseInt(sp.getString("pref_img_size", "100")));
+    			cv.put(UserContract.Columns.FONT_SIZE, sp.getInt("pref_img_desc_font_size", 15));
+    			cv.put(UserContract.Columns.IMG_SIZE, sp.getInt("pref_img_size", 100));
+    			cv.put(UserContract.Columns.CAT_BACKGROUND, String.valueOf(sp.getInt("category_view_background", 0xff33b5e5)));
+    			cv.put(UserContract.Columns.CONTEXT_CAT_BACKGROUND, String.valueOf(sp.getInt("context_category_view_background", 0xffe446ff)));
     			getContentResolver().update(uri, cv, null,null);    			
     			editor.putLong("logged_user_root", Database.getMainRootFk());
     			editor.putLong("logged_user_id", 0 );
@@ -305,8 +332,8 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
     			Intent i = getIntent();
     			finish();
     			startActivity(i);
-    			
-            	replaceGridFragment(Database.getMainRootFk(), false, false);
+    		
+            	replaceCategory(Database.getMainRootFk(), 0, false);
             	
             	return true;
             	
@@ -354,32 +381,37 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 	};
 	
 	
+
+	
     private class DrawerItemClickListener implements ListView.OnItemClickListener{
 
 		@Override
 		public void onItemClick(AdapterView parent, View view, int position, long id) {
-			if(actual_category_fk != id){
+			if(actual_category_fk.getCategoryId() != id){
 				selectItem(position);
 				igf.finishActionMode();
-				Long firstCategory = fragmentsHistory.get(0);
+				IdPositionModel firstCategory = fragmentsHistory.get(0);
 				fragmentsHistory.clear();
-				if(firstCategory != null && id!= firstCategory){
+				if(firstCategory != null && id!= firstCategory.getCategoryId()){
 					fragmentsHistory.add(firstCategory);
 				}
 			}
 			else{
 				Toast.makeText(getApplicationContext(), "Jesteœ ju¿ w tej kategorii", Toast.LENGTH_SHORT ).show();
-			    mDrawerLayout.closeDrawers();
+			    if(!mDualPane);
+			    	mDrawerLayout.closeDrawers();
 			}
 		}
 		
 		private void selectItem(int position){
 			Long cat_id = mCategoryMap.get(mCategoryTitles.get(position));
-			replaceGridFragment(cat_id, false, true);
+			//replaceGridFragment(new IdPositionModel(cat_id), false, true);
+			replaceCategory(cat_id, 0, true);
 			
 			 // Highlight the selected item, update the title, and close the drawer
 		    mDrawerList.setItemChecked(position, true);
-		    mDrawerLayout.closeDrawers();
+		    if(!mDualPane)
+		    	mDrawerLayout.closeDrawers();
 		}
     }
     
@@ -422,12 +454,12 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 	
 	@Override
 	protected void onSaveInstanceState(Bundle outState) {
-		outState.putLong("actual_category_fk", actual_category_fk);
+		outState.putLong("actual_category_fk", actual_category_fk.getCategoryId());
 	};
 	
 	@Override
 	protected void onRestoreInstanceState(Bundle savedInstanceState) {
-		actual_category_fk = savedInstanceState.getLong("actual_category_fk");
+		actual_category_fk.setCategoryId(savedInstanceState.getLong("actual_category_fk"));
 	};
 	
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -445,44 +477,48 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 
 	@SuppressLint("NewApi")
 	@TargetApi(Build.VERSION_CODES.HONEYCOMB)
-	public void setDrawer(){
+	public void setDrawerOrLeftList(){
+		if(!mDualPane){
+		      mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
+		      mDrawerLayout.getViewTreeObserver().addOnGlobalLayoutListener(vto);
+		      mDrawerToggle = new ActionBarDrawerToggle(
+			                this,                  /* host Activity */
+			                mDrawerLayout,         /* DrawerLayout object */
+			                R.drawable.ic_drawer,  /* nav drawer icon to replace 'Up' caret */
+			                R.string.drawer_open,  /* "open drawer" description */
+			                R.string.drawer_close  /* "close drawer" description */
+		                ) {
+				    		String mActionBarTitle = null;
+				    		ActionBar mActionBar = getActionBar();
+		
+				            /** Called when a drawer has settled in a completely closed state. */
+				            public void onDrawerClosed(View view) {
+				            	mActionBar.setTitle(mActionBarTitle);
+				            }
+		
+				            /** Called when a drawer has settled in a completely open state. */
+				            public void onDrawerOpened(View drawerView) {
+				            	mActionBarTitle = (String) mActionBar.getTitle();
+				            	mActionBar.setTitle( "Wybierz kategoriê");
+				            }
+		        };
+		        mDrawerLayout.setDrawerListener(mDrawerToggle);
+		        mDrawerList  = (ListView) findViewById(R.id.left_drawer);
+		}else{
+			mDrawerList = (ListView) findViewById(R.id.categories_list);
+		}
+			
+		
 		String[] projection = {"i."+ImageContract.Columns._ID, "i."+ImageContract.Columns.FILENAME, "i."+ImageContract.Columns.CATEGORY};
 		String selection;
 		String[] selectionArgs = {""};
 
-        mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
-       mDrawerLayout.getViewTreeObserver().addOnGlobalLayoutListener(vto);
-       // Utils.setWallpaper(mDrawerLayout, layout_height, layout_width, null, ScalingLogic.CROP);
-
-        mDrawerToggle = new ActionBarDrawerToggle(
-	                this,                  /* host Activity */
-	                mDrawerLayout,         /* DrawerLayout object */
-	                R.drawable.ic_drawer,  /* nav drawer icon to replace 'Up' caret */
-	                R.string.drawer_open,  /* "open drawer" description */
-	                R.string.drawer_close  /* "close drawer" description */
-                ) {
-        	
-    		String mActionBarTitle = null;
-    		ActionBar mActionBar = getActionBar();
-
-            /** Called when a drawer has settled in a completely closed state. */
-            public void onDrawerClosed(View view) {
-            	mActionBar.setTitle(mActionBarTitle);
-            }
-
-            /** Called when a drawer has settled in a completely open state. */
-            public void onDrawerOpened(View drawerView) {
-            	mActionBarTitle = (String) mActionBar.getTitle();
-            	mActionBar.setTitle( "Wybierz kategoriê");
-            }
-        };
-
-        // Set the drawer toggle as the DrawerListener
-        mDrawerLayout.setDrawerListener(mDrawerToggle);
-        
+  
         getActionBar().setDisplayHomeAsUpEnabled(true);
 
-        mDrawerList  = (ListView) findViewById(R.id.left_drawer);
+
+        
+        
         if(logged_user_id!=0){
         	selection = "i."+ImageContract.Columns.CATEGORY + " IS NOT NULL AND (i."+ImageContract.Columns.CATEGORY +" <> ?) AND "+"i."+ImageContract.Columns.AUTHOR_FK+" = ? ";
         	selectionArgs = new String[2];
@@ -493,11 +529,6 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
         	selection = "i."+ImageContract.Columns.CATEGORY + " IS NOT NULL AND (i."+ImageContract.Columns.CATEGORY +" <> ?)";
         
         Cursor c = getContentResolver().query(ImageContract.CONTENT_URI, projection, selection, selectionArgs, ImageContract.Columns._ID+", " +ImageContract.Columns.AUTHOR_FK);
-        
-       // MatrixCursor extras = new MatrixCursor(new String[] {ImageContract.Columns._ID, ImageContract.Columns.FILENAME, ImageContract.Columns.CATEGORY});
-        //extras.addRow(new String[]{"-1","1.jpg", "HOME"});
-        //Cursor[] cursors = {extras, cursor};
-       // Cursor c = new MergeCursor(cursors);
         c.moveToFirst();
         while(!c.isAfterLast()){
         	String category = c.getString(2);
@@ -516,7 +547,6 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 		
         SimpleCursorAdapter adapter = new SimpleCursorAdapter(getApplicationContext(), R.layout.drawer_row, c, from,to, 0);
     	adapter.setViewBinder(new SimpleCursorAdapter.ViewBinder(){
-			   /** Binds the Cursor column defined by the specified index to the specified view */
 			   public boolean setViewValue(View view, Cursor cursor, int columnIndex){
 			       if(view.getId() == R.id.drawer_category_icon/*category_image*/){
 						 String path = Storage.getPathToScaledBitmap(cursor.getString(1),50);
@@ -534,14 +564,14 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
         // Set the list's click listener
         mDrawerList.setOnItemClickListener(new DrawerItemClickListener());
 	}
-	
-	
+
 	@Override
 	public void onBackPressed() {
 		if(fragmentsHistory.size()>0){
-			Long previousFragmentId = fragmentsHistory.get(fragmentsHistory.size()-1);
+			//IdPositionModel previousCategory = fragmentsHistory.get(fragmentsHistory.size()-1);
 			
-			replaceGridFragment(previousFragmentId, true, false);
+			//replaceGridFragment(previousCategory, true, false);
+			gotoPreviousCategory();
 		}
 		else{ // opuszczam aplikacje
 			if (doubleBackToExitPressedOnce) {
@@ -561,6 +591,8 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 	        }, 2000);
 		}
 	}
+	
+
 	@Override
 	public boolean onNavigationItemSelected(int itemPosition, long itemId) {
 		if(actual_category_fk== null){
@@ -572,17 +604,17 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 	
 			case 0: // alfabetycznie 
 				ImageGridFragment.sortOrder = "i."+ImageContract.Columns.DESC + " COLLATE LOCALIZED ASC";			
-				args.putLong("CATEGORY_ID", actual_category_fk);
+				args.putLong("CATEGORY_ID", actual_category_fk.getCategoryId());
 				igf.getLoaderManager().restartLoader(1, args, (LoaderCallbacks<Cursor>) igf);
 				break;
 			case 1: // ostatnio zmodyfikowane
 				ImageGridFragment.sortOrder = "i."+ImageContract.Columns.MODIFIED + " DESC";
-				args.putLong("CATEGORY_ID", actual_category_fk);
+				args.putLong("CATEGORY_ID", actual_category_fk.getCategoryId());
 				igf.getLoaderManager().restartLoader(1, args, (LoaderCallbacks<Cursor>) igf);
 				break;
 			case 2: // najczêœciej u¿ywane
 				ImageGridFragment.sortOrder = "i."+ImageContract.Columns.TIME_USED + " DESC";
-				args.putLong("CATEGORY_ID", actual_category_fk);
+				args.putLong("CATEGORY_ID", actual_category_fk.getCategoryId());
 				igf.getLoaderManager().restartLoader(1, args, (LoaderCallbacks<Cursor>) igf);
 				break;
 	
@@ -593,14 +625,19 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 		
 		return false;
 	}
-	
-	public void replaceGridFragment(Long category_id, boolean gotoPreviousFragment, boolean addPreviousToHistory){
+	/*
+	public void replaceGridFragment(IdPositionModel replaceToCategory, boolean gotoPreviousFragment, boolean addPreviousToHistory){
 		igf = new ImageGridFragment();
-		Bundle args = new Bundle();			
-		args.putLong("CATEGORY_ID", category_id);
+		Bundle args = new Bundle();	
+		Long repCatId = replaceToCategory.getCategoryId();
+		int repCatPos = replaceToCategory.getPosition();
+		
+		args.putLong("CATEGORY_ID", repCatId);
+		args.putInt("RET_POSITION", repCatPos);
+		
 		igf.setArguments(args);
-		Long prevCategoryFk = actual_category_fk;
-		actual_category_fk = category_id;
+		IdPositionModel prevCat = actual_category_fk;
+		actual_category_fk = new IdPositionModel(repCatId, repCatPos);
 		
 		
 
@@ -608,11 +645,12 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 	    if(gotoPreviousFragment){
 			igf.setArguments(args);
 	    	fragmentsHistory.remove(fragmentsHistory.size()-1);
-			setActionBarTitleFromCategoryId(category_id);
+			setActionBarTitleFromCategoryId(id_pos.getCategoryId());
 			final FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
 			ft.setCustomAnimations(android.R.anim.slide_in_left, android.R.anim.slide_out_right);//R.anim.slide_in_right, R.anim.slide_out_left);
 		    ft.replace(R.id.content_frame, igf, ImageGridActivity.GRID_FRAGMENT_TAG);
 		    ft.commit();	
+
 	    }
 	    else{
 			igf.setArguments(args);
@@ -624,6 +662,56 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 		    ft.commit();	
 	    }
         
+	}
+	*/
+	
+	public void replaceCategory(Long categoryId, int position, boolean addPreviousToHistory){
+		actual_category_fk.setNextCatPosition(position);
+		
+		igf = new ImageGridFragment();
+		/*
+		Bundle args = new Bundle();	
+		args.putLong("CATEGORY_ID", categoryId);
+		igf.setArguments(args);
+		*/
+		final FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+		ft.setCustomAnimations(R.anim.slide_in_right, R.anim.slide_out_left);
+	    ft.replace(R.id.content_frame, igf, ImageGridActivity.GRID_FRAGMENT_TAG);
+	    ft.commit();
+	    
+	    if(addPreviousToHistory){
+	    	fragmentsHistory.add(actual_category_fk);
+	    }
+	    
+	    actual_category_fk = new IdPositionModel(categoryId);	
+		setActionBarTitleFromCategoryId(actual_category_fk.getCategoryId());
+	    
+	}
+	
+	public void gotoPreviousCategory(){
+		IdPositionModel previousCategory = fragmentsHistory.get(fragmentsHistory.size()-1);
+		//Long prevCatId = previousCategory.getCategoryId();
+		//int prevCatPos = actual_category_fk.getNextCatPosition();
+	
+		igf = new ImageGridFragment();
+		/*
+		Bundle args = new Bundle();			
+		args.putLong("CATEGORY_ID", prevCatId);
+		args.putInt("RET_POSITION", prevCatPos);
+		igf.setArguments(args);
+		*/
+		
+		
+		final FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+		ft.setCustomAnimations(android.R.anim.slide_in_left, android.R.anim.slide_out_right);
+	    ft.replace(R.id.content_frame, igf, ImageGridActivity.GRID_FRAGMENT_TAG);
+	    ft.commit();
+		actual_category_fk = previousCategory;
+	    fragmentsHistory.remove(fragmentsHistory.size()-1);
+	    setActionBarTitleFromCategoryId(actual_category_fk.getCategoryId());
+		
+		
+		
 	}
 	
 	

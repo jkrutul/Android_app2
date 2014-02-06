@@ -1,26 +1,54 @@
 <?xml version="1.0" encoding="utf-8"?>
-<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
+<PreferenceScreen 
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:robobunny="http://robobunny.com" >
 
     <PreferenceCategory
         android:key="pref_thumbs"
-        android:title="Miniaturki" >
+        android:title="Symbole" >
+        <com.robobunny.SeekBarPreference
+            android:defaultValue="100"
+            android:key="pref_img_size"
+            android:max="400"
+            android:title="Wielkość miniatur"
+            robobunny:min="50"
+            robobunny:unitsLeft=""
+            robobunny:unitsRight="pikseli" />
+        <com.robobunny.SeekBarPreference
+            android:defaultValue="15"
+            android:key="pref_img_desc_font_size"
+            android:max="25"
+            android:title="rozmiar czcionki"
+            robobunny:min="5"
+            robobunny:unitsLeft=""
+            robobunny:unitsRight="pkt" />
+
+        <yuku.ambilwarna.widget.AmbilWarnaPreference
+            android:defaultValue="0xff33b5e5"
+            android:key="category_view_background"
+            android:title="Kolor tła kategorii kontekstowej" />
+        <yuku.ambilwarna.widget.AmbilWarnaPreference
+            android:defaultValue="0xffe446ff"
+            android:key="context_category_view_background"
+            android:title="Kolor tła kategorii" />
+        <!--
         <EditTextPreference
             android:defaultValue="100"
             android:key="pref_img_size"
             android:summary="100"
             android:title="wielkość miniatur" />
+
         <EditTextPreference
             android:defaultValue="15"
             android:key="pref_img_desc_font_size"
             android:summary="@dimen/desc_font_size"
             android:title="rozmiar czcionki" />
-        
+        -->
         <CheckBoxPreference
-            android:title="przytnij obrazki, aby dopasować"
             android:defaultValue="false"
+            android:key="pref_img_crop"
             android:summary="nie"
-            android:key="pref_img_crop"/>
-
+            android:title="przytnij obrazki, aby dopasować" />
     </PreferenceCategory>
 
 </PreferenceScreen>

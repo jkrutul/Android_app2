@@ -101,7 +101,7 @@ public class ScalingUtilities {
                 Config.ARGB_8888);
         Canvas canvas = new Canvas(scaledBitmap);
         canvas.drawBitmap(unscaledBitmap, srcRect, dstRect, new Paint(Paint.FILTER_BITMAP_FLAG));
-    	Log.i("ScalingUtikuties", "w: "+ unscaledBitmap.getWidth() + " h: " + unscaledBitmap.getHeight() + " -> " + "w: "+ scaledBitmap.getWidth() + " h: " + scaledBitmap.getHeight());
+    	//Log.i("ScalingUtilities", "w: "+ unscaledBitmap.getWidth() + " h: " + unscaledBitmap.getHeight() + " -> " + "w: "+ scaledBitmap.getWidth() + " h: " + scaledBitmap.getHeight());
         return scaledBitmap;
     }
 

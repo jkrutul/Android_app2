@@ -78,6 +78,8 @@ public class Database {
 			UserContract.Columns.ISMALE+" INTEGER DEFAULT 1, "+
 			UserContract.Columns.FONT_SIZE+" INTEGER DEFAULT 15, "+
 			UserContract.Columns.IMG_SIZE +" INTEGER DEFAULT 150, "+
+			UserContract.Columns.CAT_BACKGROUND+" TEXT, "+
+			UserContract.Columns.CONTEXT_CAT_BACKGROUND+" TEXT, "+
 			UserContract.Columns.ROOT_FK+" INTEGER, "+
 		    "FOREIGN KEY("+UserContract.Columns.ROOT_FK+") REFERENCES "+ImageContract.TABLE_IMAGE+"("+ImageContract.Columns._ID+") "+
 	");";
@@ -136,6 +138,24 @@ public class Database {
 	
 	public static String backupDb(String filename){
 		String dbDirPath = Storage.getAppRootDir()+File.separator+"backups"+File.separator;
+		filename+=".db";
+		dbDirPath+=filename;
+		try {
+
+			if(dbHelper.exportDatabase(dbDirPath))
+				return filename;
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+	
+	public static String backupDb(String filename, String dbDirPath ){
+		File exportDbDir = new File(dbDirPath);
+		if( !exportDbDir.exists() || !exportDbDir.isDirectory()){
+			exportDbDir.mkdirs();
+		}
+		
 		filename+=".db";
 		dbDirPath+=filename;
 		try {
@@ -488,10 +508,14 @@ public class Database {
 
 		if(savedDb.createNewFile()){
 			Storage.copyFile(new FileInputStream(currentDb), new FileOutputStream(savedDb));
+			open();
 			return true;
 		}
-		else
+		else{
+			open();
 			return false;
+		}
+
 	}
 		 
 	/**
@@ -510,8 +534,10 @@ public class Database {
 	        // Access the copied database so SQLiteHelper will cache it and mark
 	        // it as created.
 	        getWritableDatabase().close();
+	        open();
 	        return true;
 	    }
+	    
 	    return false;}
 	}
 		

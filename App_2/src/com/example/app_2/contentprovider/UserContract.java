@@ -22,6 +22,8 @@ public class UserContract {
 		public static final String IMG_FILENAME = "user_image";
 		public static final String FONT_SIZE = "font_size";
 		public static final String IMG_SIZE = "image_size";
+		public static final String CAT_BACKGROUND = "cat_background";
+		public static final String CONTEXT_CAT_BACKGROUND = "context_cat_background";
 		public static final String DEFAULT_SORT_ORDER = _ID + " ASC";
 
 	}

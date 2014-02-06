@@ -2,7 +2,7 @@
 
     <item
         android:id="@+id/action_settings"
-        android:orderInCategory="100"
+        android:orderInCategory="2"
         android:showAsAction="never"
         android:title="@string/action_settings"/>
     
@@ -11,11 +11,13 @@
         android:orderInCategory="100"
         android:showAsAction="always"
         android:icon="@drawable/navigation_refresh"
-        android:title="Refresh"/>
+        android:title="Usuń wszystkie pliki"/>
     
     <item
-        android:id="@+id/clear_cache"
-        android:icon="@android:drawable/ic_menu_delete"
-        android:showAsAction="never"
-        android:title="clear_cache_menu"/>
+        android:id="@+id/import_export_files"
+        android:orderInCategory="98"
+        android:showAsAction="always"
+        android:icon="@drawable/ic_action_import_export"
+        android:title="Importuj lub exportuj obrazki i relacje"/>
+    
 </menu>
