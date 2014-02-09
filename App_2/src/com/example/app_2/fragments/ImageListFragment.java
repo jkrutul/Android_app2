@@ -292,7 +292,7 @@ public class ImageListFragment extends ListFragment implements LoaderCallbacks<C
 				
 				switch (view.getId()) {
 				case R.id.mc_icon:
-					ImageLoader.loadBitmap(path, (ImageView) view);
+					ImageLoader.loadBitmap(path, (ImageView) view,100);
 					LinearLayout ll = (LinearLayout)view.getParent();
 					if(isCategory){				
 						if(cursor.getInt(4) == 1)

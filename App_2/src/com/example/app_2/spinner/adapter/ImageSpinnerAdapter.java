@@ -73,7 +73,7 @@ public class ImageSpinnerAdapter extends ArrayAdapter<ImageSpinnerItem> {
 				categoryName.setText(item.getItemString());
 				if(item.getFilename()!=null){
 					String path = Storage.getPathToScaledBitmap(item.getFilename(), 100);
-					ImageLoader.loadBitmap(path, imageView);
+					ImageLoader.loadBitmap(path, imageView,100);
 				}
     		}
     	}

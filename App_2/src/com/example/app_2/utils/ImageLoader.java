@@ -1,6 +1,5 @@
 package com.example.app_2.utils;
 
-import java.io.File;
 import java.lang.ref.WeakReference;
 
 import android.annotation.SuppressLint;
@@ -9,7 +8,6 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
-import android.graphics.Bitmap.CompressFormat;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.ColorDrawable;
@@ -24,7 +22,7 @@ import android.view.WindowManager;
 import android.widget.ImageView;
 
 import com.example.app_2.App_2;
-import com.example.app_2.storage.DiskLruImageCache;
+import com.example.app_2.models.CacheKeyModel;
 import com.sonyericsson.util.ScalingUtilities;
 import com.sonyericsson.util.ScalingUtilities.ScalingLogic;
 
@@ -43,7 +41,7 @@ public class ImageLoader {
 	// Use 1/8th of the available memory for this memory cache.
 	final int cacheSize = maxMemory / 8;
 
-	private static LruCache<String, Bitmap> mMemoryCache;
+	private static LruCache<CacheKeyModel, Bitmap> mMemoryCache;
 	
 	public ImageLoader(Context context) {
 		//context = App_2.getAppContext();
@@ -54,10 +52,10 @@ public class ImageLoader {
 		maxHeight = display.getHeight();		
 
 		/* INITIALIZE MEMORY CACHE */
-		mMemoryCache = new LruCache<String, Bitmap>(cacheSize) {
+		mMemoryCache = new LruCache<CacheKeyModel, Bitmap>(cacheSize) {
 		@TargetApi(Build.VERSION_CODES.HONEYCOMB_MR1)
 		@Override
-			protected int sizeOf(String key, Bitmap bitmap) {
+			protected int sizeOf(CacheKeyModel key, Bitmap bitmap) {
 				return bitmap.getByteCount() / 1024;
 				
 			}
@@ -66,7 +64,7 @@ public class ImageLoader {
 
 	}
 
-	public static void addBitmapToMemoryCache(String key, Bitmap bitmap) {
+	public static void addBitmapToMemoryCache(CacheKeyModel key, Bitmap bitmap) {
 		if(key!=null && bitmap != null){
 			if (getBitmapFromMemCache(key) == null) {
 				mMemoryCache.put(key, bitmap);
@@ -76,7 +74,7 @@ public class ImageLoader {
 
 	}
 
-	public static Bitmap getBitmapFromMemCache(String key) {
+	public static Bitmap getBitmapFromMemCache(CacheKeyModel key) {
 		if(key!=null){
 			return mMemoryCache.get(key);
 		}
@@ -88,19 +86,19 @@ public class ImageLoader {
 	}
 	
 	@SuppressLint("NewApi")
-	public static void loadBitmap(String path, ImageView imageView){
+	public static void loadBitmap(String path, ImageView imageView, int reqImgSize){
 		if(path == null){
 			return;
 		}
 		Bitmap value = null;
 		if(mMemoryCache!= null){
-			value = getBitmapFromMemCache(Utils.getFilenameFromPath(path));
+			value = getBitmapFromMemCache(new CacheKeyModel(Utils.getFilenameFromPath(path), reqImgSize));
 			//value = mMemoryCache.get(Utils.getFilenameFromPath(path));
 		}
 		if(value != null){
 			imageView.setImageBitmap(value);
 		}else if(cancelPotentialWork(path, imageView)){
-			BitmapWorkerTask task = new BitmapWorkerTask(imageView);
+			BitmapWorkerTask task = new BitmapWorkerTask(imageView, reqImgSize);
 			AsyncDrawable asyncDrawable = new AsyncDrawable(App_2.getAppContext().getResources(), null, task);
 			imageView.setImageDrawable(asyncDrawable);
 			task.executeOnExecutor(AsyncTask.DUAL_THREAD_EXECUTOR, path);
@@ -143,12 +141,13 @@ public class ImageLoader {
 	    private final WeakReference<ImageView> imageViewReference;
 	    private String path = null;
 	    final BitmapFactory.Options options = new BitmapFactory.Options();
-	    ScalingLogic sl = ScalingLogic.FIT;
+	    private ScalingLogic sl = ScalingLogic.FIT;
+	    private int reqImgSize;
 	    
 	    SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(App_2.getAppContext());
 	
 	    
-	    public BitmapWorkerTask(ImageView imageView) {
+	    public BitmapWorkerTask(ImageView imageView, int reqImgSize) {
 	        // Use a WeakReference to ensure the ImageView can be garbage collected
 	        imageViewReference = new WeakReference<ImageView>(imageView);
     		options.inPurgeable = true;
@@ -156,6 +155,8 @@ public class ImageLoader {
     	    	sl =  ScalingLogic.CROP;
     	    else
     	    	sl = ScalingLogic.FIT;
+    	    
+    	    this.reqImgSize = reqImgSize;
 	    }
 
 	    // Decode image in background.
@@ -183,7 +184,7 @@ public class ImageLoader {
 	        	
 	        	//Log.i(LOG_TAG, "filename: "+ path +" decoded image h:"+bitmap.getHeight()+" w:"+bitmap.getWidth());
 	        	
-		        addBitmapToMemoryCache(imageKey,bitmap);
+		        addBitmapToMemoryCache(new CacheKeyModel(imageKey,  this.reqImgSize),bitmap);
 	        return bitmap;
 	    }
 	    	    

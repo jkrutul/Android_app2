@@ -72,7 +72,7 @@ public class BindImagesToCategoryActivity extends FragmentActivity implements On
 		c.moveToFirst();
 		if(!c.isAfterLast()){
 			String path = Storage.getPathToScaledBitmap(c.getString(0), 150);
-			ImageLoader.loadBitmap(path, parent_category_imageView);
+			ImageLoader.loadBitmap(path, parent_category_imageView, 150);
 			category_name_textView.append("\""+c.getString(1)+"\"");
 		}
 		c.close();

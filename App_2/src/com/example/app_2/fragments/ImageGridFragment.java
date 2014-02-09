@@ -162,7 +162,7 @@ public class ImageGridFragment extends Fragment implements LoaderCallbacks<Curso
 			        String path  = Storage.getPathToScaledBitmap(filename, mItemHeight);  
 			        String category = cursor.getString(3);
 					boolean isCategory = (category != null  && !category.isEmpty() ) ? true : false; 
-					ImageLoader.loadBitmap(path, iv);
+					ImageLoader.loadBitmap(path, iv, mItemHeight);
 					if(isCategory)
 						if(cursor.getInt(4) == 1)
 							//view.setBackgroundColor(Color.argb(120, 149,39,225));

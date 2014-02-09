@@ -313,7 +313,7 @@ public class ImageDetailsFragment extends Fragment{
 			mAuthor.setText(cursor.getString(5));
 			cursor.close();
 			
-			ImageLoader.loadBitmap(Storage.getPathToScaledBitmap(imgName, 300), mImage);
+			ImageLoader.loadBitmap(Storage.getPathToScaledBitmap(imgName, 300), mImage,300);
 			
 			setImageParents(id);
 		}

@@ -566,7 +566,7 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 			   public boolean setViewValue(View view, Cursor cursor, int columnIndex){
 			       if(view.getId() == R.id.drawer_category_icon/*category_image*/){
 						String path = Storage.getPathToScaledBitmap(cursor.getString(1),50);
-						ImageLoader.loadBitmap(path, (ImageView) view);
+						ImageLoader.loadBitmap(path, (ImageView) view, 50);
 
 						if(cursor.getInt(3) == 1)
 							view.setBackgroundColor(mCatBColor);

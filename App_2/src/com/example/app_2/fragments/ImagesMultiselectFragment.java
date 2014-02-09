@@ -178,7 +178,7 @@ public class ImagesMultiselectFragment extends ListFragment implements LoaderCal
 				
 				switch (view.getId()) {
 				case R.id.mc_icon:
-					ImageLoader.loadBitmap(path, (ImageView) view);
+					ImageLoader.loadBitmap(path, (ImageView) view,100);
 					CheckableLinearLayout cll = (CheckableLinearLayout)view.getParent();
 					if(isCategory)
 						cll.setBackgroundColor(Color.argb(120, 0, 255, 0));
