@@ -18,6 +18,7 @@ import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.graphics.ImageFormat;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -88,7 +89,6 @@ public class ImageGridFragment extends Fragment implements LoaderCallbacks<Curso
 	public boolean mEditMode = true;
 
 	private  ImageGridActivity executingActivity;
-	private  SharedPreferences sharedPref; 
 	
 	private static final int dev_h = App_2.getMaxHeight();
 	private static final int dev_w = App_2.getMaxWidth();
@@ -293,7 +293,7 @@ public class ImageGridFragment extends Fragment implements LoaderCallbacks<Curso
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		executingActivity = (ImageGridActivity) getActivity();
-		sharedPref = PreferenceManager.getDefaultSharedPreferences(executingActivity);
+		SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(executingActivity);
 		mImageThumbSize =sharedPref.getInt("pref_img_size",150);
 		mImageFontSize = sharedPref.getInt("pref_img_desc_font_size", 15);
 		/*
@@ -399,7 +399,7 @@ public class ImageGridFragment extends Fragment implements LoaderCallbacks<Curso
 				int posToScrool = ImageGridActivity.actual_category_fk.getNextCatPosition();
 				Long categoryId = ImageGridActivity.actual_category_fk.getCategoryId();
 				Log.i(LOG_TAG, "Category id: "+categoryId+" Scrool to pos: "+posToScrool );
-				mGridView.smoothScrollToPositionFromTop(posToScrool, 10, 0);
+				//mGridView.smoothScrollToPositionFromTop(posToScrool, 10, 0);
 		    }
 		  });
 
@@ -441,7 +441,8 @@ public class ImageGridFragment extends Fragment implements LoaderCallbacks<Curso
 		Bundle args = new Bundle();		
 		args.putLong("CATEGORY_ID", ImageGridActivity.actual_category_fk.getCategoryId());
 		getLoaderManager().restartLoader(1, args, this);
-		refreshDrawer();
+		executingActivity.notifyCategoryAdapter();
+		//refreshDrawer();
 	}
 	
 	private void removeSelectedBindings(){
@@ -511,14 +512,16 @@ public class ImageGridFragment extends Fragment implements LoaderCallbacks<Curso
 				}
 				//jeœli tak to usuwam tylko wiazanie na akutaln¹ kategoriê	
 			}		
-				getActivity().getContentResolver().delete(ParentContract.CONTENT_URI, where , new String[]{String.valueOf(l), String.valueOf(category_fk) });		
+				getActivity().getContentResolver().delete(ParentContract.CONTENT_URI, where , new String[]{String.valueOf(l), String.valueOf(category_fk) });
+
 		}
 
 		c.close();
 		Bundle args = new Bundle();		
 		args.putLong("CATEGORY_ID", category_fk);
 		getLoaderManager().restartLoader(1, args, this);
-		refreshDrawer();
+		executingActivity.notifyCategoryAdapter();
+		//refreshDrawer();
 		
 	}
 	
@@ -537,8 +540,9 @@ public class ImageGridFragment extends Fragment implements LoaderCallbacks<Curso
 	
 	
 	
-	
+	/*
 	private void refreshDrawer(){
 		executingActivity.setDrawerOrLeftList();
 	}
+	*/
 }

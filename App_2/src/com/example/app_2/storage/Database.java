@@ -137,7 +137,8 @@ public class Database {
 	
 	
 	public static String backupDb(String filename){
-		String dbDirPath = Storage.getAppRootDir()+File.separator+"backups"+File.separator;
+		
+		String dbDirPath = Storage.getBackupDir().getAbsolutePath()+File.separator; //Storage.getAppRootDir()+File.separator+"backups"+File.separator;
 		filename+=".db";
 		dbDirPath+=filename;
 		try {

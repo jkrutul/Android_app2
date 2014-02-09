@@ -3,15 +3,11 @@ package com.example.app_2.activities;
 import java.io.File;
 import java.io.IOException;
 
-import yuku.ambilwarna.AmbilWarnaDialog;
-import yuku.ambilwarna.AmbilWarnaDialog.OnAmbilWarnaListener;
-
 import net.lingala.zip4j.core.ZipFile;
 import net.lingala.zip4j.exception.ZipException;
 import net.lingala.zip4j.model.ZipParameters;
 import net.lingala.zip4j.progress.ProgressMonitor;
 import net.lingala.zip4j.util.Zip4jConstants;
-
 import android.app.ActionBar;
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -21,7 +17,6 @@ import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.util.Log;
@@ -31,8 +26,6 @@ import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.ShareActionProvider;
 import android.widget.Toast;
-import ar.com.daidalos.afiledialog.FileChooserDialog;
-
 
 import com.example.app_2.App_2;
 import com.example.app_2.R;
@@ -41,7 +34,7 @@ import com.example.app_2.storage.Storage;
 import com.example.app_2.utils.AsyncTask;
 import com.example.app_2.utils.Utils;
 import com.example.app_2.utils.ZipUnzipFiles;
-import com.ipaulpro.afilechooser.utils.FileUtils;
+import com.sonyericsson.util.ScalingUtilities.ScalingLogic;
 
 
 public class MainActivity extends Activity {
@@ -60,13 +53,19 @@ public class MainActivity extends Activity {
 		PreferenceManager.setDefaultValues(this, R.xml.preferences, false);
 
 		
-		LinearLayout ll = (LinearLayout) findViewById(R.id.main_activity);
+		//LinearLayout ll = (LinearLayout) findViewById(R.id.main_activity);
 		//Utils.setWallpaper(ll, App_2.maxHeight, App_2.getMaxWidth(), null, ScalingLogic.CROP);
+		
+		 File app_root = Storage.getAppRootDir();
+	  	 if(!app_root.exists()){
+	  		   app_root.mkdirs();
+	  	 }
 
 		ActionBar actionBar = getActionBar();
 		actionBar.setSubtitle("G³owne menu");
 		prefs = getSharedPreferences("com.example.app_2", MODE_PRIVATE);
 		Log.i("PREFS", "pref.getInt" + prefs.getInt("pref_img_size", 100));
+		
 
 	}
 	
@@ -74,6 +73,8 @@ public class MainActivity extends Activity {
 	protected void onResume() {
 		super.onResume();
 	       if (prefs.getBoolean("firstrun", true)) {
+	    	  
+	    		   
 	            // Do first run stuff here then set 'firstrun' as false
 	            // using the following line to edit/commit prefs
 	            prefs.edit().putBoolean("firstrun", false).commit();
@@ -100,8 +101,8 @@ public class MainActivity extends Activity {
 		switch (item.getItemId()) {
 		case R.id.menu_refresh:
 			 new AlertDialog.Builder(this)
-		        .setTitle("Czy usun¹c informacje oraz relacje o obrazkach?")
-		        .setMessage("Obrazki zostan¹ dodane do g³ównej kategori")
+		        .setTitle("Spowoduje usuniêcie obrazków z bazy danych")
+		        .setMessage("Kontynuowaæ?")
 		        .setNegativeButton(android.R.string.no, null)
 		        .setPositiveButton(android.R.string.yes, new OnClickListener() {
 
@@ -126,8 +127,14 @@ public class MainActivity extends Activity {
 	            .setMessage("Importuj lub eksportuj pliki u¿ytkownika")
 	            .setPositiveButton("Importuj", new DialogInterface.OnClickListener() {
 	                public void onClick(DialogInterface dialog, int whichButton) {
-	                	ImportUserFilesTask iuft = new ImportUserFilesTask(a);
-	                	iuft.execute(Storage.getAppRootDir()+File.separator+"zapis.zip");
+	                	File f = new File(Storage.getAppRootDir()+File.separator+"zapis.zip");
+	                	if(!f.exists()){
+	                		Toast.makeText(a.getApplicationContext(), "plik: "+ f.getAbsolutePath()+" nie istnieje" , Toast.LENGTH_LONG).show();
+	                	}else{
+	                		ImportUserFilesTask iuft = new ImportUserFilesTask(a);
+	                		iuft.execute(Storage.getAppRootDir()+File.separator+"zapis.zip");
+	                	}
+
 	                	//importAllUserFiles( Storage.getAppRootDir()+File.separator+"zapis.zip");
 	                }
 	            })
@@ -142,10 +149,9 @@ public class MainActivity extends Activity {
 
 	                    //Intent intent = Intent.createChooser(getContentIntent, "Select a file");
 	                    //startActivityForResult(intent, REQUEST_CHOOSER);
-	                	FileChooserDialog d = new FileChooserDialog(a.getApplicationContext());
-	                	d.show();
-	                	//ExportUserFilesTask euft = new ExportUserFilesTask(a, false);
-	                	//euft.execute(Storage.getAppRootDir()+File.separator+"zapis.zip", Storage.getAppRootDir().getAbsolutePath());
+
+	                	ExportUserFilesTask euft = new ExportUserFilesTask(a, false);
+	                	euft.execute(Storage.getAppRootDir()+File.separator+"zapis.zip", Storage.getAppRootDir().getAbsolutePath());
 	                	
 	                	//exportAllUserFiles();
 	                }
@@ -238,6 +244,13 @@ public class MainActivity extends Activity {
 		protected Void doInBackground(String... params) {
 			String zipFilePath = params[0];
 			String pathToFolder = params[1];
+			
+			File exp = new File(Storage.getAppRootDir()+File.separator+"exportedDB");
+			if(exp.exists()){
+				exp.delete();
+			}
+			
+			Database.backupDb("exportedDB", Storage.getAppRootDir()+File.separator);
 			
 			File folderToAdd = new File(pathToFolder);
 			if(!folderToAdd.exists() || !folderToAdd.isDirectory())
