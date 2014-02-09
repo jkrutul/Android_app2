@@ -41,7 +41,7 @@ public class ImageLoader {
 	// Use 1/8th of the available memory for this memory cache.
 	final int cacheSize = maxMemory / 8;
 
-	private static LruCache<CacheKeyModel, Bitmap> mMemoryCache;
+	private static LruCache<String, Bitmap> mMemoryCache;
 	
 	public ImageLoader(Context context) {
 		//context = App_2.getAppContext();
@@ -52,10 +52,10 @@ public class ImageLoader {
 		maxHeight = display.getHeight();		
 
 		/* INITIALIZE MEMORY CACHE */
-		mMemoryCache = new LruCache<CacheKeyModel, Bitmap>(cacheSize) {
+		mMemoryCache = new LruCache<String, Bitmap>(cacheSize) {
 		@TargetApi(Build.VERSION_CODES.HONEYCOMB_MR1)
 		@Override
-			protected int sizeOf(CacheKeyModel key, Bitmap bitmap) {
+			protected int sizeOf(String key, Bitmap bitmap) {
 				return bitmap.getByteCount() / 1024;
 				
 			}
@@ -64,19 +64,20 @@ public class ImageLoader {
 
 	}
 
-	public static void addBitmapToMemoryCache(CacheKeyModel key, Bitmap bitmap) {
-		if(key!=null && bitmap != null){
-			if (getBitmapFromMemCache(key) == null) {
-				mMemoryCache.put(key, bitmap);
+	public static void addBitmapToMemoryCache(CacheKeyModel ckm, Bitmap bitmap) {
+		if(ckm!=null && bitmap != null){
+			if (getBitmapFromMemCache(ckm) == null) {
+				mMemoryCache.put(ckm.getImgKey()+"_"+ckm.getImgSize(), bitmap);
+				Log.i(LOG_TAG, "cache < - " + ckm.getImgKey() + " : "+ ckm.getImgSize() );
 			}
 		}else
 			Log.w(LOG_TAG, "key or bitmap is null");
 
 	}
 
-	public static Bitmap getBitmapFromMemCache(CacheKeyModel key) {
-		if(key!=null){
-			return mMemoryCache.get(key);
+	public static Bitmap getBitmapFromMemCache(CacheKeyModel ckm) {
+		if(ckm!=null){
+			return mMemoryCache.get(ckm.getImgKey()+"_"+ckm.getImgSize());
 		}
 		else{
 			Log.w(LOG_TAG, "key is null");
@@ -91,11 +92,14 @@ public class ImageLoader {
 			return;
 		}
 		Bitmap value = null;
+		CacheKeyModel ckm = new CacheKeyModel(Utils.getFilenameFromPath(path), reqImgSize);
 		if(mMemoryCache!= null){
-			value = getBitmapFromMemCache(new CacheKeyModel(Utils.getFilenameFromPath(path), reqImgSize));
+
+			value = getBitmapFromMemCache(ckm);
 			//value = mMemoryCache.get(Utils.getFilenameFromPath(path));
 		}
 		if(value != null){
+			Log.i(LOG_TAG, "cache - > " + ckm.getImgKey() + " : "+ ckm.getImgSize() );
 			imageView.setImageBitmap(value);
 		}else if(cancelPotentialWork(path, imageView)){
 			BitmapWorkerTask task = new BitmapWorkerTask(imageView, reqImgSize);
