@@ -111,9 +111,13 @@ public class ImageContentProvider extends ContentProvider{
 			break;
 		default:
 		    throw new IllegalArgumentException("Unknown URI: " + uri);
+		    
 		}
 		
-		String orderBy = TextUtils.isEmpty(sortOrder) ? ImageContract.Columns.DEFAULT_SORT_ORDER : sortOrder;
+		String orderBy = sortOrder;
+		if(TextUtils.isEmpty(sortOrder)){
+			orderBy= ImageContract.Columns.DEFAULT_SORT_ORDER;
+		}
 		SQLiteDatabase db = mOpenHelper.getWritableDatabase();
 		Cursor cursor = queryBuilder.query(db, projection, selection, selectionArgs, null, null, "i."+orderBy);
 		cursor.setNotificationUri(getContext().getContentResolver(), uri);
@@ -172,9 +176,10 @@ public class ImageContentProvider extends ContentProvider{
 		}
 	}
 	
+	/*
 	private void checkColumns(String[] projection){
 		if(projection !=null){
-			String[] available = {ImageContract.Columns._ID, ImageContract.Columns.FILENAME, ImageContract.Columns.AUDIO_PATH, ImageContract.Columns.DESC, ImageContract.Columns.CATEGORY};
+			String[] available = {ImageContract.Columns._ID, ImageContract.Columns.FILENAME, ImageContract.Columns.DESC, ImageContract.Columns.IS_CATEGORY};
 			HashSet<String> requestedColumns = new HashSet<String>(Arrays.asList(projection));
 			HashSet<String> avaliableColumns = new HashSet<String>(Arrays.asList(available));
 			if((avaliableColumns.contains(requestedColumns))==false){
@@ -182,5 +187,6 @@ public class ImageContentProvider extends ContentProvider{
 			}
 		}
 	}
+	*/
 
 }

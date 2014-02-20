@@ -81,7 +81,7 @@
             android:textStyle="bold|italic" />
     </LinearLayout>
 
-    <com.example.app_2.widget.InertCheckBox
+    <CheckBox
         android:id="@+id/mc_chceck_box"
         android:layout_width="wrap_content"
         android:layout_height="match_parent"

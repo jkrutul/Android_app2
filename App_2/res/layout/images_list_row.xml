@@ -12,15 +12,15 @@
         android:id="@+id/mc_icon"
         android:layout_width="0dp"
         android:layout_height="match_parent"
-        android:layout_alignParentLeft="true"
-        android:layout_centerVertical="true"
         android:layout_weight="1"
+        android:gravity="left"
+        android:src="@drawable/ic_launcher"
         android:focusable="false" />
 
     <LinearLayout
         android:layout_width="0dp"
         android:layout_height="match_parent"
-        android:layout_weight="1"
+        android:layout_weight="3"
         android:orientation="vertical"
        android:layout_toRightOf="@id/mc_icon" >
 

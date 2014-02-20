@@ -63,7 +63,7 @@ public class ImageEditActivity extends FragmentActivity{
     @Override
     protected void onResume() {
     	super.onResume();
-		getSupportLoaderManager().initLoader(0, null, (LoaderCallbacks<Cursor>)ilf);
+		//getSupportLoaderManager().initLoader(0, null, (LoaderCallbacks<Cursor>)ilf);
     }
     
     @Override
@@ -134,6 +134,7 @@ public class ImageEditActivity extends FragmentActivity{
 		case R.id.import_db:
 			i = new Intent(this, FilesSelectActivity.class);
 			Bundle bundle = new Bundle();
+			bundle.putBoolean("single_select", true);
 			bundle.putString("DIR_PATH", Storage.getBackupDir().getAbsolutePath());
 			i.putExtras(bundle);
 			startActivityForResult(i, DB_SELECT_REQUEST);
@@ -157,7 +158,7 @@ public class ImageEditActivity extends FragmentActivity{
 
 	  public void onButtonClick(View view){
 			switch(view.getId()){
-				case R.id.submit_button:
+				case R.id.id_submit_button:
 					ImageDetailsFragment idf = (ImageDetailsFragment) getSupportFragmentManager().findFragmentById(R.id.details);
 					boolean mDualPane = idf != null && idf.getView().getVisibility() == View.VISIBLE;
 					if(mDualPane)
@@ -175,14 +176,14 @@ public class ImageEditActivity extends FragmentActivity{
 			switch (requestCode) {
 			case FILE_SELECT_REQUEST:
 				if (resultCode == RESULT_OK) {
-					Intent i = new Intent(this, NewImgTemplateActivity.class);
-					startActivity(i);
+					//Intent i = new Intent(this, NewImgTemplateActivity.class);
+					//startActivity(i);
 				}
 				break;
 			case TAKE_PIC_REQUEST:
 				if (resultCode == RESULT_OK) {
-					Intent i = new Intent(this, NewImgTemplateActivity.class);
-					startActivity(i);
+					//Intent i = new Intent(this, NewImgTemplateActivity.class);
+					//startActivity(i);
 				}
 				break;
 			

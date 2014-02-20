@@ -129,6 +129,8 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_grid);
+        Database db = Database.getInstance(getApplicationContext());
+        db.open();
         //LinearLayout ll = (LinearLayout) findViewById(R.layout.activity_grid);
         //Utils.setWallpaper(ll, App_2.maxHeight, App_2.getMaxWidth(), null, ScalingLogic.CROP);
 		SharedPreferences sharedPref = getApplicationContext().getSharedPreferences("USER",Context.MODE_PRIVATE);			// pobranie informacji o zalogowanym u¿ytkowniku
@@ -485,6 +487,7 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 		}
 	}
 
+	@SuppressWarnings("deprecation")
 	@SuppressLint("NewApi")
 	@TargetApi(Build.VERSION_CODES.HONEYCOMB)
 	public void setDrawerOrLeftList(){
@@ -519,9 +522,9 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 		}
 			
 		
-		String[] projection = {"i."+ImageContract.Columns._ID, "i."+ImageContract.Columns.FILENAME, "i."+ImageContract.Columns.CATEGORY, "i."+ImageContract.Columns.IS_CONTEXTUAL_CATEGORY};
+		String[] projection = {"i."+ImageContract.Columns._ID, "i."+ImageContract.Columns.FILENAME, "i."+ImageContract.Columns.IS_CATEGORY, "i."+ImageContract.Columns.IS_ADD_TO_EXPR};
 		String selection;
-		String[] selectionArgs = {""};
+    	String[] selectionArgs = new String[1];
 
   
         getActionBar().setDisplayHomeAsUpEnabled(true);
@@ -530,14 +533,16 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
         
         
         if(logged_user_id!=0){
-        	selection = "i."+ImageContract.Columns.CATEGORY + " IS NOT NULL AND (i."+ImageContract.Columns.CATEGORY +" <> ?) AND "+"i."+ImageContract.Columns.AUTHOR_FK+" = ? ";
+        	selection = "i."+ImageContract.Columns.IS_CATEGORY + "=? AND "+"i."+ImageContract.Columns.AUTHOR_FK+" = ? ";
         	selectionArgs = new String[2];
-        	selectionArgs[0]="";
-        	selectionArgs[1]= String.valueOf(logged_user_id);
+        	selectionArgs[0]="1";
+        	selectionArgs[0]= String.valueOf(logged_user_id);
         }
-        else
-        	selection = "i."+ImageContract.Columns.CATEGORY + " IS NOT NULL AND (i."+ImageContract.Columns.CATEGORY +" <> ?)";
-        
+        else{
+        	selection = "i."+ImageContract.Columns.IS_CATEGORY + "=?";
+        	selectionArgs = new String[1];
+        	selectionArgs[0]="1";
+        }
         
         
         Cursor categoryCursor = getContentResolver().query(ImageContract.CONTENT_URI, projection, selection, selectionArgs, ImageContract.Columns._ID+", " +ImageContract.Columns.AUTHOR_FK);
@@ -557,8 +562,8 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 		String[] from = new String[] {
 				   ImageContract.Columns._ID, 
 				   ImageContract.Columns.FILENAME,
-				   ImageContract.Columns.CATEGORY,
-				   ImageContract.Columns.IS_CONTEXTUAL_CATEGORY};
+				   ImageContract.Columns.IS_CATEGORY,
+				   ImageContract.Columns.IS_ADD_TO_EXPR};
 		int[] to = new int[] { 0, R.id.drawer_category_icon, R.id.category };
 		
         categoriesAdapter = new SimpleCursorAdapter(getApplicationContext(), R.layout.drawer_row, categoryCursor, from,to, 0);
@@ -693,11 +698,11 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 		actual_category_fk.setNextCatPosition(position);
 		
 		igf = new ImageGridFragment();
-		/*
+
 		Bundle args = new Bundle();	
 		args.putLong("CATEGORY_ID", categoryId);
 		igf.setArguments(args);
-		*/
+		
 		final FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
 		ft.setCustomAnimations(R.anim.slide_in_right, R.anim.slide_out_left);
 	    ft.replace(R.id.content_frame, igf, ImageGridActivity.GRID_FRAGMENT_TAG);

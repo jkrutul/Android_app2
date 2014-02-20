@@ -50,9 +50,12 @@ public class ImageDetailsActivity extends FragmentActivity{
 			startActivityForResult(i, SELECT_PARENTS_REQUEST_CODE);
 			break;
 			
-		case R.id.submit_button:
+		case R.id.id_submit_button:
 			details.onButtonClick(view);
 			break;	
+		
+		case R.id.id_cancel_button:
+			details.onButtonClick(view);
 		}
 		
     }
@@ -64,7 +67,7 @@ public class ImageDetailsActivity extends FragmentActivity{
     	     if(resultCode == RESULT_OK){  
     	    	 long checkedIds[] =  data.getLongArrayExtra("result_checked_ids");
     	    	 ImageDetailsFragment.addParents(checkedIds);
-    	    	 details.setParentsView(checkedIds);
+    	    	// details.setParentsView(checkedIds);
     	    	 String result = new String();
     	    	 for(Long i: checkedIds)
     	    		 result += " "+ i;

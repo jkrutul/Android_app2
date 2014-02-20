@@ -1,9 +1,7 @@
 package com.example.app_2.fragments;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -15,47 +13,45 @@ import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentTransaction;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
-import android.widget.Button;
-import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
 import android.widget.TextView;
 
 import com.example.app_2.App_2;
 import com.example.app_2.R;
 import com.example.app_2.activities.ImageDetailsActivity;
-import com.example.app_2.activities.ImageEditActivity;
 import com.example.app_2.contentprovider.ImageContract;
 import com.example.app_2.contentprovider.ParentContract;
 import com.example.app_2.contentprovider.ParentsOfImageContract;
 import com.example.app_2.contentprovider.UserContract;
 import com.example.app_2.intents.ImageIntents;
 import com.example.app_2.storage.Storage;
-import com.example.app_2.utils.BitmapCalc;
 import com.example.app_2.utils.ImageLoader;
-import com.example.app_2.utils.Utils;
 //import android.widget.ArrayAdapter;
 
 public class ImageDetailsFragment extends Fragment{
-	private TextView mId;
-	private EditText mCategory;
-	private TextView mTitleText;
-	private EditText mDescText;
-	private TextView mParents;
-	private TextView mAuthor;
-	private Button mButton;
-	public  ImageView mImage;
-	private static Bitmap bitmap;
-	private CheckBox mCreateCategoryCheckBox, mIsContextualCategory;
-	private String pathToNewImage;
-	private String filename;
+	private final static String IMAGE_LIST_FRAGMENT= "image_list_fragment_tag";
+	
+	private static Bitmap bitmap; // ?
+	private TextView mId, mSymbolInfo;
+	
+	private EditText mTTSMaleET, mTTSFemaleET, mImgDescET;
+	private RadioButton mIsCategoryRB, mAddToExprRB, mAddToLlRB, mIsNOTCategoryRB, mNOTAddToExprRB, mNOTAddToLlRB;
+	private ImageView mImage;
+	private TextView mAddToLLInfo1;
+	private View mAddToLLInfo2;
+	private RadioGroup mAddToLLRG; 	
 
-	private Map<String, Long> categories_map;
+	//private Map<String, Long> categories_map;
 	List<String> list = new ArrayList<String>();
 
 	private Uri imageUri;
@@ -65,10 +61,6 @@ public class ImageDetailsFragment extends Fragment{
 	private static Activity executing_activity;
 
 
-	/**
-	 * Create a new instance of DetailsFragment, initialized to show the text at
-	 * 'index'.
-	 */
 
 	
 
@@ -106,6 +98,13 @@ public class ImageDetailsFragment extends Fragment{
 		if (container == null) {}
 		
 		final View view = inflater.inflate(R.layout.image_details, container,false);
+		initViews(view);
+
+		
+		
+		
+		
+		/*
 		mId = (TextView) view.findViewById(R.id.img_id);
 		mImage = (ImageView) view.findViewById(R.id.img);
 		mButton = (Button) view.findViewById(R.id.submit_button);
@@ -114,7 +113,7 @@ public class ImageDetailsFragment extends Fragment{
 		mDescText = (EditText) view.findViewById(R.id.edit_description);
 		mParents = (TextView) view.findViewById(R.id.parents);
 		mAuthor = (TextView) view.findViewById(R.id.image_author);
-		
+
 		mIsContextualCategory = (CheckBox) view.findViewById(R.id.is_contextual_category);
 		mCreateCategoryCheckBox = (CheckBox) view.findViewById(R.id.create_category);
 		mCreateCategoryCheckBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
@@ -133,15 +132,15 @@ public class ImageDetailsFragment extends Fragment{
 							//mIsContextualCategory.setVisibility(View.INVISIBLE);
 					}
 				});
-
+		
 		
 		
 		categories_map = new HashMap<String, Long>();
 		String[] projection = { 
 				"i."+ImageContract.Columns._ID,
-				"i."+ImageContract.Columns.CATEGORY,
-				"i."+ImageContract.Columns.IS_CONTEXTUAL_CATEGORY};
-		String selection = "i."+ImageContract.Columns.CATEGORY + " IS NOT NULL";
+				"i."+ImageContract.Columns.IS_CATEGORY,
+				"i."+ImageContract.Columns.IS_ADD_TO_EXPR};
+		String selection = "i."+ImageContract.Columns.IS_CATEGORY + "=1";
 		Cursor c = executing_activity.getContentResolver().query(ImageContract.CONTENT_URI, projection, selection, null, null);
 		c.moveToFirst();
 		while (!c.isAfterLast()) {
@@ -150,7 +149,7 @@ public class ImageDetailsFragment extends Fragment{
 		}
 		c.close();
 		
-		
+		*/
 
 		
 		if (row_id != null && row_id != 0){
@@ -166,6 +165,7 @@ public class ImageDetailsFragment extends Fragment{
 
 	}
 	
+	/*
 	public void setParentsView(long ids[]){
 		mParents.setText("");
 		String parents = new String();
@@ -174,19 +174,23 @@ public class ImageDetailsFragment extends Fragment{
 				parents +=categories_map.get(l)+"\n";
 		mParents.setText(parents);	
 	}
+	*/
+
 
 	private void setImageParents(Long id){
-		Uri imageParentsUri = Uri.parse(ParentsOfImageContract.CONTENT_URI+"/"+id);
-		String[] projection = { "i."+ImageContract.Columns._ID, "i."+ImageContract.Columns.CATEGORY };
-		Cursor c = executing_activity.getContentResolver().query(imageParentsUri, projection, null, null, null);
-		c.moveToFirst();
-		mParents.setText("");
-		while (!c.isAfterLast()) {
-			mParents.append((c.getString(1)+" "+ c.getLong(0))+"\n");
-			c.moveToNext();
-		}
-		c.close();
+		SymbolCategoriesByIdFragment scbif = new SymbolCategoriesByIdFragment();
+		Bundle args = new Bundle();
+		args.putLong("item_id",id);    
+		
+		scbif.setArguments(args);
+		
+        if (getActivity().getSupportFragmentManager().findFragmentByTag(IMAGE_LIST_FRAGMENT) == null) {
+            final FragmentTransaction ft = getActivity().getSupportFragmentManager().beginTransaction();
+            ft.replace(R.id.cat_list_content_frame, scbif, IMAGE_LIST_FRAGMENT);
+            ft.commit();
+        }
 	}
+	
 	
 	public static void addParents(long[] ids){
 		if(row_id != null){
@@ -237,13 +241,26 @@ public class ImageDetailsFragment extends Fragment{
 		}
 	}
 	
+	/*
+	public void onCancelClick(View view){
+		switch (view.getId()) {
+		case R.id.cancel_button:
+			
+			break;
+
+		default:
+			break;
+		}
+	}
+	*/
 	
 	public void onButtonClick(View view){
 		switch (view.getId()) {
-		case R.id.submit_button:
+		case R.id.id_submit_button:
 			saveState();
 			break;
-		case R.id.cancel_button: // TODO if dual pane
+		case R.id.id_cancel_button: 
+			Log.i("idf", "cancel clicked");
 			break;
 			
 		case R.id.img:
@@ -284,37 +301,46 @@ public class ImageDetailsFragment extends Fragment{
 				"i."+ImageContract.Columns._ID,						//0
 				"i."+ImageContract.Columns.FILENAME,				//1
 				"i."+ImageContract.Columns.DESC,					//2
-				"i."+ImageContract.Columns.CATEGORY,				//3
-				"i."+ImageContract.Columns.IS_CONTEXTUAL_CATEGORY, 	//4
-				"u."+UserContract.Columns.USERNAME};				//5
+				"i."+ImageContract.Columns.TTS_M,					//3
+				"i."+ImageContract.Columns.TTS_F,					//4	
+				"i."+ImageContract.Columns.IS_CATEGORY,				//5
+				"i."+ImageContract.Columns.IS_ADD_TO_EXPR, 			//6
+				"i."+ImageContract.Columns.IS_ADD_TO_CAT_LIST,		//7
+				"u."+UserContract.Columns.USERNAME};				//8
+		
 		Cursor cursor = executing_activity.getContentResolver().query(uri,	projection, null, null, null);
 		if (cursor != null) {
 			cursor.moveToFirst();
-			String img_id = cursor.getString(0);
-			String category = cursor.getString(3);
-			mId.setText(img_id);
-
-			if (category != null)
-				if (!category.equals("")) {
-					mCreateCategoryCheckBox.setChecked(true);
-					if(cursor.getInt(4) == 0){
-						mIsContextualCategory.setChecked(false);
-					}
-					else{
-						mIsContextualCategory.setChecked(true);
-					}
-					
-					mCategory.setText(category);
-				}
-
-			String imgName = cursor.getString(1);
-			mTitleText.setText(imgName);
-			mDescText.setText(cursor.getString(2));
-			mAuthor.setText(cursor.getString(5));
+			String filename, desc, tts_m, tts_f, username, symbolInfo;
+			boolean isCategory, isAddToExpr, isAddToCatList;
+			
+			filename = cursor.getString(1);
+			desc = cursor.getString(2);
+			tts_m = cursor.getString(3);
+			tts_f = cursor.getString(4);
+			isCategory = (cursor.getInt(5) == 1) ? true : false;
+			isAddToExpr = (cursor.getInt(6) == 1) ? true : false;
+			isAddToCatList = (cursor.getInt(7) == 1) ? true : false;
+			username = cursor.getString(8);
+			
+			
+			mId.setText(Long.toString(id));
+			mImgDescET.setText(desc);
+			mTTSMaleET.setText(tts_m);
+			mTTSFemaleET.setText(tts_f);
+			
+			mIsCategoryRB.setChecked(isCategory);
+			mIsNOTCategoryRB.setChecked(!isCategory);
+			
+			mAddToExprRB.setChecked(isAddToExpr);
+			mNOTAddToExprRB.setChecked(!isAddToExpr);
+			
+			mAddToLlRB.setChecked(isAddToCatList);
+			mNOTAddToLlRB.setChecked(!isAddToCatList);
+			
+			mSymbolInfo.setText("ID: "+ id + "\nU¿ytkownik: "+username);
 			cursor.close();
-			
-			ImageLoader.loadBitmap(Storage.getPathToScaledBitmap(imgName, 300), mImage,300);
-			
+			ImageLoader.loadBitmap(Storage.getPathToScaledBitmap(filename, 150), mImage,150);
 			setImageParents(id);
 		}
 		
@@ -322,6 +348,7 @@ public class ImageDetailsFragment extends Fragment{
 
 	@Override
 	public void onActivityResult(int requestCode, int resultCode, Intent data) {
+		/*
 		if (resultCode == Activity.RESULT_OK) {
 			if(requestCode == TAKE_PIC_REQUEST || requestCode == FILE_SELECT_REQUEST){
 				Uri uri = data.getData();
@@ -339,6 +366,7 @@ public class ImageDetailsFragment extends Fragment{
 				mImage.setImageBitmap(bitmap);
 			}
 		}
+		*/
 	}
 	public void onSaveInstanceState(Bundle outState) {
 		super.onSaveInstanceState(outState);
@@ -359,34 +387,78 @@ public class ImageDetailsFragment extends Fragment{
 	}
 
 	private void saveState() {
-		String category = null;
-		int isContextualCategory=0 ;
-		if (mCreateCategoryCheckBox.isChecked()) {
-			category = mCategory.getText().toString();
-			if (category.equals("")) {
-				category = null;
-			}else{
-				if(mIsContextualCategory.isChecked()){
-					isContextualCategory = 1;
-				}
-			}
+		
+		String filename, desc, tts_m, tts_f, username, symbolInfo;
+		boolean isCategory, isAddToExpr, isAddToCatList;
+		
+		
+		desc = mImgDescET.getText().toString();
+		tts_m = mTTSMaleET.getText().toString();
+		tts_f = mTTSFemaleET.getText().toString();
+		isCategory = mIsCategoryRB.isChecked();
+		isAddToExpr = mAddToExprRB.isChecked();
+		isAddToCatList = mAddToLlRB.isChecked();
+		
+		
+		
 
-		}
-
-		String description = mDescText.getText().toString();
 
 		ContentValues values = new ContentValues();
-		values.put(ImageContract.Columns.CATEGORY, category);
-		values.put(ImageContract.Columns.DESC, description);
-		values.put(ImageContract.Columns.IS_CONTEXTUAL_CATEGORY, isContextualCategory);
+		values.put(ImageContract.Columns.DESC, desc);
+		values.put(ImageContract.Columns.TTS_M, tts_m);
+		values.put(ImageContract.Columns.TTS_F, tts_f);
+		values.put(ImageContract.Columns.IS_CATEGORY, isCategory);
+		values.put(ImageContract.Columns.IS_ADD_TO_CAT_LIST, isAddToExpr);
+		values.put(ImageContract.Columns.IS_ADD_TO_EXPR, isAddToCatList);
 
+		/*
 		if (row_id == null && this.filename!=null) {
 			values.put(ImageContract.Columns.FILENAME, this.filename);
 			imageUri = executing_activity.getContentResolver().insert(ImageContract.CONTENT_URI, values);
 		} else {
-			executing_activity.getContentResolver().update(imageUri, values, null,	null);
-		}
+		*/
+		executing_activity.getContentResolver().update(imageUri, values, null,	null);
+		//}
 		
 
 	}
+	
+	private void initViews(View view){		
+		mId = (TextView) view.findViewById(R.id.img_id);
+		mImage = (ImageView) view.findViewById(R.id.img);
+		mImgDescET = (EditText) view.findViewById(R.id.img_desc);
+		mSymbolInfo = (TextView) view.findViewById(R.id.symbol_info);
+		mTTSMaleET =  (EditText) view.findViewById(R.id.tts_male);
+		mTTSFemaleET = (EditText) view.findViewById(R.id.tts_female);
+		mIsCategoryRB = (RadioButton) view.findViewById(R.id.category_yes);
+		mIsNOTCategoryRB = (RadioButton) view.findViewById(R.id.category_no);
+		mAddToExprRB = (RadioButton) view.findViewById(R.id.add_to_expr_yes);
+		mNOTAddToExprRB = (RadioButton) view.findViewById(R.id.add_to_expr_no);
+		mAddToLlRB = (RadioButton) view.findViewById(R.id.add_to_ll_yes);
+		mNOTAddToLlRB = (RadioButton) view.findViewById(R.id.add_to_ll_no);
+		mAddToLLInfo1 = (TextView) view.findViewById(R.id.addToLLInfo1);
+		mAddToLLInfo2 = (View) view.findViewById(R.id.addToLLInfo2);
+		mAddToLLRG = (RadioGroup) view.findViewById(R.id.addToLL_RG);
+				
+		mIsCategoryRB.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+			
+			@Override
+			public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+				if(isChecked){
+					mAddToLLInfo1.setVisibility(View.VISIBLE);
+					mAddToLLInfo2.setVisibility(View.VISIBLE);
+					mAddToLLRG.setVisibility(View.VISIBLE);
+				}else{
+					mAddToLLInfo1.setVisibility(View.GONE);
+					mAddToLLInfo2.setVisibility(View.GONE);
+					mAddToLLRG.setVisibility(View.GONE);
+				}
+			}
+		});
+		
+		
+		
+	}
+	
+
 }

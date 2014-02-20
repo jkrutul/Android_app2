@@ -214,7 +214,7 @@ public class AddUserActivity extends Activity {
 		ContentValues img_val = new ContentValues();								// stworzenie nowego korzenia dla u¿ytkownika
 		img_val.put(ImageContract.Columns.FILENAME, user_img);
 		img_val.put(ImageContract.Columns.DESC, username + " - G³ówna");
-		img_val.put(ImageContract.Columns.CATEGORY, username + " - G³ówna");
+		img_val.put(ImageContract.Columns.IS_CATEGORY, true);
 		Uri img_uri = getContentResolver().insert(ImageContract.CONTENT_URI, img_val);
 		
 

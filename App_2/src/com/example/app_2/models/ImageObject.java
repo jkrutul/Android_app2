@@ -1,72 +1,78 @@
 package com.example.app_2.models;
 
-public class ImageObject { //ID imageName, AUDIOPATH, DESCRIPTION, times_used, modified, last_used, category,parent_fk 
-	private Long id;  		
-	private String imageName;
-	private String description;
+public class ImageObject { //ID filename, AUDIOPATH, DESCRIPTION, times_used, modified, last_used, category,parent_fk 
+	private Long id;
+	private String filename, description, tts_m, tts_f;
+	private int isCategory, isAddToExpr, isAddToCatList;
+	
 	private Long times_used;
 	private String modified;
 	private String last_used;
-	private String category;
-	private int isContextualCategory;
+
 	private Long author_fk;
 	
-	public String getCategory() {
-		return category;
-	}
-	public void setCategory(String category) {
-		this.category = category;
-	}
 
 
 	public Long getId() {
 		return id;
 	}
+	
 	public void setId(Long id) {
 		this.id = id;
 	}	
+	
 	public ImageObject(){
 		
 	}
 	
-	public ImageObject(String imageName){
-		this.imageName = imageName;
+	public ImageObject(String filename){
+		this.filename = filename;
 	}
 	
-	public ImageObject(String imageName, Long author_id){ 					// konstruktor dla liœcia
-		this.imageName = imageName;
+	public ImageObject(String filename, Long author_id){ 					// konstruktor dla liœcia
+		this.filename = filename;
 		this.author_fk = author_id;
 	}
 	
 	
-	public ImageObject(String imageName, String description, Long author_id){ 					// konstruktor dla liœcia
-		this.imageName = imageName;
+	public ImageObject(String filename, String description, Long author_id){ 					// konstruktor dla liœcia
+		this.filename = filename;
 		this.author_fk = author_id;
 		this.description = description;
 	}
 	
 	
-	public ImageObject(String imageName, String description,String category){
-		this.imageName = imageName;
+	public ImageObject(String filename, String description, int isCategory){
+		this.filename = filename;
 
 		this.description = description;
-		this.category = category;
+		this.isCategory =isCategory;
 	
 	}
 
-	public ImageObject(String imageName, String description,String category, boolean isContextualCategory){
-		this.imageName = imageName;
+	public ImageObject(String filename, String description, int isCategory, int addToExpression){
+		this.filename = filename;
 
 		this.description = description;
-		this.category = category;
-		this.setIsContextualCategory((isContextualCategory) ? 1 : 0);
+		this.isCategory = isCategory;
+		this.isAddToExpr = addToExpression;
+	}
 	
+	public ImageObject(String filename, String description, String tts_m, String tts_f, int isCategory, int isAddToExpr, int isAddToCatList){
+		this.filename = filename;
+		this.tts_m = tts_m;
+		this.tts_f = tts_f;
+		this.description = description;
+		this.isCategory = isCategory;
+		this.isAddToExpr = isAddToExpr;
+		this.isAddToCatList = isAddToCatList;
 	}
-	public String getImageName() {
-		return imageName;
+	
+	public String getFilename() {
+		return filename;
 	}
-	public void setImageName(String imageName) {
-		this.imageName = imageName;
+	public void setFilename(String filename) {
+		this.filename = filename;
 	}
 	public String getDescription() {
 		return description;
@@ -95,8 +101,8 @@ public class ImageObject { //ID imageName, AUDIOPATH, DESCRIPTION, times_used, m
 	}
 
 	@Override
-	public String toString(){				//ID imageName, AUDIOPATH, DESCRIPTION, times_used, modified, last_used, category,parent_fk 
-		return id+";"+imageName+";"+description+";"+times_used+";"+modified+";"+last_used+";"+category+";";
+	public String toString(){				//ID filename, AUDIOPATH, DESCRIPTION, times_used, modified, last_used, category,parent_fk 
+		return id+";"+filename+";"+description+";"+times_used+";"+modified+";"+last_used+";"+isCategory+";";
 	}
 	public Long getAuthor_fk() {
 		return author_fk;
@@ -104,11 +110,36 @@ public class ImageObject { //ID imageName, AUDIOPATH, DESCRIPTION, times_used, m
 	public void setAuthor_fk(Long author_fk) {
 		this.author_fk = author_fk;
 	}
-	public int getIsContextualCategory() {
-		return isContextualCategory;
+
+	public String getTts_m() {
+		return tts_m;
 	}
-	public void setIsContextualCategory(int isContextualCategory) {
-		this.isContextualCategory = isContextualCategory;
+	public void setTts_m(String tts_m) {
+		this.tts_m = tts_m;
+	}
+	public String getTts_f() {
+		return tts_f;
+	}
+	public void setTts_f(String tts_f) {
+		this.tts_f = tts_f;
+	}
+	public int isAddToExpr() {
+		return isAddToExpr;
+	}
+	public void setAddToExpr(int isAddToExpr) {
+		this.isAddToExpr = isAddToExpr;
+	}
+	public int isAddToCatList() {
+		return isAddToCatList;
+	}
+	public void setAddToCastList(int isAddToCatList) {
+		this.isAddToCatList = isAddToCatList;
+	}
+	public int isCategory() {
+		return isCategory;
+	}
+	public void setCategory(int isCategory) {
+		this.isCategory = isCategory;
 	}
 
 }

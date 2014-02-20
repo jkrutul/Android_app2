@@ -39,6 +39,16 @@ public class ParentMultiselectFragment extends ListFragment implements LoaderCal
 	private Map<Long,Integer> posMapOfAllItems;
 	private ArrayList<Long> selectedItemsOnCreate;
 	
+	private String[] projection = { 
+			"i."+ImageContract.Columns._ID,
+			"i."+ImageContract.Columns.FILENAME,
+			"i."+ImageContract.Columns.IS_CATEGORY,
+			"i."+ImageContract.Columns.DESC,
+			"i."+ImageContract.Columns.AUTHOR_FK
+			};
+    private String selection = "i."+ImageContract.Columns.IS_CATEGORY + " =?" ;
+    private String[] selectionArgs ={"1"};
+	
 	public ParentMultiselectFragment(){
 		
 	}
@@ -71,21 +81,17 @@ public class ParentMultiselectFragment extends ListFragment implements LoaderCal
 		//new ImageLoader(getActivity());
 		selectedItemsOnCreate = new ArrayList<Long>();
 		
-		String[] from = new String[] { ImageContract.Columns._ID,ImageContract.Columns.FILENAME, ImageContract.Columns.CATEGORY};
-		int[] to = new int[] { 0, R.id.mc_icon, R.id.mc_text}; 		
-		String[] projection3 = { 
-				"i."+ImageContract.Columns._ID,
-				"i."+ImageContract.Columns.FILENAME,
-				"i."+ImageContract.Columns.CATEGORY
-				};
-        String selection2 = "i."+ImageContract.Columns.CATEGORY + " IS NOT NULL AND (i."+ImageContract.Columns.CATEGORY +" <> ?)";
-        String[] selectionArgs2 ={""};
-		Cursor cursor2 = getActivity().getContentResolver().query(ImageContract.CONTENT_URI, projection3, selection2, selectionArgs2, null);
-		adapter = new SimpleCursorAdapter( getActivity().getApplicationContext(),  R.layout.multiple_choice_item, cursor2, from, to, 0);
+		//String[] from = new String[] { ImageContract.Columns._ID,ImageContract.Columns.FILENAME, ImageContract.Columns.IS_CATEGORY, ImageCo};
+		int[] to = new int[] { 0, R.id.mc_icon,0, R.id.mc_text, R.id.mc_author}; 
+		
+
+        
+		Cursor cursor = getActivity().getContentResolver().query(ImageContract.CONTENT_URI, projection, selection, selectionArgs, null);
+		adapter = new SimpleCursorAdapter( getActivity().getApplicationContext(),  R.layout.multiple_choice_item, cursor, projection, to, 0);
 		adapter.setViewBinder(new SimpleCursorAdapter.ViewBinder() {
 			public boolean setViewValue(View view, Cursor cursor,int columnIndex) {
 				if (view.getId() == R.id.mc_icon) {
-					String path = Storage.getPathToScaledBitmap(cursor.getString(cursor.getColumnIndex(ImageContract.Columns.FILENAME)),100);
+					String path = Storage.getPathToScaledBitmap(cursor.getString(1),100);
 					ImageLoader.loadBitmap(path, (ImageView) view,100);
 					return true;
 				}
@@ -138,16 +144,7 @@ public class ParentMultiselectFragment extends ListFragment implements LoaderCal
 	
 	@Override
 	public Loader<Cursor> onCreateLoader(int arg0, Bundle bundle) {
-		
-		String[] projection = { 
-				"i."+ImageContract.Columns._ID,
-				"i."+ImageContract.Columns.FILENAME,
-				"i."+ImageContract.Columns.CATEGORY,
-				"i."+ImageContract.Columns.AUTHOR_FK
-				};
-        String selection = "i."+ImageContract.Columns.CATEGORY + " IS NOT NULL AND (i."+ImageContract.Columns.CATEGORY +" <> ?)" ;
-        String[] selectionArgs ={""};
-        
+		        
 		Long user_id = null;					
 		if (bundle !=null){
 			user_id = bundle.getLong("USER_ID");	

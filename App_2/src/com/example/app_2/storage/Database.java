@@ -51,13 +51,15 @@ public class Database {
 			ImageContract.TABLE_IMAGE+" ("+
 			ImageContract.Columns._ID+" INTEGER PRIMARY KEY AUTOINCREMENT,"+
 			ImageContract.Columns.FILENAME+ " TEXT, "+
-			ImageContract.Columns.AUDIO_PATH + " TEXT, "+
 			ImageContract.Columns.DESC+ " TEXT, "+
+			ImageContract.Columns.TTS_M+" TEXT, "+
+			ImageContract.Columns.TTS_F+" TEXT, "+
 			ImageContract.Columns.MODIFIED+ " DATETIME, "+
 			ImageContract.Columns.TIME_USED+ " INTEGER DEFAULT 0 ,"+
 			ImageContract.Columns.LAST_USED+ " DATETIME, "+
-			ImageContract.Columns.CATEGORY+ " TEXT, "+
-			ImageContract.Columns.IS_CONTEXTUAL_CATEGORY+ " INTEGER DEFAULT 0,"+
+			ImageContract.Columns.IS_CATEGORY+ " INTEGER DEFAULT 0, "+
+			ImageContract.Columns.IS_ADD_TO_EXPR+ " INTEGER DEFAULT 0, "+
+			ImageContract.Columns.IS_ADD_TO_CAT_LIST+" INTEGER DEFAULT 0, "+
 			ImageContract.Columns.AUTHOR_FK+ " INTEGER "+
 	");";
 	
@@ -203,10 +205,12 @@ public class Database {
 	 * @param mio
 	 * @return inserted ImageObject
 	 */
+	
+	/*
 	public ImageObject insertImage1(ImageObject mio){
 		ContentValues cv = new ContentValues();
 		cv.put(ImageContract.Columns.FILENAME, mio.getImageName() );
-		cv.put(ImageContract.Columns.CATEGORY, mio.getCategory());
+		cv.put(ImageContract.Columns.IS_CATEGORY, mio.getCategory());
 		cv.put(ImageContract.Columns.DESC, mio.getDescription());
 		cv.put(ImageContract.Columns.MODIFIED, dateFormat.format(date));
 
@@ -223,9 +227,10 @@ public class Database {
 		c.close();
 		return mio;
 	}
+	*/
 	
 	public Long insertImage(ImageObject img_object){
-		String filename = img_object.getImageName();
+		String filename = img_object.getFilename();
 		String description = img_object.getDescription();
 		if(description == null)
 			description = Utils.cutExtention(filename);
@@ -254,25 +259,32 @@ public class Database {
 		whereArgs[0] = String.valueOf(_rowIndex);
 		ContentValues cv = new ContentValues();
 		cv.put(ImageContract.Columns._ID,mio.getId());
-		cv.put(ImageContract.Columns.FILENAME, mio.getImageName() );
-		cv.put(ImageContract.Columns.CATEGORY, mio.getCategory());
+		cv.put(ImageContract.Columns.FILENAME, mio.getFilename() );
+		
+		cv.put(ImageContract.Columns.IS_CATEGORY, mio.isCategory());
+		cv.put(ImageContract.Columns.IS_ADD_TO_EXPR, mio.isAddToExpr());
+		cv.put(ImageContract.Columns.IS_ADD_TO_CAT_LIST, mio.isAddToCatList());
 		cv.put(ImageContract.Columns.DESC, mio.getDescription());
+		cv.put(ImageContract.Columns.TTS_M, mio.getTts_m());
+		cv.put(ImageContract.Columns.TTS_F, mio.getTts_f());
 		cv.put(ImageContract.Columns.TIME_USED, mio.getTimes_used());
 		return db.update(ImageContract.TABLE_IMAGE, cv, where, whereArgs);
 	}
 	
+	/*
 	public int updateImage(String imageName, ImageObject mio){
 		String where = ImageContract.Columns.FILENAME + "=?";
 		String[] whereArgs = {""};
 		whereArgs[0] = imageName;
 		ContentValues cv = new ContentValues();
 		//cv.put(ImageContract.Columns._ID,mio.getId());
-		cv.put(ImageContract.Columns.FILENAME, mio.getImageName() );
-		cv.put(ImageContract.Columns.CATEGORY, mio.getCategory());
+		cv.put(ImageContract.Columns.FILENAME, mio.getFilename() );
+		cv.put(ImageContract.Columns.IS_CATEGORY, mio.getCategory());
 		cv.put(ImageContract.Columns.DESC, mio.getDescription());
 		Log.i(LOG_TAG, "updating image:"+mio);
 		return db.update(ImageContract.TABLE_IMAGE, cv, where, whereArgs);
 	}
+	*/
 	
 	public int updateImageCounter(ImageObject io){
 		long used_counter = io.getTimes_used();
@@ -307,35 +319,7 @@ public class Database {
 		return null;
 	}
 
-	public List<ImageObject> getAllImages(){
-		ImageObject mio;
-		
-		String selection =ImageContract.Columns.CATEGORY+" NOT LIKE \'ROOT\'";
-		String[] selectionArgs = {""};
-		//selectionArgs[0] = "\'ROOT\'";		
-		
-		List<ImageObject> images = new LinkedList<ImageObject>();
-		try{
-			Cursor c = db.query(ImageContract.TABLE_IMAGE, null, selection,null /*selectionArgs*/,null, null,ImageContract.Columns._ID);
-			c.moveToFirst();
-			//if(!c.isAfterLast())
-			//	c.moveToNext();
-			if(c.getCount()>0){
-				while(!c.isAfterLast()){
-					mio = cursorToImage(c);
-					images.add(mio);
-					c.moveToNext();
-				}
-			}
-			c.close();
-		}
-		catch(SQLException ex){
-			Log.w(LOG_TAG,ex);
-		}
-		
-		return images;
-	}
-	
+
 	public static Long getMainDictFk(){
 		Cursor c = db.query("metadata", new String[]{"dict_fk"}, null ,null,null, null, null);
 		c.moveToFirst();
@@ -360,60 +344,26 @@ public class Database {
 	private static ImageObject cursorToImage(Cursor cursor){
 		ImageObject mio = new ImageObject();
 		mio.setId(			cursor.getLong(		cursor.getColumnIndex(ImageContract.Columns._ID)));
-		mio.setImageName(	cursor.getString(	cursor.getColumnIndex(ImageContract.Columns.FILENAME)));
+		mio.setFilename(	cursor.getString(	cursor.getColumnIndex(ImageContract.Columns.FILENAME)));
 		mio.setDescription(	cursor.getString(	cursor.getColumnIndex(ImageContract.Columns.DESC)));
 		mio.setModified(	cursor.getString(	cursor.getColumnIndex(ImageContract.Columns.MODIFIED)));
 		mio.setTimes_used(	cursor.getLong(		cursor.getColumnIndex(ImageContract.Columns.TIME_USED)));
 		mio.setLast_used(	cursor.getString(	cursor.getColumnIndex(ImageContract.Columns.LAST_USED)));
-		mio.setCategory(	cursor.getString(	cursor.getColumnIndex(ImageContract.Columns.CATEGORY)));
+		mio.setCategory(	cursor.getInt(	cursor.getColumnIndex(ImageContract.Columns.IS_CATEGORY)));
 		return mio;
 	}
 	
 	private static ImageObject cursorToCategory(Cursor cursor){
 		ImageObject mio = new ImageObject();
 		mio.setId(			cursor.getLong(		cursor.getColumnIndex(ImageContract.Columns._ID)));
-		mio.setImageName(	cursor.getString(	cursor.getColumnIndex(ImageContract.Columns.FILENAME)));
-		mio.setCategory(	cursor.getString(	cursor.getColumnIndex(ImageContract.Columns.CATEGORY)));
+		mio.setFilename(	cursor.getString(	cursor.getColumnIndex(ImageContract.Columns.FILENAME)));
+		mio.setCategory(	cursor.getInt(	cursor.getColumnIndex(ImageContract.Columns.IS_CATEGORY)));
 		return mio;
 	}
 	
-	public void exportImageToCsv(String filename){
-		File f  = ExternalStorage.getExternalStorageDir(filename);
-	    try{
-	    	FileOutputStream out = new FileOutputStream(f);
-			OutputStreamWriter osw = new OutputStreamWriter(out);
-			for(ImageObject img_o : getAllImages()){       
-				osw.write(img_o+"\n");
-			}
-			osw.flush();
-			osw.close();
-		}catch (Exception e) {
-			Log.e(LOG_TAG, "File write failed:" + e.toString());
-		}	
-	}
 	
-	public void importImageFromCsv(String filename){
-		File file = new File(Environment.getExternalStorageDirectory(),	filename);
-		if(file.exists()){
-			try{
-				FileInputStream in = new FileInputStream(file);
-				BufferedReader reader = new BufferedReader(new InputStreamReader(in));
-				String line = null;
-				String tv[] = null;
-				recreateDB();
-				while((line = reader.readLine())!=null){
-					tv = line.split("\\;"); //ID imageName, AUDIOPATH, DESCRIPTION, times_used, modified, last_used, category,parent_fk 
-					ImageObject io = new ImageObject(tv[1],tv[3],tv[7]);  //String imageName, String audioPath, String description,String category, Long paretn_fk
-					insertImage(io);
-				}
-				in.close();
-			}catch(Exception e){
-				Log.e(LOG_TAG, "File read failed:" + e.toString());
-			}
-		}else
-			Log.i(LOG_TAG, "file not exists");
-	}
-	
+
+
 	
 	//----
 	public static class myDbHelper extends SQLiteOpenHelper{
@@ -452,13 +402,13 @@ public class Database {
 				long main_dict, main_root;
 				
 				ContentValues cv = new ContentValues();
-				cv.put(ImageContract.Columns.CATEGORY, "MAIN_DICT");
+				cv.put(ImageContract.Columns.IS_CATEGORY, true);
 				cv.put(ImageContract.Columns.DESC,  "MAIN_DICT");
 				cv.put(ImageContract.Columns.MODIFIED, dateFormat.format(date));
 				main_dict=  _db.insert(ImageContract.TABLE_IMAGE, null, cv);
 				
 				cv.clear();
-				cv.put(ImageContract.Columns.CATEGORY, "MAIN_ROOT");
+				cv.put(ImageContract.Columns.IS_CATEGORY, true);
 				cv.put(ImageContract.Columns.DESC,  "MAIN_ROOT");
 				cv.put(ImageContract.Columns.MODIFIED, dateFormat.format(date));
 				main_root =  _db.insert(ImageContract.TABLE_IMAGE, null, cv);

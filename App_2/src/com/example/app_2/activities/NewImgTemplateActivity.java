@@ -42,6 +42,7 @@ import com.example.app_2.utils.Utils;
 
 // za³adowawnie pustego ImageDetailsFragment
 public class NewImgTemplateActivity extends Activity {
+	/*
 	private TextView mId;
 	private EditText mCategory;
 	private TextView mTitleText;
@@ -206,7 +207,7 @@ public class NewImgTemplateActivity extends Activity {
 		description = mDescText.getText().toString();
 
 		ContentValues values = new ContentValues();
-		values.put(ImageContract.Columns.CATEGORY, category);
+		values.put(ImageContract.Columns.IS_CATEGORY, category);
 		values.put(ImageContract.Columns.DESC, description);
 		values.put(ImageContract.Columns.FILENAME, this.newFileName);
 		
@@ -220,7 +221,7 @@ public class NewImgTemplateActivity extends Activity {
 	private void fillData(Uri uri) {
 		String[] projection = { ImageContract.Columns._ID,
 				ImageContract.Columns.FILENAME, ImageContract.Columns.DESC,
-				ImageContract.Columns.CATEGORY};
+				ImageContract.Columns.IS_CATEGORY};
 		Cursor cursor = getContentResolver().query(uri,	projection, null, null, null);
 		cursor.moveToFirst();
 		if ( cursor.isAfterLast()) {
@@ -231,7 +232,7 @@ public class NewImgTemplateActivity extends Activity {
 					.getColumnIndex(ImageContract.Columns._ID));
 
 			String category = cursor.getString(cursor
-					.getColumnIndexOrThrow(ImageContract.Columns.CATEGORY));
+					.getColumnIndexOrThrow(ImageContract.Columns.IS_CATEGORY));
 
 			mId.setText(img_id);
 
@@ -250,4 +251,5 @@ public class NewImgTemplateActivity extends Activity {
 
 		}
 	}
+	*/
 }

@@ -68,7 +68,7 @@ public class ImagesMultiselectFragment extends ListFragment implements LoaderCal
 	private String[] projection = new String[] { "i."+ImageContract.Columns._ID,
 			 "i."+ImageContract.Columns.FILENAME,
 			 "i."+ImageContract.Columns.DESC,
-			 "i."+ImageContract.Columns.CATEGORY,
+			 "i."+ImageContract.Columns.IS_CATEGORY,
 			 "u."+UserContract.Columns.USERNAME};
 	private String selection;
 	private String[] selectionArgs;
@@ -159,7 +159,7 @@ public class ImagesMultiselectFragment extends ListFragment implements LoaderCal
 		//new ImageLoader(getActivity());
 		selectedItemsOnCreate = new ArrayList<Long>();
 		
-		String[] from = new String[] {ImageContract.Columns._ID,  ImageContract.Columns.FILENAME,  ImageContract.Columns.DESC,  ImageContract.Columns.CATEGORY, UserContract.Columns.USERNAME};
+		String[] from = new String[] {ImageContract.Columns._ID,  ImageContract.Columns.FILENAME,  ImageContract.Columns.DESC,  ImageContract.Columns.IS_CATEGORY, UserContract.Columns.USERNAME};
 		int[] to = new int[] {0, R.id.mc_icon, R.id.mc_text, R.id.mc_info, R.id.mc_author }; 
 		
 		listView = getListView();
@@ -240,7 +240,7 @@ public class ImagesMultiselectFragment extends ListFragment implements LoaderCal
 		final FragmentActivity a = getActivity();
 
 		items =  new ArrayList<ImageSpinnerItem>();
-		//items.add(new ImageSpinnerItem(null,"Autor kategorii", null, true));
+
 		String[] projection = {UserContract.Columns._ID, UserContract.Columns.IMG_FILENAME, UserContract.Columns.USERNAME };
 	
 		Cursor c = a.getContentResolver().query(UserContract.CONTENT_URI, projection, null, null, null);
@@ -280,10 +280,7 @@ public class ImagesMultiselectFragment extends ListFragment implements LoaderCal
 					selected_user_id = data.getItemId();
 					a.getSupportLoaderManager().restartLoader(0, null, lc);
 				}
-				//if(user_id != null){
-				//	bundle.putLong("SELECTED_USER_ID", user_id);
-				//	a.getSupportLoaderManager().restartLoader(0, bundle, lc);
-				//}
+
 			}
 			
 			@Override
@@ -326,11 +323,7 @@ public class ImagesMultiselectFragment extends ListFragment implements LoaderCal
 		task.executeOnExecutor(com.example.app_2.utils.AsyncTask.DUAL_THREAD_EXECUTOR, cat_root);
 		
 	}
-	
-	//private static boolean cancelPotentialWork(Long id, TextView tv){
-	//	CalculateDfsWorkerTask calculateDfsWorkerTask = getCalculateDfsWorkerTask(tv);
-	//}
-	
+
 	private static  CalculateDfsWorkerTask getCalculateDfsWorkerTask(TextView textView) {
 
 		    return null;
@@ -391,7 +384,7 @@ public class ImagesMultiselectFragment extends ListFragment implements LoaderCal
 		}
 		
 		if(showOnlyCategories){
-			sel += " AND ( " + ImageContract.Columns.CATEGORY + "<> ? OR " + ImageContract.Columns.CATEGORY + " IS NOT NULL )";
+			sel += " AND ( " + ImageContract.Columns.IS_CATEGORY + "<> ? OR " + ImageContract.Columns.IS_CATEGORY + " IS NOT NULL )";
 			selArgs = new String[]{ selArgs[0], selArgs[1], selArgs[2], ""};
 		}
 

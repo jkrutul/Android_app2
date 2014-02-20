@@ -68,7 +68,7 @@ public class BindImagesToCategoryActivity extends FragmentActivity implements On
 		
 		Uri uri = Uri.parse(ImageContract.CONTENT_URI+"/"+executing_category_id);
 		
-		Cursor c = getContentResolver().query(uri, new String[]{ImageContract.Columns.FILENAME, ImageContract.Columns.CATEGORY}, null, null, null);
+		Cursor c = getContentResolver().query(uri, new String[]{ImageContract.Columns.FILENAME, ImageContract.Columns.IS_CATEGORY}, null, null, null);
 		c.moveToFirst();
 		if(!c.isAfterLast()){
 			String path = Storage.getPathToScaledBitmap(c.getString(0), 150);
@@ -148,13 +148,14 @@ public class BindImagesToCategoryActivity extends FragmentActivity implements On
                         "i."+ImageContract.Columns._ID,
                         "i."+ImageContract.Columns.FILENAME,
                         "i."+ImageContract.Columns.DESC,
-                        "i."+ImageContract.Columns.CATEGORY};
+                        "i."+ImageContract.Columns.IS_CATEGORY,
+                        "i."+ImageContract.Columns.IS_ADD_TO_EXPR};
             
             
             ArrayList<Long>checked_category_list = new ArrayList<Long>();            // wydzielam kategorie do osobnej listy
             for(Long checked_list_item : checked_list){
                 uri = Uri.parse(ImageContract.CONTENT_URI+"/"+checked_list_item);
-                c= getContentResolver().query(uri, new String[]{"i."+ImageContract.Columns._ID, "i."+ImageContract.Columns.CATEGORY}, null, null, null);
+                c= getContentResolver().query(uri, new String[]{"i."+ImageContract.Columns._ID, "i."+ImageContract.Columns.IS_CATEGORY}, null, null, null);
                 c.moveToFirst();
                 if(!c.isAfterLast()){
                     String category = c.getString(1);
@@ -181,7 +182,7 @@ public class BindImagesToCategoryActivity extends FragmentActivity implements On
 	                        c = getContentResolver().query(uri, projection, null, null, null);
 	                        c.moveToFirst();
 	                        if(!c.isAfterLast()){
-	                            ContentValues img_cv = createImgContentValue( c.getString(1), c.getString(2), c.getString(3), category_author);
+	                            ContentValues img_cv = createImgContentValue( c.getString(1), c.getString(2), c.getInt(3), c.getInt(4), category_author);
 	                            Uri inserted_image_uri = getContentResolver().insert(ImageContract.CONTENT_URI, img_cv);
 	                            copied.put(checked_category_id, Long.parseLong(inserted_image_uri.getLastPathSegment()));
 	                        }
@@ -202,7 +203,7 @@ public class BindImagesToCategoryActivity extends FragmentActivity implements On
 		                        c = getContentResolver().query(uri, projection, null, null, null);
 		                        c.moveToFirst();
 		                        if(!c.isAfterLast()){
-		                            ContentValues img_cv = createImgContentValue( c.getString(1), c.getString(2), c.getString(3), category_author);
+		                            ContentValues img_cv = createImgContentValue( c.getString(1), c.getString(2), c.getInt(3), c.getInt(4), category_author);
 		                            Uri inserted_image_uri = getContentResolver().insert(ImageContract.CONTENT_URI, img_cv);
 		                            copied.put(parent, Long.parseLong(inserted_image_uri.getLastPathSegment()));
 		                        }
@@ -219,7 +220,7 @@ public class BindImagesToCategoryActivity extends FragmentActivity implements On
 		                        c = getContentResolver().query(uri, projection, null, null, null);
 		                        c.moveToFirst();
 		                        if(!c.isAfterLast()){
-		                            ContentValues img_cv = createImgContentValue( c.getString(1), c.getString(2), c.getString(3), category_author );
+		                            ContentValues img_cv = createImgContentValue( c.getString(1), c.getString(2), c.getInt(3), c.getInt(4), category_author );
 		                            Uri inserted_image_uri = getContentResolver().insert(ImageContract.CONTENT_URI, img_cv);
 		                            copied.put(child, Long.parseLong(inserted_image_uri.getLastPathSegment()));
 		                        }
@@ -245,7 +246,7 @@ public class BindImagesToCategoryActivity extends FragmentActivity implements On
 	                    c= getContentResolver().query(uri, projection, null, null, null);
 	                    c.moveToFirst();
 	                    if(!c.isAfterLast()){
-	                        ContentValues img_cv = createImgContentValue( c.getString(1), c.getString(2), c.getString(3), category_author );
+	                        ContentValues img_cv = createImgContentValue( c.getString(1), c.getString(2), c.getInt(3), c.getInt(4), category_author );
 	                        if(c.getString(3) != null && !c.getString(3).isEmpty()){
 	                            Log.w(LOG_TAG, "obrazek jest kategori¹, a dodawany jako liœæ");                            
 	                        }
@@ -319,11 +320,12 @@ public class BindImagesToCategoryActivity extends FragmentActivity implements On
 		return bind_cv;
 	}
 	
-	private ContentValues createImgContentValue(String filename, String description, String category, Long author_fk){
+	private ContentValues createImgContentValue(String filename, String description, int iscategory, int is_contextual, Long author_fk){
 		ContentValues img_cv = new ContentValues();
 		img_cv.put(ImageContract.Columns.FILENAME, filename);
 		img_cv.put(ImageContract.Columns.DESC, description);
-		img_cv.put(ImageContract.Columns.CATEGORY,	category);
+		img_cv.put(ImageContract.Columns.IS_CATEGORY,	iscategory);
+		img_cv.put(ImageContract.Columns.IS_ADD_TO_EXPR, is_contextual);
 		img_cv.put(ImageContract.Columns.AUTHOR_FK, author_fk);
 		img_cv.put(ImageContract.Columns.MODIFIED, dateFormat.format(date));
 		return img_cv;

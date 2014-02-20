@@ -116,12 +116,25 @@ public class ImageListFragment extends ListFragment implements LoaderCallbacks<C
 	*/
 	
 	private String[] projection = new String[] { 
-			 "i."+ImageContract.Columns._ID, 					//0
-			 "i."+ImageContract.Columns.FILENAME,				//1
-			 "i."+ImageContract.Columns.DESC,					//2
-			 "i."+ImageContract.Columns.CATEGORY,				//3
-			 "i."+ImageContract.Columns.IS_CONTEXTUAL_CATEGORY,	//4
-			 "u."+UserContract.Columns.USERNAME};				//5
+			"i."+ImageContract.Columns._ID,					//0
+			"i."+ImageContract.Columns.FILENAME,				//1
+			"i."+ImageContract.Columns.DESC,					//2
+			"i."+ImageContract.Columns.IS_CATEGORY,			//3
+			"i."+ImageContract.Columns.IS_ADD_TO_EXPR,		//4
+			"u."+UserContract.Columns.USERNAME,				//5
+			"i."+ImageContract.Columns.IS_ADD_TO_EXPR		//6
+			 };			
+	
+	
+	/*
+	 * 									ImageContract.Columns._ID,					//0
+										ImageContract.Columns.FILENAME,				//1
+										ImageContract.Columns.DESC,					//2
+										ImageContract.Columns.IS_CATEGORY,			//3
+										ImageContract.Columns.IS_ADD_TO_EXPR,		//4
+										UserContract.Columns.USERNAME,				//5
+										ImageContract.Columns.IS_ADD_TO_EXPR		//6
+	 */
 	private String selection;
 	private String[] selectionArgs;
 	public String sortOrder;
@@ -177,7 +190,7 @@ public class ImageListFragment extends ListFragment implements LoaderCallbacks<C
 			logged_user_id = null;
 		
 		if(logged_user_id == null){
-			selection = "p."+ParentContract.Columns.PARENT_FK+" = ? " ;							// - obrazki które wskazuj¹ na s³ownik ( czyli wszystkie )
+			selection = "p."+ParentContract.Columns.PARENT_FK+" = ? " ;						// - obrazki które wskazuj¹ na s³ownik ( czyli wszystkie )
 			selectionArgs= new String[]{Long.toString(Database.getMainDictFk())	};
 		}else{
 		
@@ -277,9 +290,18 @@ public class ImageListFragment extends ListFragment implements LoaderCallbacks<C
 		super.onActivityCreated(savedInstanceState);
 		//new ImageLoader(getActivity());
 
-		String[] from = new String[] {ImageContract.Columns._ID,  ImageContract.Columns.FILENAME,  ImageContract.Columns.DESC,  ImageContract.Columns.CATEGORY, UserContract.Columns.USERNAME, ImageContract.Columns.IS_CONTEXTUAL_CATEGORY};
-		int[] to = new int[] { 0, R.id.mc_icon, R.id.mc_text, R.id.mc_dfs, R.id.mc_author, 0 }; 
+
+		String[] from = new String[] {	
+										ImageContract.Columns._ID,					//0
+										ImageContract.Columns.FILENAME,				//1
+										ImageContract.Columns.DESC,					//2
+										ImageContract.Columns.IS_CATEGORY,			//3
+										ImageContract.Columns.IS_ADD_TO_EXPR,		//4
+										UserContract.Columns.USERNAME,				//5
+										ImageContract.Columns.IS_ADD_TO_EXPR		//6
+									};
 		
+		int[] to = new int[] { 0, R.id.mc_icon, R.id.mc_text, R.id.mc_dfs, R.id.mc_author, 0 }; 
 		
 		adapter = new SimpleCursorAdapter( getActivity().getApplicationContext(), R.layout.images_list_row, null, from, to, 0);
 		adapter.setFilterQueryProvider(fqp);
@@ -287,8 +309,9 @@ public class ImageListFragment extends ListFragment implements LoaderCallbacks<C
 			public boolean setViewValue(View view, Cursor cursor,int columnIndex) {
 				Long img_id = cursor.getLong(0);
 				String path =  Storage.getPathToScaledBitmap(cursor.getString(1),100);
-				String category = cursor.getString(3);
-				boolean isCategory =  ( category != null && !category.isEmpty()) ? true : false;
+				boolean isCategory = (cursor.getInt(3) ==1) ? true : false;
+				//String category = cursor.getString(3);
+				//boolean isCategory =  ( category != null && !category.isEmpty()) ? true : false;
 				
 				switch (view.getId()) {
 				case R.id.mc_icon:
@@ -450,7 +473,7 @@ public class ImageListFragment extends ListFragment implements LoaderCallbacks<C
 			selArgs= new String[]{ Long.toString(Database.getMainDictFk()), Long.toString(selected_user_id)	};
 		
 			if(showOnlyCategories){
-				sel += " AND ( " + ImageContract.Columns.CATEGORY + "<> ? OR " + ImageContract.Columns.CATEGORY + " IS NOT NULL )";
+				sel += " AND ( " + ImageContract.Columns.IS_CATEGORY + "<> ? OR " + ImageContract.Columns.IS_CATEGORY + " IS NOT NULL )";
 				selArgs = new String[]{ selArgs[0], selArgs[1], ""};
 			}
 		}else{
@@ -458,7 +481,7 @@ public class ImageListFragment extends ListFragment implements LoaderCallbacks<C
 			selArgs= new String[]{ Long.toString(Database.getMainDictFk())	};
 		
 			if(showOnlyCategories){
-				sel += " AND ( " + ImageContract.Columns.CATEGORY + "<> ? OR " + ImageContract.Columns.CATEGORY + " IS NOT NULL )";
+				sel += " AND ( " + ImageContract.Columns.IS_CATEGORY + "<> ? OR " + ImageContract.Columns.IS_CATEGORY + " IS NOT NULL )";
 				selArgs = new String[]{ selArgs[0], ""};
 			}	
 		}
@@ -679,7 +702,7 @@ public class ImageListFragment extends ListFragment implements LoaderCallbacks<C
 	 */
 	private boolean isCategory(Long l){
 		Uri uri = Uri.parse(ImageContract.CONTENT_URI + "/" + l);			
-		Cursor c =getActivity().getContentResolver().query(uri, new String[]{ImageContract.Columns.CATEGORY}, null, null, null);
+		Cursor c =getActivity().getContentResolver().query(uri, new String[]{ImageContract.Columns.IS_CATEGORY}, null, null, null);
 		if(c!= null){
 			c.moveToFirst();
 			String filename = c.getString(0);

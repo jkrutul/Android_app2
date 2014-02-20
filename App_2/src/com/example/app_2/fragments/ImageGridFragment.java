@@ -103,10 +103,13 @@ public class ImageGridFragment extends Fragment implements LoaderCallbacks<Curso
 	private static String[] loader_projection = new String[] { "i."+ImageContract.Columns._ID,						//0
 															   "i."+ImageContract.Columns.FILENAME,					//1
 															   "i."+ImageContract.Columns.DESC,						//2
-															   "i."+ImageContract.Columns.CATEGORY,					//3
-															   "i."+ImageContract.Columns.IS_CONTEXTUAL_CATEGORY,	//4
-														       "i."+ImageContract.Columns.MODIFIED,					//5
-															   "i."+ImageContract.Columns.TIME_USED};				//6
+															   "i."+ImageContract.Columns.TTS_M,					//3
+															   "i."+ImageContract.Columns.TTS_F,					//4
+															   "i."+ImageContract.Columns.IS_CATEGORY,				//5
+															   "i."+ImageContract.Columns.IS_ADD_TO_EXPR,			//6
+															   "i."+ImageContract.Columns.IS_ADD_TO_CAT_LIST,		//7
+														       "i."+ImageContract.Columns.MODIFIED,					//8
+															   "i."+ImageContract.Columns.TIME_USED};				//9
 	
 	private OnItemLongClickListener ilcL = new OnItemLongClickListener(){
 		@Override
@@ -255,31 +258,51 @@ public class ImageGridFragment extends Fragment implements LoaderCallbacks<Curso
 		}
 	};
 	
+	
+	
+	
+	/*
+	 *  														"i."+ImageContract.Columns._ID,						//0
+															   "i."+ImageContract.Columns.FILENAME,					//1
+															   "i."+ImageContract.Columns.DESC,						//2
+															   "i."+ImageContract.Columns.TTS_M,					//3
+															   "i."+ImageContract.Columns.TTS_F,					//4
+															   "i."+ImageContract.Columns.IS_CATEGORY,				//5
+															   "i."+ImageContract.Columns.IS_ADD_TO_EXPR,			//6
+															   "i."+ImageContract.Columns.IS_ADD_TO_CAT_LIST,		//7
+														       "i."+ImageContract.Columns.MODIFIED,					//8
+															   "i."+ImageContract.Columns.TIME_USED};				//9
+	 */
 	private OnItemClickListener mOnItemClickListener = new OnItemClickListener() {
 		@Override
 		public void onItemClick(AdapterView<?> parent, final  View thumbView, int position, long id) {
 			Cursor c = (Cursor) adapter.getItem(position);	
-			ImageObject img_object= new ImageObject();
+			ImageObject img_object= new ImageObject(c.getString(1), c.getString(2), c.getString(3), c.getString(4), c.getInt(5), c.getInt(6), c.getInt(7));
+			img_object.setTimes_used(c.getLong(9));
+			img_object.setId(c.getLong(0));
+			/*
 			img_object.setId(c.getLong(c.getColumnIndex(ImageContract.Columns._ID)));
 			img_object.setImageName(c.getString(c.getColumnIndex(ImageContract.Columns.FILENAME)));
 			img_object.setDescription( c.getString(c.getColumnIndex(ImageContract.Columns.DESC)));
-			img_object.setCategory(c.getString(c.getColumnIndex(ImageContract.Columns.CATEGORY)));
+			img_object.setCategory(c.getString(c.getColumnIndex(ImageContract.Columns.IS_CATEGORY)));
 			img_object.setTimes_used(c.getLong(c.getColumnIndex(ImageContract.Columns.TIME_USED)));
-			img_object.setIsContextualCategory(c.getInt(c.getColumnIndex(ImageContract.Columns.IS_CONTEXTUAL_CATEGORY)));
-							
-			if(img_object.getCategory() == null || img_object.getCategory().isEmpty())
+			img_object.setIsContextualCategory(c.getInt(c.getColumnIndex(ImageContract.Columns.IS_ADD_TO_EXPR)));
+			 */			
+			
+			
+			if(img_object.isAddToExpr() == 1 && img_object.isCategory() == 0)	// symbol
 				executingActivity.addImageToAdapter(img_object);
 			
 			if (mCurrentAnimator != null) {
 			       mCurrentAnimator.cancel();
 			   }
-			String category = img_object.getCategory();
-			if(category!=null){
+
+			if(img_object.isCategory() == 1){								// kategoria
 				Long l = c.getLong(c.getColumnIndex(ImageContract.Columns._ID));
 				executingActivity.replaceCategory(l, position, true);
 				ActionBar actionBar = executingActivity.getActionBar();
-				actionBar.setTitle(category);
-				if(img_object.getIsContextualCategory() == 1){
+				actionBar.setTitle(img_object.getDescription());
+				if(img_object.isAddToExpr() == 1){
 					executingActivity.addImageToAdapter(img_object);
 				}
 				
@@ -422,7 +445,7 @@ public class ImageGridFragment extends Fragment implements LoaderCallbacks<Curso
 		Cursor c = null;
 		for(Long l : selected_images_ids){
 			Uri uri = Uri.parse(ImageContract.CONTENT_URI + "/" + l);
-			c =getActivity().getContentResolver().query(uri, new String[]{ImageContract.Columns.DESC, ImageContract.Columns.CATEGORY}, null, null, null);
+			c =getActivity().getContentResolver().query(uri, new String[]{ImageContract.Columns.DESC, ImageContract.Columns.IS_CATEGORY}, null, null, null);
 			if(c!= null){
 				c.moveToFirst();
 				if(c.getString(1) != null)
@@ -431,7 +454,7 @@ public class ImageGridFragment extends Fragment implements LoaderCallbacks<Curso
 			
 			if(!isCategory){
 				ContentValues cv = new ContentValues();
-				cv.put(ImageContract.Columns.CATEGORY, c.getString(0));
+				cv.put(ImageContract.Columns.IS_CATEGORY, true);
 				getActivity().getContentResolver().update(uri, cv, null, null);
 				
 			}
@@ -457,12 +480,10 @@ public class ImageGridFragment extends Fragment implements LoaderCallbacks<Curso
 			Uri uri = Uri.parse(ImageContract.CONTENT_URI + "/" + l);
 			String categoryName = null;
 			
-			c =getActivity().getContentResolver().query(uri, new String[]{ImageContract.Columns.CATEGORY}, null, null, null);
+			c =getActivity().getContentResolver().query(uri, new String[]{ImageContract.Columns.IS_CATEGORY}, null, null, null);
 			if(c!= null){
 				c.moveToFirst();
-				categoryName = c.getString(0);
-				if(categoryName != null)
-					isCategory = true;
+				isCategory = (c.getInt(0) == 1) ? true : false;
 			}
 
 			if(isCategory){
@@ -491,7 +512,7 @@ public class ImageGridFragment extends Fragment implements LoaderCallbacks<Curso
 					
 					if(isCategoryEmpty){							// jeœli tak usuwam kategoriê ( ustawiam dla obrazka null w polu kategorii )
 						ContentValues cv = new ContentValues();
-						cv.put(ImageContract.Columns.CATEGORY, (Long)null);
+						cv.put(ImageContract.Columns.IS_CATEGORY, (Long)null);
 						Uri p_uri = Uri.parse(ImageContract.CONTENT_URI + "/" + l);
 						getActivity().getContentResolver().update(p_uri, cv, null, null);
 	
@@ -530,7 +551,7 @@ public class ImageGridFragment extends Fragment implements LoaderCallbacks<Curso
 		for(EdgeModel em : DFS.edges){
 			getActivity().getContentResolver().delete(ParentContract.CONTENT_URI, ParentContract.Columns.IMAGE_FK+" = ? AND "+ ParentContract.Columns.PARENT_FK+" = ? " , new String[]{String.valueOf(em.getChild()), String.valueOf(em.getParent()) });
 		   ContentValues cv = new ContentValues();
-			cv.put(ImageContract.Columns.CATEGORY, (Long)null);
+			cv.put(ImageContract.Columns.IS_CATEGORY, (Long)null);
 			// jeœli obrazki poddrzewa s¹ kategoriami to ustawiam na "null", ¿eby nie by³y widoczne w DrawerPane
 			Uri p_uri = Uri.parse(ImageContract.CONTENT_URI + "/" + em.getParent());
 			getActivity().getContentResolver().update(p_uri, cv, null, null);
