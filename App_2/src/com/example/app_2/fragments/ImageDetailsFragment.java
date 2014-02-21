@@ -14,6 +14,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
+import android.support.v4.content.CursorLoader;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -30,6 +31,7 @@ import com.example.app_2.App_2;
 import com.example.app_2.R;
 import com.example.app_2.activities.ImageDetailsActivity;
 import com.example.app_2.contentprovider.ImageContract;
+import com.example.app_2.contentprovider.ImagesOfParentContract;
 import com.example.app_2.contentprovider.ParentContract;
 import com.example.app_2.contentprovider.ParentsOfImageContract;
 import com.example.app_2.contentprovider.UserContract;
@@ -47,9 +49,9 @@ public class ImageDetailsFragment extends Fragment{
 	private EditText mTTSMaleET, mTTSFemaleET, mImgDescET;
 	private RadioButton mIsCategoryRB, mAddToExprRB, mAddToLlRB, mIsNOTCategoryRB, mNOTAddToExprRB, mNOTAddToLlRB;
 	private ImageView mImage;
-	private TextView mAddToLLInfo1;
-	private View mAddToLLInfo2;
-	private RadioGroup mAddToLLRG; 	
+	private TextView mAddToLLInfo1, mAddToExprInfo1, mCatListTV;
+	private View mAddToLLInfo2, mAddToExprInfo2;
+	private RadioGroup mAddToLLRG, mAddToExprRG; 	
 
 	//private Map<String, Long> categories_map;
 	List<String> list = new ArrayList<String>();
@@ -178,6 +180,9 @@ public class ImageDetailsFragment extends Fragment{
 
 
 	private void setImageParents(Long id){
+		
+		
+		/*
 		SymbolCategoriesByIdFragment scbif = new SymbolCategoriesByIdFragment();
 		Bundle args = new Bundle();
 		args.putLong("item_id",id);    
@@ -189,6 +194,21 @@ public class ImageDetailsFragment extends Fragment{
             ft.replace(R.id.cat_list_content_frame, scbif, IMAGE_LIST_FRAGMENT);
             ft.commit();
         }
+        */
+		
+		
+		
+		Uri uri = Uri.parse(ParentsOfImageContract.CONTENT_URI+"/"+String.valueOf(id));
+		Cursor c = executing_activity.getContentResolver().query(uri, new String[]{ImageContract.Columns.DESC}, null, null, null);
+		if(c != null){
+			c.moveToFirst();
+			while(!c.isAfterLast()){
+				mCatListTV.append(c.getString(0)+", ");
+				c.moveToNext();
+			}
+			c.close();
+		}
+		
 	}
 	
 	
@@ -289,8 +309,9 @@ public class ImageDetailsFragment extends Fragment{
 		}
 
 
-		if(executing_activity instanceof ImageDetailsActivity)
+		if(executing_activity instanceof ImageDetailsActivity){
 			executing_activity.finish();
+		}
 	}
 
 	
@@ -439,19 +460,34 @@ public class ImageDetailsFragment extends Fragment{
 		mAddToLLInfo1 = (TextView) view.findViewById(R.id.addToLLInfo1);
 		mAddToLLInfo2 = (View) view.findViewById(R.id.addToLLInfo2);
 		mAddToLLRG = (RadioGroup) view.findViewById(R.id.addToLL_RG);
+		
+		mAddToExprInfo1 = (TextView) view.findViewById(R.id.add_to_expr_info);
+		mAddToExprInfo2 = (View) view.findViewById(R.id.add_to_expr_info2);
+		mAddToExprRG = (RadioGroup) view.findViewById(R.id.add_to_expr_rb);
+		
+		mCatListTV = (TextView) view.findViewById(R.id.cat_list_tv);
 				
 		mIsCategoryRB.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
 			
 			@Override
 			public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-				if(isChecked){
+				if(isChecked){ // symbol jest kategori¹ 
 					mAddToLLInfo1.setVisibility(View.VISIBLE);
 					mAddToLLInfo2.setVisibility(View.VISIBLE);
 					mAddToLLRG.setVisibility(View.VISIBLE);
+					
+					mAddToExprInfo1.setVisibility(View.VISIBLE);
+					mAddToExprInfo2.setVisibility(View.VISIBLE);
+					mAddToExprRG.setVisibility(View.VISIBLE);
+					
 				}else{
 					mAddToLLInfo1.setVisibility(View.GONE);
 					mAddToLLInfo2.setVisibility(View.GONE);
 					mAddToLLRG.setVisibility(View.GONE);
+					
+					mAddToExprInfo1.setVisibility(View.GONE);
+					mAddToExprInfo2.setVisibility(View.GONE);
+					mAddToExprRG.setVisibility(View.GONE);
 				}
 			}
 		});

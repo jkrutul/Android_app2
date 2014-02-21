@@ -522,7 +522,12 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 		}
 			
 		
-		String[] projection = {"i."+ImageContract.Columns._ID, "i."+ImageContract.Columns.FILENAME, "i."+ImageContract.Columns.IS_CATEGORY, "i."+ImageContract.Columns.IS_ADD_TO_EXPR};
+		String[] projection = {
+								"i."+ImageContract.Columns._ID,				//0
+								"i."+ImageContract.Columns.FILENAME,		//1
+								"i."+ImageContract.Columns.IS_CATEGORY,		//2
+								"i."+ImageContract.Columns.IS_ADD_TO_EXPR	//3
+								};
 		String selection;
     	String[] selectionArgs = new String[1];
 
@@ -533,15 +538,17 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
         
         
         if(logged_user_id!=0){
-        	selection = "i."+ImageContract.Columns.IS_CATEGORY + "=? AND "+"i."+ImageContract.Columns.AUTHOR_FK+" = ? ";
-        	selectionArgs = new String[2];
+        	selection = "i."+ImageContract.Columns.IS_CATEGORY + "=? AND i."+ImageContract.Columns.AUTHOR_FK+" = ? AND i."+ImageContract.Columns.IS_ADD_TO_CAT_LIST+" =? ";
+        	selectionArgs = new String[3];
         	selectionArgs[0]="1";
-        	selectionArgs[0]= String.valueOf(logged_user_id);
+        	selectionArgs[1]= String.valueOf(logged_user_id);
+        	selectionArgs[2] ="1";
         }
         else{
-        	selection = "i."+ImageContract.Columns.IS_CATEGORY + "=?";
-        	selectionArgs = new String[1];
+        	selection = "i."+ImageContract.Columns.IS_CATEGORY + "=? AND i."+ImageContract.Columns.IS_ADD_TO_CAT_LIST+" =?";
+        	selectionArgs = new String[2];
         	selectionArgs[0]="1";
+        	selectionArgs[1]="1";
         }
         
         
@@ -654,45 +661,7 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 		
 		return false;
 	}
-	/*
-	public void replaceGridFragment(IdPositionModel replaceToCategory, boolean gotoPreviousFragment, boolean addPreviousToHistory){
-		igf = new ImageGridFragment();
-		Bundle args = new Bundle();	
-		Long repCatId = replaceToCategory.getCategoryId();
-		int repCatPos = replaceToCategory.getPosition();
-		
-		args.putLong("CATEGORY_ID", repCatId);
-		args.putInt("RET_POSITION", repCatPos);
-		
-		igf.setArguments(args);
-		IdPositionModel prevCat = actual_category_fk;
-		actual_category_fk = new IdPositionModel(repCatId, repCatPos);
-		
-		
 
-	     
-	    if(gotoPreviousFragment){
-			igf.setArguments(args);
-	    	fragmentsHistory.remove(fragmentsHistory.size()-1);
-			setActionBarTitleFromCategoryId(id_pos.getCategoryId());
-			final FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
-			ft.setCustomAnimations(android.R.anim.slide_in_left, android.R.anim.slide_out_right);//R.anim.slide_in_right, R.anim.slide_out_left);
-		    ft.replace(R.id.content_frame, igf, ImageGridActivity.GRID_FRAGMENT_TAG);
-		    ft.commit();	
-
-	    }
-	    else{
-			igf.setArguments(args);
-	    	if(addPreviousToHistory)
-	    		fragmentsHistory.add(prevCategoryFk);
-			final FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
-			ft.setCustomAnimations(R.anim.slide_in_right, R.anim.slide_out_left);
-		    ft.replace(R.id.content_frame, igf, ImageGridActivity.GRID_FRAGMENT_TAG);
-		    ft.commit();	
-	    }
-        
-	}
-	*/
 	
 	public void replaceCategory(Long categoryId, int position, boolean addPreviousToHistory){
 		actual_category_fk.setNextCatPosition(position);
@@ -742,10 +711,12 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 		
 		
 	}
+
 	
 	public void notifyCategoryAdapter(){
 		categoriesAdapter.notifyDataSetChanged();
 	}
+	
 	
 	private void setActionBarTitleFromCategoryId(Long category_id){
 		Uri uri = Uri.parse(ImageContract.CONTENT_URI+"/"+category_id);

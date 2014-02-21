@@ -62,7 +62,7 @@ import com.example.app_2.utils.DFS;
 import com.example.app_2.utils.ImageLoader;
 
 public class ImageListFragment extends ListFragment implements LoaderCallbacks<Cursor> {
-	SimpleCursorAdapter adapter;
+	public SimpleCursorAdapter adapter;
 	private EditText searchText;
 	private ListView listView;
 	private CheckBox onlyCategoriesCheckBox;

@@ -64,6 +64,7 @@ public class ImageEditActivity extends FragmentActivity{
     protected void onResume() {
     	super.onResume();
 		//getSupportLoaderManager().initLoader(0, null, (LoaderCallbacks<Cursor>)ilf);
+    	ilf.getLoaderManager().restartLoader(0, ilf.getArguments(), ilf);
     }
     
     @Override
@@ -204,5 +205,8 @@ public class ImageEditActivity extends FragmentActivity{
 
 			}
 		}
+
+
+
 		
 }

@@ -163,11 +163,11 @@ public class ImageGridFragment extends Fragment implements LoaderCallbacks<Curso
 				    mImageViewLayoutParams = new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT, mItemHeight);
 			        iv.setLayoutParams(mImageViewLayoutParams);
 			        String path  = Storage.getPathToScaledBitmap(filename, mItemHeight);  
-			        String category = cursor.getString(3);
-					boolean isCategory = (category != null  && !category.isEmpty() ) ? true : false; 
+			        int isCategory = cursor.getInt(5);
+					
 					ImageLoader.loadBitmap(path, iv, mItemHeight);
-					if(isCategory)
-						if(cursor.getInt(4) == 1)
+					if(isCategory == 1)
+						if(cursor.getInt(6) == 1)
 							//view.setBackgroundColor(Color.argb(120, 149,39,225));
 							view.setBackgroundColor(mCategoryBackgroundColor);
 						else
@@ -290,23 +290,22 @@ public class ImageGridFragment extends Fragment implements LoaderCallbacks<Curso
 			 */			
 			
 			
-			if(img_object.isAddToExpr() == 1 && img_object.isCategory() == 0)	// symbol
-				executingActivity.addImageToAdapter(img_object);
-			
-			if (mCurrentAnimator != null) {
-			       mCurrentAnimator.cancel();
-			   }
-
-			if(img_object.isCategory() == 1){								// kategoria
+			if(img_object.isCategory() == 1){ 							// jest kategori¹
+				if(img_object.isAddToExpr() == 1)						// dodawana do wyra¿enia
+					executingActivity.addImageToAdapter(img_object);
+				
 				Long l = c.getLong(c.getColumnIndex(ImageContract.Columns._ID));
 				executingActivity.replaceCategory(l, position, true);
 				ActionBar actionBar = executingActivity.getActionBar();
 				actionBar.setTitle(img_object.getDescription());
-				if(img_object.isAddToExpr() == 1){
-					executingActivity.addImageToAdapter(img_object);
-				}
 				
-			}				
+			}
+			else														// jest symbolem
+				executingActivity.addImageToAdapter(img_object);
+			
+			if (mCurrentAnimator != null) {
+			       mCurrentAnimator.cancel();
+			   }	
 	 }
 	};
 	
@@ -448,13 +447,13 @@ public class ImageGridFragment extends Fragment implements LoaderCallbacks<Curso
 			c =getActivity().getContentResolver().query(uri, new String[]{ImageContract.Columns.DESC, ImageContract.Columns.IS_CATEGORY}, null, null, null);
 			if(c!= null){
 				c.moveToFirst();
-				if(c.getString(1) != null)
+				if(c.getInt(1) != 0)
 					isCategory = true;
 			}
 			
 			if(!isCategory){
 				ContentValues cv = new ContentValues();
-				cv.put(ImageContract.Columns.IS_CATEGORY, true);
+				cv.put(ImageContract.Columns.IS_CATEGORY, 1);
 				getActivity().getContentResolver().update(uri, cv, null, null);
 				
 			}

@@ -58,7 +58,7 @@ public class Database {
 			ImageContract.Columns.TIME_USED+ " INTEGER DEFAULT 0 ,"+
 			ImageContract.Columns.LAST_USED+ " DATETIME, "+
 			ImageContract.Columns.IS_CATEGORY+ " INTEGER DEFAULT 0, "+
-			ImageContract.Columns.IS_ADD_TO_EXPR+ " INTEGER DEFAULT 0, "+
+			ImageContract.Columns.IS_ADD_TO_EXPR+ " INTEGER DEFAULT 1, "+
 			ImageContract.Columns.IS_ADD_TO_CAT_LIST+" INTEGER DEFAULT 0, "+
 			ImageContract.Columns.AUTHOR_FK+ " INTEGER "+
 	");";
