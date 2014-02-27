@@ -524,10 +524,12 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 		
 		String[] projection = {
 								"i."+ImageContract.Columns._ID,				//0
-								"i."+ImageContract.Columns.FILENAME,		//1
+								"i."+ImageContract.Columns.FILENAME,		//1	
 								"i."+ImageContract.Columns.IS_CATEGORY,		//2
-								"i."+ImageContract.Columns.IS_ADD_TO_EXPR	//3
+								"i."+ImageContract.Columns.IS_ADD_TO_EXPR,	//3
+								"i."+ImageContract.Columns.DESC	
 								};
+		
 		String selection;
     	String[] selectionArgs = new String[1];
 
@@ -569,6 +571,7 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 		String[] from = new String[] {
 				   ImageContract.Columns._ID, 
 				   ImageContract.Columns.FILENAME,
+				   ImageContract.Columns.DESC,
 				   ImageContract.Columns.IS_CATEGORY,
 				   ImageContract.Columns.IS_ADD_TO_EXPR};
 		int[] to = new int[] { 0, R.id.drawer_category_icon, R.id.category };
@@ -577,8 +580,8 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
     	categoriesAdapter.setViewBinder(new SimpleCursorAdapter.ViewBinder(){
 			   public boolean setViewValue(View view, Cursor cursor, int columnIndex){
 			       if(view.getId() == R.id.drawer_category_icon/*category_image*/){
-						String path = Storage.getPathToScaledBitmap(cursor.getString(1),50);
-						ImageLoader.loadBitmap(path, (ImageView) view, 50);
+						String path = Storage.getPathToScaledBitmap(cursor.getString(1),100);
+						ImageLoader.loadBitmap(path, (ImageView) view, 100);
 
 						if(cursor.getInt(3) == 1)
 							view.setBackgroundColor(mCatBColor);

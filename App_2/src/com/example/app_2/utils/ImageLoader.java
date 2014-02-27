@@ -68,7 +68,7 @@ public class ImageLoader {
 		if(ckm!=null && bitmap != null){
 			if (getBitmapFromMemCache(ckm) == null) {
 				mMemoryCache.put(ckm.getImgKey()+"_"+ckm.getImgSize(), bitmap);
-				Log.i(LOG_TAG, "cache < - " + ckm.getImgKey() + " : "+ ckm.getImgSize() );
+				//Log.i(LOG_TAG, "cache < - " + ckm.getImgKey() + " : "+ ckm.getImgSize() );
 			}
 		}else
 			Log.w(LOG_TAG, "key or bitmap is null");
@@ -99,7 +99,7 @@ public class ImageLoader {
 			//value = mMemoryCache.get(Utils.getFilenameFromPath(path));
 		}
 		if(value != null){
-			Log.i(LOG_TAG, "cache - > " + ckm.getImgKey() + " : "+ ckm.getImgSize() );
+			//Log.i(LOG_TAG, "cache - > " + ckm.getImgKey() + " : "+ ckm.getImgSize() );
 			imageView.setImageBitmap(value);
 		}else if(cancelPotentialWork(path, imageView)){
 			BitmapWorkerTask task = new BitmapWorkerTask(imageView, reqImgSize);

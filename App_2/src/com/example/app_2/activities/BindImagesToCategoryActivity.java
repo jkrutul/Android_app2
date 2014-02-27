@@ -3,6 +3,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedList;
 
 import android.app.ActionBar;
 import android.app.ActionBar.OnNavigationListener;
@@ -35,8 +36,8 @@ import com.example.app_2.utils.ImageLoader;
 
 public class BindImagesToCategoryActivity extends FragmentActivity implements OnNavigationListener{
 	static final String LOG_TAG = "BindImagesToCategory";
-	ImagesMultiselectFragment imf;
-	Long executing_category_id;
+	private ImagesMultiselectFragment imf;
+	private Long executing_category_id;
 	//Long logged_user_id;
 	private static SimpleDateFormat dateFormat;
 	private static Date date;
@@ -55,10 +56,7 @@ public class BindImagesToCategoryActivity extends FragmentActivity implements On
 		super.onCreate(bundle);
 		dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"); 
 		date = new Date();
-		
-		//SharedPreferences sharedPref = getSharedPreferences("USER",Context.MODE_PRIVATE);
-		//logged_user_id = sharedPref.getLong("logged_user_id", 0);
-		
+
 		getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
 		executing_category_id = ImageGridActivity.actual_category_fk.getCategoryId();	
 		setContentView(R.layout.activity_bind_images_to_category);
@@ -68,7 +66,7 @@ public class BindImagesToCategoryActivity extends FragmentActivity implements On
 		
 		Uri uri = Uri.parse(ImageContract.CONTENT_URI+"/"+executing_category_id);
 		
-		Cursor c = getContentResolver().query(uri, new String[]{ImageContract.Columns.FILENAME, ImageContract.Columns.IS_CATEGORY}, null, null, null);
+		Cursor c = getContentResolver().query(uri, new String[]{ImageContract.Columns.FILENAME, ImageContract.Columns.DESC}, null, null, null);
 		c.moveToFirst();
 		if(!c.isAfterLast()){
 			String path = Storage.getPathToScaledBitmap(c.getString(0), 150);
@@ -110,7 +108,7 @@ public class BindImagesToCategoryActivity extends FragmentActivity implements On
                 break;
             }
 
-            bindImagesToCategory(checked_list, true);  
+            bindImagesToCategory(checked_list,executing_category_id);  
             finish();
             break;
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            
@@ -122,49 +120,69 @@ public class BindImagesToCategoryActivity extends FragmentActivity implements On
 	}
 	
 	
-    private void bindImagesToCategory(ArrayList<Long> checked_list, boolean preventDuplicates){
-        boolean copy_images = true;
-        Long category_author = null, selected_items_author = null;
-   
-        Uri uri = Uri.parse(ImageContract.CONTENT_URI + "/"+ImageGridActivity.actual_category_fk.getCategoryId());                 // znaleŸenie autora kategorii do której dodawane bêd¹ obrazki
+	
+	
+	/**
+	 * Dodaje wi¹zania symboli do kategorii
+	 * @param checked_list - lista symboli/kategorii które zostan¹ dodane do kategorii. Nie mog¹ nale¿eæ do ró¿nych u¿ytkowników
+	 * @param category_id -  id kategorii do której zostan¹ dowi¹zane symbole
+	 */
+    private void bindImagesToCategory(ArrayList<Long> checked_list, Long category_id){
+        Long category_author = null;
+        
+        ArrayList<Long> ownCheckedSymbolsList = new ArrayList<Long>();
+        ArrayList<Long> someoneCheckedSymbolsList = new ArrayList<Long>();
+                 
+        Uri uri = Uri.parse(ImageContract.CONTENT_URI + "/"+category_id);                 								// znaleŸenie autora kategorii do której dodawane bêd¹ obrazki
         Cursor c = getContentResolver().query(uri, new String[]{"i."+ImageContract.Columns.AUTHOR_FK}, null,null, null);
         c.moveToFirst(); // TODO dodaæ else
         if(!c.isAfterLast())
             category_author = c.getLong(0);
         c.close();
+        																															//rozdzielenie obrazków na te do skopiowania 
         
-        uri = Uri.parse(ImageContract.CONTENT_URI + "/"+checked_list.get(0));                                    // znaleŸenie autora dodawanych obrazków
-        c = getContentResolver().query(uri, new String[]{"i."+ImageContract.Columns.AUTHOR_FK}, null, null, null);
-        c.moveToFirst();
-        if(!c.isAfterLast())
-            selected_items_author = c.getLong(0);
-        c.close();
         
-        copy_images = (category_author == selected_items_author) ? false : true;
-        ContentValues[] cvArray  = new ContentValues[checked_list.size()];
+        for(Long checked_item : checked_list){
+	        uri = Uri.parse(ImageContract.CONTENT_URI + "/"+checked_item);                                    																										
+	        c = getContentResolver().query(uri, new String[]{"i."+ImageContract.Columns.AUTHOR_FK}, null, null, null);
+	        c.moveToFirst();
+	        if(!c.isAfterLast()){
+	        	if(c.getLong(0) == category_author)							// symbol nale¿y do zbioru u¿ytkownika
+	        		ownCheckedSymbolsList.add(checked_item);
+	        	else
+	        		someoneCheckedSymbolsList.add(checked_item);
+	        }
+	        c.close();
+	        
+        }
+        	
+
+        //copy_images = (category_author == selected_items_author) ? false : true;
+        //ContentValues[] cvArray  = new ContentValues[checked_list.size()];
         
-        if(copy_images){            // obrazki nie nale¿¹ do tego samego u¿ytkownika - kopiujê obrazki
+        if(someoneCheckedSymbolsList.size()>0){            // obrazki nie nale¿¹ do tego samego u¿ytkownika - kopiujê obrazki
             String[] projection = {
-                        "i."+ImageContract.Columns._ID,
-                        "i."+ImageContract.Columns.FILENAME,
-                        "i."+ImageContract.Columns.DESC,
-                        "i."+ImageContract.Columns.IS_CATEGORY,
-                        "i."+ImageContract.Columns.IS_ADD_TO_EXPR};
+                        "i."+ImageContract.Columns._ID,						//0
+                        "i."+ImageContract.Columns.FILENAME,				//1
+                        "i."+ImageContract.Columns.DESC,					//2
+                        "i."+ImageContract.Columns.TTS_M,					//3
+                        "i."+ImageContract.Columns.TTS_F,					//4
+                        "i."+ImageContract.Columns.IS_CATEGORY,				//5
+                        "i."+ImageContract.Columns.IS_ADD_TO_EXPR};			//6
             
             
             ArrayList<Long>checked_category_list = new ArrayList<Long>();            // wydzielam kategorie do osobnej listy
-            for(Long checked_list_item : checked_list){
+            for(Long checked_list_item : someoneCheckedSymbolsList){
                 uri = Uri.parse(ImageContract.CONTENT_URI+"/"+checked_list_item);
                 c= getContentResolver().query(uri, new String[]{"i."+ImageContract.Columns._ID, "i."+ImageContract.Columns.IS_CATEGORY}, null, null, null);
                 c.moveToFirst();
                 if(!c.isAfterLast()){
-                    String category = c.getString(1);
-                    if(category != null && !category.isEmpty())
+                    if(c.getInt(1) == 1)
                         checked_category_list.add(c.getLong(0));
                 }
             }
                 
-            checked_list.removeAll(checked_category_list);
+            someoneCheckedSymbolsList.removeAll(checked_category_list);
             
             HashMap<Long,Long> copied = new HashMap<Long,Long>(); // key - id elementu kopiowanego, value - id nowego elementu
             
@@ -182,7 +200,7 @@ public class BindImagesToCategoryActivity extends FragmentActivity implements On
 	                        c = getContentResolver().query(uri, projection, null, null, null);
 	                        c.moveToFirst();
 	                        if(!c.isAfterLast()){
-	                            ContentValues img_cv = createImgContentValue( c.getString(1), c.getString(2), c.getInt(3), c.getInt(4), category_author);
+	                            ContentValues img_cv = createImgContentValue( c.getString(1), c.getString(2), c.getString(3), c.getString(4),c.getInt(5), c.getInt(6), category_author);
 	                            Uri inserted_image_uri = getContentResolver().insert(ImageContract.CONTENT_URI, img_cv);
 	                            copied.put(checked_category_id, Long.parseLong(inserted_image_uri.getLastPathSegment()));
 	                        }
@@ -203,7 +221,7 @@ public class BindImagesToCategoryActivity extends FragmentActivity implements On
 		                        c = getContentResolver().query(uri, projection, null, null, null);
 		                        c.moveToFirst();
 		                        if(!c.isAfterLast()){
-		                            ContentValues img_cv = createImgContentValue( c.getString(1), c.getString(2), c.getInt(3), c.getInt(4), category_author);
+		                            ContentValues img_cv = createImgContentValue( c.getString(1), c.getString(2), c.getString(3), c.getString(4),c.getInt(5), c.getInt(6), category_author);
 		                            Uri inserted_image_uri = getContentResolver().insert(ImageContract.CONTENT_URI, img_cv);
 		                            copied.put(parent, Long.parseLong(inserted_image_uri.getLastPathSegment()));
 		                        }
@@ -220,7 +238,7 @@ public class BindImagesToCategoryActivity extends FragmentActivity implements On
 		                        c = getContentResolver().query(uri, projection, null, null, null);
 		                        c.moveToFirst();
 		                        if(!c.isAfterLast()){
-		                            ContentValues img_cv = createImgContentValue( c.getString(1), c.getString(2), c.getInt(3), c.getInt(4), category_author );
+		                            ContentValues img_cv = createImgContentValue( c.getString(1), c.getString(2), c.getString(3), c.getString(4),c.getInt(5), c.getInt(6), category_author);
 		                            Uri inserted_image_uri = getContentResolver().insert(ImageContract.CONTENT_URI, img_cv);
 		                            copied.put(child, Long.parseLong(inserted_image_uri.getLastPathSegment()));
 		                        }
@@ -231,12 +249,12 @@ public class BindImagesToCategoryActivity extends FragmentActivity implements On
 	                }
 				}
                 // dodajê wi¹zanie nowo powsta³ego podgrafu do kategorii
-                getContentResolver().insert(ParentContract.CONTENT_URI, createParentContentValue(copied.get(checked_category_id), executing_category_id));
+                getContentResolver().insert(ParentContract.CONTENT_URI, createParentContentValue(copied.get(checked_category_id), category_id));
                 
             }
 
             // kopiuje pozosta³e liœcie    
-            for(Long checked_list_item : checked_list){
+            for(Long checked_list_item : someoneCheckedSymbolsList){
                 if(!copied.keySet().contains(checked_list_item)){
                 	Long childInUser =  checkIfImageAlreadyExistInUserSet(checked_list_item,category_author);
                     if(checked_list_item != childInUser)
@@ -246,7 +264,7 @@ public class BindImagesToCategoryActivity extends FragmentActivity implements On
 	                    c= getContentResolver().query(uri, projection, null, null, null);
 	                    c.moveToFirst();
 	                    if(!c.isAfterLast()){
-	                        ContentValues img_cv = createImgContentValue( c.getString(1), c.getString(2), c.getInt(3), c.getInt(4), category_author );
+	                        ContentValues img_cv = createImgContentValue( c.getString(1), c.getString(2), c.getString(3), c.getString(4),c.getInt(5), c.getInt(6), category_author);
 	                        if(c.getString(3) != null && !c.getString(3).isEmpty()){
 	                            Log.w(LOG_TAG, "obrazek jest kategori¹, a dodawany jako liœæ");                            
 	                        }
@@ -258,8 +276,8 @@ public class BindImagesToCategoryActivity extends FragmentActivity implements On
 	                        // dodanie wi¹zania na kategoriê do której kopiujê element
 	                        ContentValues parent_cv = new ContentValues();
 	                        parent_cv.put(ParentContract.Columns.IMAGE_FK, inserted_image_uri.getLastPathSegment());
-	                        parent_cv.put(ParentContract.Columns.PARENT_FK, executing_category_id);
-	                        getContentResolver().insert(ParentContract.CONTENT_URI, createParentContentValue(Long.parseLong(inserted_image_uri.getLastPathSegment()), executing_category_id));
+	                        parent_cv.put(ParentContract.Columns.PARENT_FK, category_id);
+	                        getContentResolver().insert(ParentContract.CONTENT_URI, createParentContentValue(Long.parseLong(inserted_image_uri.getLastPathSegment()), category_id));
 	                    }                     	
                     }
                 }
@@ -268,12 +286,18 @@ public class BindImagesToCategoryActivity extends FragmentActivity implements On
             for(Long newCopiedId : copied.values())			// dodajê wi¹zanie na s³ownik
                 getContentResolver().insert(ParentContract.CONTENT_URI, createParentContentValue(newCopiedId, Database.getMainDictFk()));
             
-        }else{ // obrazki nale¿¹ do tego samego u¿ytkownika co kategoria - dodajê jedynie wiazania
+        }
+        
+        
+        
+        
+        if(ownCheckedSymbolsList.size()>0){ // obrazki nale¿¹ do tego samego u¿ytkownika co kategoria - dodajê jedynie wiazania
             int i =0;
-            for(Long image_fk :checked_list){
+            ContentValues[] cvArray  = new ContentValues[ownCheckedSymbolsList.size()];
+            for(Long image_fk :ownCheckedSymbolsList){
                 ContentValues cv = new ContentValues();
                 cv.put(ParentContract.Columns.IMAGE_FK, image_fk);
-                cv.put(ParentContract.Columns.PARENT_FK, executing_category_id);
+                cv.put(ParentContract.Columns.PARENT_FK, category_id);
                 cvArray[i++] = cv;
             }
             getContentResolver().bulkInsert(ParentContract.CONTENT_URI, cvArray);
@@ -289,19 +313,88 @@ public class BindImagesToCategoryActivity extends FragmentActivity implements On
      */
     private Long checkIfImageAlreadyExistInUserSet(Long img_id, Long user_id){
         Uri uri = Uri.parse(ImageContract.CONTENT_URI + "/" + img_id);
-        String[] projection = {"i."+ImageContract.Columns.FILENAME, "i."+ImageContract.Columns.DESC};
-        String description = null, filename = null;
+        String[] projection = {
+					        "i."+ImageContract.Columns.FILENAME,				//0
+					        "i."+ImageContract.Columns.DESC,					//1
+					        "i."+ImageContract.Columns.TTS_M,					//2
+					        "i."+ImageContract.Columns.TTS_F,					//3
+					        "i."+ImageContract.Columns.IS_CATEGORY,				//4
+					        "i."+ImageContract.Columns.IS_ADD_TO_EXPR			//5
+					        };	
+        
+        String description = null, filename = null, tts_m = null, tts_f = null;
+        int isCategory = 0, isAddToExpr = 0;
+        
         Cursor c = getContentResolver().query(uri, projection , null, null, null);        // pobieram wartoœci kopiowanego obrazka
         c.moveToFirst();
         if(!c.isAfterLast()){
-            description = c.getString(1);
             filename = c.getString(0);
+            description = c.getString(1);
+            tts_m = c.getString(2);
+            tts_f = c.getString(3);
+            isCategory = c.getInt(4);
+            isAddToExpr = c.getInt(5);
         }
         c.close();
         
-        if(filename != null && description != null){
-	        String selection = "i."+ImageContract.Columns.FILENAME+" = ? AND " + "i."+ImageContract.Columns.DESC + " = ? AND " +"i."+ImageContract.Columns.AUTHOR_FK+" = ? ";    // sprawdzam czy u¿ytkownik posiada w swoim zbiorze obrazek o podanych wartoœciach
-	        String selectionArgs[] = {filename,description, Long.toString(user_id)};
+        LinkedList<String> selectArgs = new LinkedList<String>();
+        
+        /*
+	        String selection= "i."+ImageContract.Columns.FILENAME+" = ? AND " +					// sprawdzam czy u¿ytkownik posiada w swoim zbiorze obrazek o podanych wartoœciach
+	        					"i."+ImageContract.Columns.DESC + " = ? AND " +
+	        					"i."+ImageContract.Columns.TTS_M + " = ? AND " +
+	        					"i."+ImageContract.Columns.TTS_F + " = ? AND " +
+	        					"i."+ImageContract.Columns.IS_CATEGORY + " = ? AND " +
+	        					"i."+ImageContract.Columns.IS_ADD_TO_EXPR + " = ? AND " +
+	        					"i."+ImageContract.Columns.AUTHOR_FK+" = ? "; 
+	      */
+        
+        String selection = new String();
+	        
+	        if(filename == null)
+	        	selection+="i."+ImageContract.Columns.FILENAME+" IS NULL ";
+	        else{
+	        	selection+="i."+ImageContract.Columns.FILENAME+" = ? ";
+	        	selectArgs.add(filename);
+	        }
+	        
+	        
+	        if(description == null)
+	        	selection+="AND i."+ImageContract.Columns.DESC +" IS NULL ";
+	        else{
+				selection+="AND i."+ImageContract.Columns.DESC + " = ? ";
+				selectArgs.add(description);
+	        }
+	        
+	        if(tts_m == null)
+	        	selection+="AND i."+ImageContract.Columns.TTS_M +" IS NULL ";
+	        else{
+				selection+="AND i."+ImageContract.Columns.TTS_M + " = ? ";
+				selectArgs.add(tts_m);
+	        }
+	        
+	        if(tts_f == null)
+	        	selection+="AND i."+ImageContract.Columns.TTS_F +" IS NULL ";
+	        else{
+				selection+="AND i."+ImageContract.Columns.TTS_F + " = ? ";
+				selectArgs.add(tts_f);
+	        }
+	        
+	        
+	        selection+=	"AND i."+ImageContract.Columns.IS_CATEGORY + " = ? " +
+						"AND i."+ImageContract.Columns.IS_ADD_TO_EXPR + " = ? " +
+						"AND i."+ImageContract.Columns.AUTHOR_FK+" = ? "; 
+	        
+	        selectArgs.add(Long.toString(isCategory));
+	        selectArgs.add(Long.toString(isAddToExpr));
+	        selectArgs.add(Long.toString(user_id));
+	        
+
+	        	
+	        String[] selectionArgs = selectArgs.toArray(new String[selectArgs.size()]);
+	        
+	        
+	        //String selectionArgs[] = {filename,description, tts_m, tts_f, Long.toString(isCategory), Integer.toString(isAddToExpr), Long.toString(user_id)};
 	        c= getContentResolver().query(ImageContract.CONTENT_URI, new String[]{"i."+ImageContract.Columns._ID}, selection, selectionArgs, null);
 	        c.moveToFirst();
 	        if(!c.isAfterLast()){
@@ -309,7 +402,6 @@ public class BindImagesToCategoryActivity extends FragmentActivity implements On
 	            Log.i(LOG_TAG, "filename: " +filename+" description: "+ description+ " already exists in user: "+user_id);
 	        }
 	        c.close();
-        }
         return img_id;
     }
 	
@@ -320,10 +412,13 @@ public class BindImagesToCategoryActivity extends FragmentActivity implements On
 		return bind_cv;
 	}
 	
-	private ContentValues createImgContentValue(String filename, String description, int iscategory, int is_contextual, Long author_fk){
+
+	private ContentValues createImgContentValue(String filename, String description, String tts_m, String tts_f, int iscategory, int is_contextual, Long author_fk){
 		ContentValues img_cv = new ContentValues();
 		img_cv.put(ImageContract.Columns.FILENAME, filename);
 		img_cv.put(ImageContract.Columns.DESC, description);
+		img_cv.put(ImageContract.Columns.TTS_M,tts_m);
+		img_cv.put(ImageContract.Columns.TTS_F, tts_f);
 		img_cv.put(ImageContract.Columns.IS_CATEGORY,	iscategory);
 		img_cv.put(ImageContract.Columns.IS_ADD_TO_EXPR, is_contextual);
 		img_cv.put(ImageContract.Columns.AUTHOR_FK, author_fk);

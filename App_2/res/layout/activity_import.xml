@@ -27,7 +27,7 @@
             android:text="Wybierz folder"
             android:textSize="15dp" />
     </LinearLayout>
-   
+   <!--  
     <LinearLayout
         android:id="@+id/user_chooser_layout"
         android:layout_width="match_parent"
@@ -51,13 +51,13 @@
 
 
     </LinearLayout>
-    
+    -->
     <TextView 
         android:id="@+id/info_textview"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Wybierz kategorię do których dodać obrazki:"
-        android:layout_below="@id/user_chooser_layout"
+        android:layout_below="@id/upper_layout"
         android:textSize="12dp"
         android:paddingTop="5dp"/>    
 

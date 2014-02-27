@@ -37,6 +37,7 @@ import android.widget.AdapterView.OnItemSelectedListener;
 
 import com.example.app_2.R;
 import com.example.app_2.contentprovider.UserContract;
+import com.example.app_2.fragments.ImagesMultiselectFragment;
 import com.example.app_2.fragments.ParentMultiselectFragment;
 import com.example.app_2.provider.Images;
 import com.example.app_2.provider.Images.ProcessBitmapsTask;
@@ -46,9 +47,9 @@ import com.example.app_2.storage.Database;
 import com.example.app_2.utils.Utils;
 
 public class AddImagesFromFolderActivity  extends FragmentActivity{
-	Button import_button;
-	EditText pathEditText;
-	Spinner user_spinner;
+	private Button import_button;
+	private EditText pathEditText;
+	private Spinner user_spinner;
 	
 	ArrayList<ImageSpinnerItem> items;
 	Long selected_user_id;
@@ -58,8 +59,9 @@ public class AddImagesFromFolderActivity  extends FragmentActivity{
 	public static final int PLEASE_WAIT_DIALOG = 1;
 	public static final int ADD_TO_DB_WAIT_DIALOG = 2;
 	public static ProgressDialog dialog;
-	Long import_to_parent_id, logged_user_id;
-	ParentMultiselectFragment pmf;
+	private Long logged_user_id;
+	//ParentMultiselectFragment pmf;
+	private ImagesMultiselectFragment imf;
 
 	ArrayList<ImageSpinnerItem> categoryItems;
 	ArrayList<ImageSpinnerItem> userItems;
@@ -94,19 +96,28 @@ public class AddImagesFromFolderActivity  extends FragmentActivity{
 			logged_user_id = null;
 		}
 		
-
+		//pmf = ParentMultiselectFragment.newInstance(logged_user_id);
 		
-        pmf = new ParentMultiselectFragment();
         
+        imf = new ImagesMultiselectFragment();
+        Bundle args = new Bundle();
+        if(logged_user_id!=null)
+        	args.putLong("category_id", logged_user_id);
+        
+        args.putBoolean("viewOnlyCategories", true);
+        args.putBoolean("viewUserRootCategories", true);
+        imf.setArguments(args);
+
     	final FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
-   	 	ft.replace(R.id.choose_list, pmf);
+   	 	ft.replace(R.id.choose_list, imf);
         ft.commit();
+
         
         
-        setUpUserSpinner();
+       // setUpUserSpinner();
 	}
 
-	
+	/*
 	private void setUpUserSpinner(){
 		user_spinner = (Spinner) findViewById(R.id.user_spinner);
 
@@ -171,6 +182,7 @@ public class AddImagesFromFolderActivity  extends FragmentActivity{
 			});
 		
 	}
+	*/
 	
 	public void showFileChooser(View view) {
 	    Intent intent = new Intent(Intent.ACTION_GET_CONTENT); 
@@ -228,7 +240,7 @@ public class AddImagesFromFolderActivity  extends FragmentActivity{
 							ProcessBitmapsTask processBitmapsTask = new ProcessBitmapsTask(a, selected_user_id);
 							ArrayList<String> lArgs = new ArrayList<String>();
 							lArgs.add(pathEditText.getText().toString());
-							for(Long l :  pmf.getCheckedItemIds())
+							for(Long l :  imf.getCheckedItemIds())
 								lArgs.add(String.valueOf(l));
 							processBitmapsTask.executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, lArgs);
 						}

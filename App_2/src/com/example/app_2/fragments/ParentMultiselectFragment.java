@@ -81,13 +81,20 @@ public class ParentMultiselectFragment extends ListFragment implements LoaderCal
 		//new ImageLoader(getActivity());
 		selectedItemsOnCreate = new ArrayList<Long>();
 		
+		String[] from = new String[] { 
+				ImageContract.Columns._ID,
+				ImageContract.Columns.FILENAME,
+				ImageContract.Columns.IS_CATEGORY,
+				ImageContract.Columns.DESC,
+				ImageContract.Columns.AUTHOR_FK
+				};
 		//String[] from = new String[] { ImageContract.Columns._ID,ImageContract.Columns.FILENAME, ImageContract.Columns.IS_CATEGORY, ImageCo};
 		int[] to = new int[] { 0, R.id.mc_icon,0, R.id.mc_text, R.id.mc_author}; 
 		
 
         
 		Cursor cursor = getActivity().getContentResolver().query(ImageContract.CONTENT_URI, projection, selection, selectionArgs, null);
-		adapter = new SimpleCursorAdapter( getActivity().getApplicationContext(),  R.layout.multiple_choice_item, cursor, projection, to, 0);
+		adapter = new SimpleCursorAdapter( getActivity().getApplicationContext(),  R.layout.multiple_choice_item, cursor, from, to, 0);
 		adapter.setViewBinder(new SimpleCursorAdapter.ViewBinder() {
 			public boolean setViewValue(View view, Cursor cursor,int columnIndex) {
 				if (view.getId() == R.id.mc_icon) {

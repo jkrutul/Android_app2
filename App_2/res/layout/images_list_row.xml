@@ -2,7 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/mc_layout"
     android:layout_width="match_parent"
-    android:layout_height="50dp"
+    android:layout_height="match_parent"
     android:layout_marginRight="10dp"
     android:orientation="horizontal"
     android:paddingBottom="5dp"
@@ -13,53 +13,92 @@
         android:layout_width="0dp"
         android:layout_height="match_parent"
         android:layout_weight="1"
+        android:focusable="false"
         android:gravity="left"
-        android:src="@drawable/ic_launcher"
-        android:focusable="false" />
+        android:src="@drawable/ic_launcher" />
 
     <LinearLayout
         android:layout_width="0dp"
         android:layout_height="match_parent"
+        android:layout_toRightOf="@id/mc_icon"
         android:layout_weight="3"
         android:orientation="vertical"
-       android:layout_toRightOf="@id/mc_icon" >
+        android:padding="4dp" >
 
         <TextView
             android:id="@+id/mc_text"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="1"
+            android:layout_weight="2"
             android:focusable="false"
-            android:gravity="left"
+            android:gravity="left|center"
             android:text="mc_text"
             android:textColor="@android:color/black"
-            android:textSize="12sp"
-            android:textStyle="bold|italic" />
+            android:textSize="20sp"
+            android:textStyle="bold" />
         
-        <TextView
-            android:id="@+id/mc_dfs"
+        
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="1"
-            android:focusable="false"
-            android:gravity="left"
-            android:text=""
-            android:textColor="@android:color/black"
-            android:textSize="12sp"
-            android:textStyle="bold|italic" />
-
-        <TextView
-            android:id="@+id/mc_author"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
             android:layout_toRightOf="@id/mc_icon"
-            android:focusable="false"
-            android:gravity="left"
-            android:text="author"
-            android:textColor="@android:color/black"
-            android:textSize="12sp"
-            android:textStyle="bold|italic" />
+            android:layout_weight="1" >
+
+            <TextView
+                android:id="@+id/mc_ttm"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:focusable="false"
+                android:gravity="left|center"
+                android:hint="TTM" 
+                android:textColor="@android:color/black"
+                android:textSize="12sp"
+                android:textStyle="bold|italic" />
+
+            <TextView
+                android:id="@+id/mc_ttf"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:focusable="false"
+                android:gravity="left|center"
+                android:hint="TTS"
+                android:textColor="@android:color/black"
+                android:textSize="12sp"
+                android:textStyle="bold|italic" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_toRightOf="@id/mc_icon"
+            android:layout_weight="1" >
+
+            <TextView
+                android:id="@+id/mc_used"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:focusable="false"
+                android:gravity="left|bottom"
+                android:hint="ile razy użyty" 
+                android:textColor="@android:color/black"
+                android:textSize="12sp"
+                android:textStyle="bold|italic" />
+
+            <TextView
+                android:id="@+id/mc_author"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:focusable="false"
+                android:gravity="right|bottom"
+                android:hint="właściciel"
+                android:textColor="@android:color/black"
+                android:textSize="12sp"
+                android:textStyle="bold|italic" />
+        </LinearLayout>
     </LinearLayout>
 
 </LinearLayout>

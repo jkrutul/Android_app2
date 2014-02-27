@@ -1,13 +1,11 @@
 package com.example.app_2.provider;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
-import android.R.string;
 import android.app.Activity;
 import android.content.ContentProviderOperation;
 import android.content.ContentProviderResult;
@@ -15,24 +13,22 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.OperationApplicationException;
 import android.content.SharedPreferences;
+import android.database.Cursor;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.hardware.Camera.Size;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.RemoteException;
 import android.util.Log;
 
 import com.example.app_2.App_2;
-import com.example.app_2.R;
 import com.example.app_2.activities.AddImagesFromFolderActivity;
 import com.example.app_2.activities.ImageGridActivity;
 import com.example.app_2.contentprovider.ImageContract;
 import com.example.app_2.contentprovider.ParentContract;
 import com.example.app_2.models.ImageObject;
+import com.example.app_2.models.UserAndCategoriesListModel;
 import com.example.app_2.storage.Database;
 import com.example.app_2.storage.Storage;
-import com.example.app_2.utils.BitmapCalc;
 import com.example.app_2.utils.ImageLoader;
 import com.example.app_2.utils.Utils;
 
@@ -106,13 +102,97 @@ public final class Images {
 		
 	}
 	
+	private static LinkedList<UserAndCategoriesListModel> groupCategoriesByUser(LinkedList<ImageObject> io){
+		LinkedList<UserAndCategoriesListModel> groupByUser = new LinkedList<UserAndCategoriesListModel>();
+		LinkedList<Long> users = new LinkedList<Long>();
+		
+				
+		for(ImageObject img_object : io){			
+			long author_fk= img_object.getAuthor_fk();
+
+			if(!users.contains(author_fk)){
+				users.add(author_fk);
+			}
+		}
+		
+		
+		for(Long user : users){
+			groupByUser.add(new UserAndCategoriesListModel(user));
+		}
+		
+		UserAndCategoriesListModel user_and_cats = null;
+		
+		for(ImageObject imageObject : io ){
+			long author_fk = imageObject.getAuthor_fk();
+			if(user_and_cats != null){
+				if( user_and_cats.getUser_fk() == author_fk)
+					user_and_cats.getCategories().add(imageObject.getId());			
+				
+				else
+					for(UserAndCategoriesListModel uaclm : groupByUser)
+						if(uaclm.getUser_fk() == author_fk){
+							user_and_cats = uaclm;
+							user_and_cats.getCategories().add(imageObject.getId());			
+							break;
+						}
+			}
+			else{
+				for(UserAndCategoriesListModel uaclm : groupByUser)
+					if(uaclm.getUser_fk() == author_fk){
+						user_and_cats = uaclm;
+						user_and_cats.getCategories().add(imageObject.getId());			
+						break;
+					}
+			}
+
+		}
+		return groupByUser;
+	}
 	
-	public static void addNewEntriesToImageTable(List<String> filenames, ArrayList<Long> categories, Long user_id){
+	private static LinkedList<ImageObject> getAutorsFromImageList(ArrayList<Long> symbol_ids){
+		LinkedList<ImageObject> ios = new LinkedList<ImageObject>();
+		Cursor c = null;
+		String[] projection = {"i."+ImageContract.Columns.AUTHOR_FK};
+		
+		for(Long symbolId : symbol_ids){
+			Uri uri = Uri.parse(ImageContract.CONTENT_URI+"/"+symbolId);
+
+			c = App_2.getAppContext().getContentResolver().query(uri, projection, null, null, null);
+			c.moveToFirst();
+			if(!c.isAfterLast()){
+				long authorId = c.getLong(0);
+				ImageObject io = new ImageObject();
+				io.setAuthor_fk(authorId);
+				io.setId(symbolId);
+				ios.add(io);
+			}
+			
+		}
+		
+		c.close();
+		return ios;
+	}
+	
+	
+	
+	
+	public static void addNewEntriesToImageTable(List<String> filenames, ArrayList<Long> categories){
+		
+		LinkedList<ImageObject> catAndUsers_ids = getAutorsFromImageList(categories);		//pobieram autorów ka¿dej z kategorii
+		
+		LinkedList<UserAndCategoriesListModel> groupByUser = groupCategoriesByUser(catAndUsers_ids);	//grupujê w listy kategorii dla ka¿dego autora
+		
+
+		
+		
+		
 		Database db = Database.getInstance(App_2.getAppContext());
 		db.open();
 		int cvSize = 0;
 		Long main_dict_id = db.getMainDictFk();
-		Long logged_user_id = null;
+		//Long logged_user_id = null;
+		/*
+		 * 
 		if(user_id != null){
 			logged_user_id = user_id;
 		}else{
@@ -121,7 +201,10 @@ public final class Images {
 			if(logged_user_id == -1)
 				logged_user_id = null;
 		}
-
+		 
+		 */
+		
+		/*
 		if(categories!=null){
 			categories.add(main_dict_id);
 			cvSize = categories.size();
@@ -131,21 +214,74 @@ public final class Images {
 			categories.add(main_dict_id);
 			cvSize  = 1;
 		}
-		for(String filename: filenames){
-			Long inserted_id = db.insertImage(new ImageObject(filename, logged_user_id));
-			if(inserted_id!= -1){
-				ContentValues[] cvArray  = new ContentValues[cvSize];
-				int i =0;
-				for(Long category_fk :categories){
-					//category_fk = categories.get(i);
-					ContentValues cv = new ContentValues();
-					cv.put(ParentContract.Columns.IMAGE_FK, inserted_id);
-					cv.put(ParentContract.Columns.PARENT_FK, category_fk);
-					cvArray[i++] = cv;
+		
+		*/
+		
+		for(UserAndCategoriesListModel uc : groupByUser){					//dodanie s³ownika do list kategorii
+			LinkedList<Long> user_categories = uc.getCategories();			
+			user_categories.add(main_dict_id);
+			//cvSize += user_categories.size();
+		}
+		
+
+		
+
+		
+		for(UserAndCategoriesListModel uc : groupByUser){					//dodanie s³ownika do list kategorii
+			Long user_fk = uc.getUser_fk();
+			LinkedList<Long> user_categories  = uc.getCategories();
+			
+			for(String filename: filenames){
+				Long inserted_id = db.insertImage(new ImageObject(filename, user_fk));
+				
+				if(inserted_id!= -1){
+					ContentValues[] cvArray  = new ContentValues[user_categories.size()];
+					int i =0;
+					for(Long category_fk : user_categories){
+						ContentValues cv = new ContentValues();
+						cv.put(ParentContract.Columns.IMAGE_FK, inserted_id);
+						cv.put(ParentContract.Columns.PARENT_FK, category_fk);
+						cvArray[i++] = cv;
+					}
+					App_2.getAppContext().getContentResolver().bulkInsert(ParentContract.CONTENT_URI, cvArray);
 				}
-				App_2.getAppContext().getContentResolver().bulkInsert(ParentContract.CONTENT_URI, cvArray);
 			}
 		}
+		
+		/*
+		for(ImageObject io : catAndUsers_ids){
+			for(String filename : filenames){
+				Long inserted_id = db.insertImage(new ImageObject(filename, io.getAuthor_fk()));
+				if( inserted_id!=-1 ){
+					ContentValues cv = new ContentValues();
+					cv.put(ParentContract.Columns.IMAGE_FK, inserted_id);
+					cv.put(ParentContract.Columns.PARENT_FK, io.getId());
+					App_2.getAppContext().getContentResolver().insert(ParentContract.CONTENT_URI, cv);
+				}
+			}
+		}
+		*/
+		
+		/*
+		for(Long userId : users_ids){
+			for(String filename: filenames){
+				Long inserted_id = db.insertImage(new ImageObject(filename, userId));
+				if(inserted_id!= -1){
+					ContentValues[] cvArray  = new ContentValues[cvSize];
+					int i =0;
+					for(Long category_fk :categories){
+						//category_fk = categories.get(i);
+						ContentValues cv = new ContentValues();
+						cv.put(ParentContract.Columns.IMAGE_FK, inserted_id);
+						cv.put(ParentContract.Columns.PARENT_FK, category_fk);
+						cvArray[i++] = cv;
+					}
+					App_2.getAppContext().getContentResolver().bulkInsert(ParentContract.CONTENT_URI, cvArray);
+				}
+			}
+		}
+		*/
+
 		
 	}
 	
@@ -378,7 +514,7 @@ public final class Images {
 					break;
 
 			}
-			addNewEntriesToImageTable(uniqueFilenames, parents_fk ,this.user_id);
+			addNewEntriesToImageTable(uniqueFilenames, parents_fk);
 			return null;
 		}
 
@@ -417,7 +553,7 @@ public final class Images {
 			File image_file = new File(path_to_file);
 			uniqueFilenames.add(Storage.scaleAndSaveBitmapFromPath(image_file.getAbsolutePath(), Bitmap.CompressFormat.PNG,90,db, filenameVerification));
 			Log.i(LOG_TAG, "doInBackground");
-			addNewEntriesToImageTable(uniqueFilenames, null , null);
+			addNewEntriesToImageTable(uniqueFilenames, null);
 			return null;
 		}
 
@@ -480,7 +616,7 @@ public final class Images {
 			
 			
 			uniqueFilename.add(Storage.scaleAndSaveBitmapFromPath(path_toIMG, Bitmap.CompressFormat.PNG,100,db, filenameVerification));
-			addNewEntriesToImageTable(uniqueFilename, null ,null);
+			addNewEntriesToImageTable(uniqueFilename, null);
 			return null;
 		}
 	}

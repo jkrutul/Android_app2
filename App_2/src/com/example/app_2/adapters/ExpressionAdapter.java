@@ -20,7 +20,6 @@ import com.example.app_2.storage.Database;
 import com.example.app_2.storage.Storage;
 import com.example.app_2.utils.ImageLoader;
 import com.example.app_2.views.RecyclingImageView;
-import com.example.app_2.views.WordView;
 
 public class ExpressionAdapter extends BaseAdapter{
 	private boolean doubleBackToExitPressedOnce = false;

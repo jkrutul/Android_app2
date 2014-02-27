@@ -10,6 +10,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.database.Cursor;
+import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
@@ -57,6 +58,7 @@ public class UserLoginActivity extends Activity {
 		setContentView(R.layout.activity_user_login);
 		mSpinner = (Spinner) findViewById(R.id.user_select_spinner);
 		addItemsOnSpinner();
+		getActionBar().setBackgroundDrawable(new ColorDrawable(getResources().getColor(android.R.color.holo_green_light))); 
 		
 	}
 
@@ -93,10 +95,17 @@ public class UserLoginActivity extends Activity {
 			SharedPreferences.Editor editor = sharedPref.edit();
 			editor.putLong("logged_user_root", logged_user_root);
 			editor.putLong("logged_user_id", user_id);
+
 			editor.commit();
 			
 			Uri uri = Uri.parse(UserContract.CONTENT_URI + "/"	+ user_id);
-			Cursor c = getContentResolver().query(uri, new String[]{UserContract.Columns.FONT_SIZE, UserContract.Columns.IMG_SIZE, UserContract.Columns.CAT_BACKGROUND, UserContract.Columns.CONTEXT_CAT_BACKGROUND},null, null, null);
+			Cursor c = getContentResolver().query(uri, new String[]{
+					UserContract.Columns.FONT_SIZE,							//0
+					UserContract.Columns.IMG_SIZE,							//1
+					UserContract.Columns.CAT_BACKGROUND,					//2
+					UserContract.Columns.CONTEXT_CAT_BACKGROUND,			//3
+					UserContract.Columns.ISMALE								//4
+					},null, null, null);
 			c.moveToFirst();
 			if(!c.isAfterLast()){
 				SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this.getApplicationContext());
@@ -111,6 +120,8 @@ public class UserLoginActivity extends Activity {
 					e.putInt("category_view_background", Integer.valueOf(catColorValue));
 				if(ctxColorValue!=null)
 					e.putInt("context_category_view_background", Integer.valueOf(ctxColorValue));
+				
+				e.putInt("is_male", c.getInt(4));
 
 				e.commit();
 			}

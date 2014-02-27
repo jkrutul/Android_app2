@@ -3,6 +3,7 @@ package com.example.app_2.activities;
 import android.app.Activity;
 import android.content.Intent;
 import android.database.Cursor;
+import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
@@ -40,6 +41,7 @@ public class UsersActivity extends FragmentActivity implements LoaderCallbacks<C
 		setContentView(R.layout.activity_users);
 		lv = (ListView) findViewById(R.id.users_list_view);
 		empty = (TextView) findViewById(android.R.id.empty);
+		getActionBar().setBackgroundDrawable(new ColorDrawable(getResources().getColor(android.R.color.holo_orange_dark))); 
 		
 		
 		//new ImageLoader(this);

@@ -2,6 +2,7 @@ package com.example.app_2.fragments;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 
 import android.app.AlertDialog;
@@ -14,6 +15,7 @@ import android.database.Cursor;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.app.ListFragment;
@@ -69,6 +71,7 @@ public class ImageListFragment extends ListFragment implements LoaderCallbacks<C
 	private Spinner mSpinner;
 	private ArrayList<ImageSpinnerItem> items;
 	private Long selected_user_id = null;
+	private int mCategoryBackgroundColor, mContextCategoryBackgroundColor;
 	
 	private Long logged_user_id;
 	
@@ -77,8 +80,12 @@ public class ImageListFragment extends ListFragment implements LoaderCallbacks<C
 	private static final int DELETE_ID = Menu.FIRST + 1;
 	private static final int LOADER_ID = 0;
 	private static final String LOG_TAG = "ImageListFragment";
-	Long cat_id;
+	public Long cat_id;
 	
+	
+	public String sortOrder;
+	private boolean showOnlyCategories = false;
+	private String constraint;
 	
 	/*
 	String[] projection = { 
@@ -122,51 +129,26 @@ public class ImageListFragment extends ListFragment implements LoaderCallbacks<C
 			"i."+ImageContract.Columns.IS_CATEGORY,			//3
 			"i."+ImageContract.Columns.IS_ADD_TO_EXPR,		//4
 			"u."+UserContract.Columns.USERNAME,				//5
-			"i."+ImageContract.Columns.IS_ADD_TO_EXPR		//6
+			"i."+ImageContract.Columns.IS_ADD_TO_EXPR,		//6
+			"i."+ImageContract.Columns.TIME_USED,			//7
+			"i."+ImageContract.Columns.TTS_M,				//8
+			"i."+ImageContract.Columns.TTS_F					//9
 			 };			
 	
 	
-	/*
-	 * 									ImageContract.Columns._ID,					//0
-										ImageContract.Columns.FILENAME,				//1
-										ImageContract.Columns.DESC,					//2
-										ImageContract.Columns.IS_CATEGORY,			//3
-										ImageContract.Columns.IS_ADD_TO_EXPR,		//4
-										UserContract.Columns.USERNAME,				//5
-										ImageContract.Columns.IS_ADD_TO_EXPR		//6
-	 */
-	private String selection;
-	private String[] selectionArgs;
-	public String sortOrder;
-	
-	private boolean showOnlyCategories = false;
+
+
 			
 			
 	private TextWatcher filterTextWatcher= new TextWatcher(){
 		public void afterTextChanged(Editable s){}
 		public void beforeTextChanged(CharSequence s, int start, int count, int after){	}
-		public void onTextChanged(CharSequence s, int start, int before, int count){	adapter.getFilter().filter(s); }
+		public void onTextChanged(CharSequence s, int start, int before, int count){
+			constraint = s.toString();
+			getActivity().getSupportLoaderManager().restartLoader(LOADER_ID, null, lc);
+			}
 	};
 	
-	private FilterQueryProvider fqp = new FilterQueryProvider() {
-		@Override
-		public Cursor runQuery(CharSequence constraint){
-			Uri uri = Uri.parse(ImagesOfParentContract.CONTENT_URI+"/"+cat_id);
-			if(constraint != null && constraint.length()>0){
-				String partialItemName = constraint.toString()+"%";
-				String s = "(" + selection + " ) AND (i."+ImageContract.Columns.FILENAME+" LIKE ? OR i."+ImageContract.Columns.DESC+" LIKE ? )";// AND i."+ImageContract.Columns._ID+" <> "+executing_category_id;
-				String [] sArgs = new String[5];
-			    sArgs[0] = selectionArgs[0];
-			    sArgs[1] = selectionArgs[1];
-			    sArgs[2] = selectionArgs[2];
-			    sArgs[3] = partialItemName;
-			    sArgs[4] = partialItemName;			
-				return getActivity().getContentResolver().query(uri, projection, s, sArgs, null);
-			}else{
-				return getActivity().getContentResolver().query(uri, projection, selection, selectionArgs, null);
-			}
-		}
-	};
 	
 	LoaderCallbacks<Cursor> lc = (LoaderCallbacks<Cursor>)this;
 	
@@ -186,23 +168,8 @@ public class ImageListFragment extends ListFragment implements LoaderCallbacks<C
 		super.onCreate(savedInstanceState);
 		SharedPreferences sharedPref = getActivity().getApplicationContext().getSharedPreferences("USER",Context.MODE_PRIVATE);			// pobranie informacji o zalogowanym u¿ytkowniku
 		logged_user_id = sharedPref.getLong("logged_user_id", 0);
-		if(logged_user_id == 0)
-			logged_user_id = null;
 		
-		if(logged_user_id == null){
-			selection = "p."+ParentContract.Columns.PARENT_FK+" = ? " ;						// - obrazki które wskazuj¹ na s³ownik ( czyli wszystkie )
-			selectionArgs= new String[]{Long.toString(Database.getMainDictFk())	};
-		}else{
-		
-		selection = "p."+ParentContract.Columns.PARENT_FK+" = ? " 							// - obrazki które wskazuj¹ na s³ownik ( czyli wszystkie )
-				+ " AND i." + ImageContract.Columns.AUTHOR_FK + "= ? "; 					// - w³aœcicielem jest zalogowany u¿ytkownik
-	
-
-		selectionArgs= new String[]{Long.toString(Database.getMainDictFk()),
-								Long.toString(logged_user_id)
-								};
-		}
-										
+							
 	};
 	
 	@Override
@@ -217,6 +184,8 @@ public class ImageListFragment extends ListFragment implements LoaderCallbacks<C
 		addItemsOnUserSpinner();
 		return v;
 	};
+	
+
 	
 	private void addItemsOnUserSpinner(){
 		final LoaderCallbacks<Cursor> lc =  (LoaderCallbacks<Cursor>)this;
@@ -253,7 +222,7 @@ public class ImageListFragment extends ListFragment implements LoaderCallbacks<C
 		}
 
 		mSpinner.setOnItemSelectedListener(new OnItemSelectedListener() {
-			Bundle bundle = new Bundle();
+			//Bundle bundle = new Bundle();
 			
 			@Override
 			public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int position, long id) {
@@ -277,8 +246,10 @@ public class ImageListFragment extends ListFragment implements LoaderCallbacks<C
 			
 			@Override
 			public void onNothingSelected(AdapterView<?> parentView) {
+				selected_user_id = null;
 				//bundle.putLong("SELECTED_USER_ID", logged_user);
 				//a.getSupportLoaderManager().restartLoader(0, bundle, lc);
+				a.getSupportLoaderManager().restartLoader(0, null, lc);
 			}
 
 		});
@@ -290,7 +261,10 @@ public class ImageListFragment extends ListFragment implements LoaderCallbacks<C
 		super.onActivityCreated(savedInstanceState);
 		//new ImageLoader(getActivity());
 
-
+		SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(getActivity());
+		mCategoryBackgroundColor =sharedPref.getInt("category_view_background", 0xff33b5e5);
+		mContextCategoryBackgroundColor =sharedPref.getInt("context_category_view_background",0xffe446ff);
+		
 		String[] from = new String[] {	
 										ImageContract.Columns._ID,					//0
 										ImageContract.Columns.FILENAME,				//1
@@ -298,13 +272,26 @@ public class ImageListFragment extends ListFragment implements LoaderCallbacks<C
 										ImageContract.Columns.IS_CATEGORY,			//3
 										ImageContract.Columns.IS_ADD_TO_EXPR,		//4
 										UserContract.Columns.USERNAME,				//5
-										ImageContract.Columns.IS_ADD_TO_EXPR		//6
+										ImageContract.Columns.IS_ADD_TO_EXPR,		//6
+										ImageContract.Columns.TIME_USED,			//7
+										ImageContract.Columns.TTS_M,				//8
+										ImageContract.Columns.TTS_F					//9
 									};
 		
-		int[] to = new int[] { 0, R.id.mc_icon, R.id.mc_text, R.id.mc_dfs, R.id.mc_author, 0 }; 
+		int[] to = new int[] { 0,					//0
+								R.id.mc_icon,		//1
+								R.id.mc_text, 		//2
+								0,					//3
+								0,					//4
+								R.id.mc_author,		//5
+								0,					//6
+								R.id.mc_used,
+								R.id.mc_ttm,
+								R.id.mc_ttf								
+								}; 
 		
 		adapter = new SimpleCursorAdapter( getActivity().getApplicationContext(), R.layout.images_list_row, null, from, to, 0);
-		adapter.setFilterQueryProvider(fqp);
+		//adapter.setFilterQueryProvider(fqp);
 		adapter.setViewBinder(new SimpleCursorAdapter.ViewBinder() {
 			public boolean setViewValue(View view, Cursor cursor,int columnIndex) {
 				Long img_id = cursor.getLong(0);
@@ -316,17 +303,18 @@ public class ImageListFragment extends ListFragment implements LoaderCallbacks<C
 				switch (view.getId()) {
 				case R.id.mc_icon:
 					ImageLoader.loadBitmap(path, (ImageView) view,100);
-					LinearLayout ll = (LinearLayout)view.getParent();
+					//LinearLayout ll = (LinearLayout)view.getParent();
 					if(isCategory){				
 						if(cursor.getInt(4) == 1)
-							ll.setBackgroundColor(Color.argb(120, 149,39,225));
+							view.setBackgroundColor(mContextCategoryBackgroundColor);
 						else
-							ll.setBackgroundColor(Color.argb(120, 0, 255, 0));
+							view.setBackgroundColor(mCategoryBackgroundColor);
 					}
 					else
-						ll.setBackgroundColor(Color.TRANSPARENT);
+						view.setBackgroundColor(Color.TRANSPARENT);
 					return true;
 				
+				/*	
 				case R.id.mc_dfs:
 					//TextView tv = (TextView) view;
 					//if(isCategory)
@@ -335,7 +323,7 @@ public class ImageListFragment extends ListFragment implements LoaderCallbacks<C
 					//	tv.setText("");
 						
 					return true;
-
+				*/
 				default:
 					return false;
 				}
@@ -420,18 +408,18 @@ public class ImageListFragment extends ListFragment implements LoaderCallbacks<C
 
 			// Check what fragment is currently shown, replace if needed.
 			ImageDetailsFragment details = (ImageDetailsFragment) getFragmentManager().findFragmentById(R.id.details);
-			ParentMultiselectFragment parents = (ParentMultiselectFragment) getFragmentManager().findFragmentById(R.id.parent_select);
+			//ParentMultiselectFragment parents = (ParentMultiselectFragment) getFragmentManager().findFragmentById(R.id.parent_select);
 			
 			if (details == null || details.getShownId() != id) {
 					// Make new fragment to show this selection.
 					details = ImageDetailsFragment.newInstance(id);
-					parents = ParentMultiselectFragment.newInstance(id);
+					//parents = ParentMultiselectFragment.newInstance(id);
 					// Execute a transaction, replacing any existing fragment
 					// with this one inside the frame.
 					FragmentTransaction ft = getFragmentManager().beginTransaction();
 					ft.replace(R.id.details, details);
 					ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
-					ft.replace(R.id.parent_select, parents);
+					//ft.replace(R.id.parent_select, parents);
 					ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
 					ft.commit();
 				
@@ -446,48 +434,55 @@ public class ImageListFragment extends ListFragment implements LoaderCallbacks<C
 		}
 	}
 
+	
+	//		---- L	O	A	D	E	R	----
 	@Override
 	public Loader<Cursor> onCreateLoader(int arg0, Bundle bundle) {
+		String selection = new String();
+		LinkedHashMap<String,String> selArgs = new LinkedHashMap<String, String>();
 		
-		/*
-		CursorLoader cursorLoader = null;
-		Uri uri ;
-		cat_id= Long.valueOf(-1);
+		selection = "p."+ParentContract.Columns.PARENT_FK+" = ? " ;							// - obrazki które wskazuj¹ na s³ownik ( czyli wszystkie )
+		selArgs.put("PARENT_FK", Long.toString(Database.getMainDictFk()));
 		
-		if(bundle!=null)
-			cat_id = bundle.getLong("cat_id");
-
-
-		uri = Uri.parse(ImagesOfParentContract.CONTENT_URI+"/"+cat_id);
-		cursorLoader = new CursorLoader(getActivity(),uri, projection, null, null, null);
-
-		return cursorLoader;
-		*/
-		
-		String sel = selection;
-		String selArgs[] = selectionArgs;
-
 		if(selected_user_id != null){
-			sel = "p."+ParentContract.Columns.PARENT_FK+" = ? " 							// - obrazki które wskazuj¹ na s³ownik ( czyli wszystkie )
-					+ " AND i." + ImageContract.Columns.AUTHOR_FK + "= ? "; 				// - w³aœcicielem jest zalogowany u¿ytkownik
-			selArgs= new String[]{ Long.toString(Database.getMainDictFk()), Long.toString(selected_user_id)	};
-		
-			if(showOnlyCategories){
-				sel += " AND ( " + ImageContract.Columns.IS_CATEGORY + "<> ? OR " + ImageContract.Columns.IS_CATEGORY + " IS NOT NULL )";
-				selArgs = new String[]{ selArgs[0], selArgs[1], ""};
-			}
-		}else{
-			sel = "p."+ParentContract.Columns.PARENT_FK+" = ? " ;							// - obrazki które wskazuj¹ na s³ownik ( czyli wszystkie )
-			selArgs= new String[]{ Long.toString(Database.getMainDictFk())	};
-		
-			if(showOnlyCategories){
-				sel += " AND ( " + ImageContract.Columns.IS_CATEGORY + "<> ? OR " + ImageContract.Columns.IS_CATEGORY + " IS NOT NULL )";
-				selArgs = new String[]{ selArgs[0], ""};
-			}	
+			selArgs.put("AUTHOR_FK", Long.toString(selected_user_id));
+			selection+= "AND i." + ImageContract.Columns.AUTHOR_FK + "= ? "; 					// - w³aœcicielem jest autor kategorii do której dodajemy obrazki
 		}
+		
+		
+		if(constraint!=null && !constraint.isEmpty()){
+			selection = "(" + selection + " ) " +
+				"AND (i."+ImageContract.Columns.FILENAME+" LIKE ?" +
+				" OR i."+ImageContract.Columns.DESC+" LIKE ?" +
+				" OR i."+ImageContract.Columns.TTS_M+" LIKE ?" +
+				" OR i."+ImageContract.Columns.TTS_F+" LIKE ?)";
+			
+			selArgs.put("FILENAME", constraint+"%");
+			selArgs.put("DESC", constraint+"%");
+			selArgs.put("TTS_M",  constraint+"%");
+			selArgs.put("TTS_F", constraint+"%"
+					);
+		}
+		
+		
 
-		CursorLoader cursorLoader = new CursorLoader(App_2.getAppContext(),	ImagesOfParentContract.CONTENT_URI, projection, sel, selArgs, sortOrder);
-		return cursorLoader;
+
+
+		
+		
+		
+		if(showOnlyCategories){
+			selection += " AND ( i." + ImageContract.Columns.IS_CATEGORY + "= ?)";
+			selArgs.put("SHOW_ONLY_CATEGORIES", "1");
+		}
+		
+		
+		String [] selectionArguments = selArgs.values().toArray(new String [selArgs.size()]);
+		//String [] selectionArguments = (String[]) selArgs.values().toArray();
+
+		CursorLoader cursorLoader = new CursorLoader(getActivity(),	ImagesOfParentContract.CONTENT_URI, projection, selection, selectionArguments, sortOrder);
+		return cursorLoader;	
+		
 	}
 
 	@Override
@@ -703,11 +698,12 @@ public class ImageListFragment extends ListFragment implements LoaderCallbacks<C
 	private boolean isCategory(Long l){
 		Uri uri = Uri.parse(ImageContract.CONTENT_URI + "/" + l);			
 		Cursor c =getActivity().getContentResolver().query(uri, new String[]{ImageContract.Columns.IS_CATEGORY}, null, null, null);
+		int isCategory;
 		if(c!= null){
 			c.moveToFirst();
-			String filename = c.getString(0);
+			isCategory = c.getInt(0);
 			c.close();
-			if(filename!= null)
+			if(isCategory == 1)
 				return true;
 		}
 		return false;

@@ -5,10 +5,13 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 
+import android.app.ActionBar;
 import android.app.AlertDialog;
+import android.app.ActionBar.OnNavigationListener;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentTransaction;
@@ -21,7 +24,11 @@ import android.view.WindowManager;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.example.app_2.App_2;
 import com.example.app_2.R;
+import com.example.app_2.actionbar.adapter.TitleNavigationAdapter;
+import com.example.app_2.actionbar.model.SpinnerNavItem;
+import com.example.app_2.contentprovider.ImageContract;
 import com.example.app_2.fragments.ImageDetailsFragment;
 import com.example.app_2.fragments.ImageListFragment;
 import com.example.app_2.spinner.model.ImageSpinnerItem;
@@ -29,10 +36,13 @@ import com.example.app_2.storage.Database;
 import com.example.app_2.storage.Storage;
 import com.example.app_2.utils.Utils;
 
-public class ImageEditActivity extends FragmentActivity{
+public class ImageEditActivity extends FragmentActivity implements OnNavigationListener{
 	private static ImageListFragment ilf;
 	//private Spinner mSpinner;
-	String newDbFilePath;
+    private ArrayList<SpinnerNavItem> navSpinner;
+    private TitleNavigationAdapter title_nav_adapter;
+    
+	private String newDbFilePath;
 	
 	ArrayList<ImageSpinnerItem> items;
 	private final static int TAKE_PIC_REQUEST = 86;
@@ -56,6 +66,18 @@ public class ImageEditActivity extends FragmentActivity{
             ft.replace(R.id.fcontainer, ilf, IMAGE_LIST_FRAGMENT);
             ft.commit();
         }
+        
+    	navSpinner = new ArrayList<SpinnerNavItem>();
+		navSpinner.add(new SpinnerNavItem("Alfabetycznie", R.drawable.sort_ascend));
+		navSpinner.add(new SpinnerNavItem("Ostatnio zmodyfikowane", R.drawable.clock));
+		navSpinner.add(new SpinnerNavItem("Najczêœciej u¿ywane", R.drawable.favourites));
+		
+		title_nav_adapter = new TitleNavigationAdapter(getApplicationContext(), navSpinner);
+		ActionBar actionBar = getActionBar();
+		actionBar.setListNavigationCallbacks(title_nav_adapter, this);
+		actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_LIST);
+
+		actionBar.setBackgroundDrawable(new ColorDrawable(getResources().getColor(android.R.color.holo_green_dark))); 
        
     }
     
@@ -64,13 +86,13 @@ public class ImageEditActivity extends FragmentActivity{
     protected void onResume() {
     	super.onResume();
 		//getSupportLoaderManager().initLoader(0, null, (LoaderCallbacks<Cursor>)ilf);
-    	ilf.getLoaderManager().restartLoader(0, ilf.getArguments(), ilf);
+    	//ilf.getLoaderManager().restartLoader(0, ilf.getArguments(), ilf);
     }
     
     @Override
     protected void onDestroy() {
     	super.onDestroy();
-    	ilf = null;
+    	//ilf = null;
     };
          
 	// Create the menu based on the XML defintion
@@ -204,6 +226,38 @@ public class ImageEditActivity extends FragmentActivity{
 				break;
 
 			}
+		}
+
+
+		@Override
+		public boolean onNavigationItemSelected(int itemPosition, long itemId) {
+
+			
+			if(ilf.isVisible()){
+				Bundle args = new Bundle();	
+				switch (itemPosition) {
+				
+				case 0: // alfabetycznie 
+					ilf.sortOrder = "i."+ImageContract.Columns.DESC + " COLLATE LOCALIZED ASC";			
+					ilf.getLoaderManager().restartLoader(0, null, (LoaderCallbacks<Cursor>) ilf);
+					break;
+				case 1: // ostatnio zmodyfikowane
+					ilf.sortOrder = "i."+ImageContract.Columns.MODIFIED + " DESC";
+					ilf.getLoaderManager().restartLoader(0, null, (LoaderCallbacks<Cursor>) ilf);
+					break;
+				case 2: // najczêœciej u¿ywane
+					ilf.sortOrder = "i."+ImageContract.Columns.TIME_USED + " DESC";
+					ilf.getLoaderManager().restartLoader(0, null, (LoaderCallbacks<Cursor>) ilf);
+					break;
+		
+				default:
+					break;
+				}
+			}
+			
+			
+		
+		return false;
 		}
 
 

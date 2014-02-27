@@ -64,7 +64,7 @@ public class MainActivity extends Activity {
 		ActionBar actionBar = getActionBar();
 		actionBar.setSubtitle("G³owne menu");
 		prefs = getSharedPreferences("com.example.app_2", MODE_PRIVATE);
-		Log.i("PREFS", "pref.getInt" + prefs.getInt("pref_img_size", 100));
+		//Log.i("PREFS", "pref.getInt" + prefs.getInt("pref_img_size", 100));
 		
 
 	}
@@ -81,10 +81,7 @@ public class MainActivity extends Activity {
 	        }
 	}
 	
-	@Override
-	protected void onDestroy() {
-		super.onDestroy();
-	}
+
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {

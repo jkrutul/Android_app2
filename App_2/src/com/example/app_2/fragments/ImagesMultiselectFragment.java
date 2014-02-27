@@ -2,12 +2,17 @@ package com.example.app_2.fragments;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.SortedMap;
+import java.util.TreeMap;
 
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.ListFragment;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
@@ -16,15 +21,15 @@ import android.support.v4.content.Loader;
 import android.support.v4.widget.SimpleCursorAdapter;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.util.Log;
 import android.util.SparseBooleanArray;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.CheckBox;
+import android.widget.CompoundButton.OnCheckedChangeListener;
+import android.widget.CompoundButton;
 import android.widget.EditText;
-import android.widget.FilterQueryProvider;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.Spinner;
@@ -42,69 +47,64 @@ import com.example.app_2.storage.Storage;
 import com.example.app_2.utils.DFS;
 import com.example.app_2.utils.ImageLoader;
 import com.example.app_2.widget.CheckableLinearLayout;
-import com.example.app_2.widget.InertCheckBox;
 
 public class ImagesMultiselectFragment extends ListFragment implements LoaderCallbacks<Cursor>{
 	private final static String LOG_TAG = "ImageMultiselectFragment";
 	private SimpleCursorAdapter adapter;
 	private ListView listView;
 	private EditText searchText;
-	private CheckBox onlyCategoriesCheckBox;
+	public CheckBox onlyCategoriesCheckBox;
 	private Spinner mSpinner;
-	ArrayList<ImageSpinnerItem> items;
-	ArrayList<Long> imagesInExecutingCategory = new ArrayList<Long>();
+	private ArrayList<ImageSpinnerItem> items;
+	private ArrayList<Long> imagesInExecutingCategory = new ArrayList<Long>();
+	private int mCategoryBackgroundColor, mContextCategoryBackgroundColor;
+
 		
 	int mCurCheckPosition = 0;
 	public static Long row_id;
 	private static final int LOADER_ID = 32;
-	private ArrayList<Long> selectedItemsOnCreate;
-	private Long cat_id;
-	private Long selected_user_id = null;
 
+	private Long selected_user_id = null;
+	boolean viewOnlyCategories = false; 
+	boolean viewUserRootCategories = false;
 
 	private Long executing_category_id;
 	private Long executing_category_author;
 	
-	private String[] projection = new String[] { "i."+ImageContract.Columns._ID,
+	private String[] projection = new String[] { 
+			"i."+ImageContract.Columns._ID,
 			 "i."+ImageContract.Columns.FILENAME,
 			 "i."+ImageContract.Columns.DESC,
 			 "i."+ImageContract.Columns.IS_CATEGORY,
+			 "i."+ImageContract.Columns.IS_ADD_TO_EXPR,
 			 "u."+UserContract.Columns.USERNAME};
-	private String selection;
-	private String[] selectionArgs;
+
 	public String sortOrder;
-	
 	private boolean showOnlyCategories = false;
+	private String constraint;
 			
 			
 	private TextWatcher filterTextWatcher= new TextWatcher(){
 		public void afterTextChanged(Editable s){}
 		public void beforeTextChanged(CharSequence s, int start, int count, int after){	}
-		public void onTextChanged(CharSequence s, int start, int before, int count){	adapter.getFilter().filter(s); }
-	};
-	
-	private FilterQueryProvider fqp = new FilterQueryProvider() {
-		@Override
-		public Cursor runQuery(CharSequence constraint){
-			Log.d( LOG_TAG," runQuery constraint:"+constraint);
-			Uri uri = Uri.parse(ImagesOfParentContract.CONTENT_URI+"/"+cat_id);
-			if(constraint != null && constraint.length()>0){
-				String partialItemName = constraint.toString()+"%";
-				String s = "(" + selection + " ) AND (i."+ImageContract.Columns.FILENAME+" LIKE ? OR i."+ImageContract.Columns.DESC+" LIKE ? )";// AND i."+ImageContract.Columns._ID+" <> "+executing_category_id;
-				String [] sArgs = new String[5];
-			    sArgs[0] = selectionArgs[0];
-			    sArgs[1] = selectionArgs[1];
-			    sArgs[2] = selectionArgs[2];
-			    sArgs[3] = partialItemName;
-			    sArgs[4] = partialItemName;			
-				return getActivity().getContentResolver().query(uri, projection, s, sArgs, null);
-			}else{
-				return getActivity().getContentResolver().query(uri, projection, selection, selectionArgs, null);
+		public void onTextChanged(CharSequence s, int start, int before, int count){
+			constraint = s.toString();
+			getActivity().getSupportLoaderManager().restartLoader(LOADER_ID, null, lc);
+			//adapter.getFilter().filter(s); 
 			}
+	};
+
+	LoaderCallbacks<Cursor> lc = (LoaderCallbacks<Cursor>)this;
+	
+	private OnCheckedChangeListener cb_checkChangeListener = new OnCheckedChangeListener() {
+		
+		@Override
+		public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+			showOnlyCategories = isChecked;
+			getActivity().getSupportLoaderManager().restartLoader(LOADER_ID, null, lc);
+			
 		}
 	};
-	
-	LoaderCallbacks<Cursor> lc = (LoaderCallbacks<Cursor>)this;
 	
 	private OnClickListener cb_clickListener = new OnClickListener() {
 
@@ -122,18 +122,20 @@ public class ImagesMultiselectFragment extends ListFragment implements LoaderCal
 		super.onCreate(bundle);
 		
 	    Bundle args = getArguments();
-		executing_category_id = (args!=null) ? 	args.getLong("category_id") : null;
+	    if(args!=null){
+			executing_category_id = args.getLong("category_id");
+			viewOnlyCategories = args.getBoolean("viewOnlyCategories");
+			viewUserRootCategories = args.getBoolean("viewUserRootCategories");
+	    }
+	    
+
+		
+
 		executing_category_author = getCategoryAuthor(executing_category_id);
 		
-																							// SELECT:
-		selection = "p."+ParentContract.Columns.PARENT_FK+" = ? " 							// - obrazki które wskazuj¹ na s³ownik ( czyli wszystkie )
-					+ " AND i." + ImageContract.Columns.AUTHOR_FK + "= ? " 					// - w³aœcicielem jest autor kategorii do której dodajemy obrazki
-					+ " AND i." + ImageContract.Columns._ID + "<> ? ";						// - usuñ mo¿liwoœæ tworzenia pêtli prostych na kategori¹ z której wywo³ujemy dodawanie obrazka
-	
-		selectionArgs= new String[]{Long.toString(Database.getMainDictFk()),
-									Long.toString(executing_category_author),
-									Long.toString(executing_category_id) 
-									};
+		
+		
+
 		
 		getImageIdsFromCategory(executing_category_id);										// pobieram listê obrazków bêd¹cych ju¿ w kategorii
 		
@@ -147,8 +149,15 @@ public class ImagesMultiselectFragment extends ListFragment implements LoaderCal
 		searchText.addTextChangedListener(filterTextWatcher);
 		mSpinner = (Spinner) v.findViewById(R.id.user_select_spinner);
 		onlyCategoriesCheckBox = (CheckBox) v.findViewById(R.id.show_only_categories_cb);
-		onlyCategoriesCheckBox.setOnClickListener(cb_clickListener);
-
+		onlyCategoriesCheckBox.setOnCheckedChangeListener(cb_checkChangeListener);
+		if(viewOnlyCategories){
+			onlyCategoriesCheckBox.setChecked(true);
+			onlyCategoriesCheckBox.setEnabled(false);
+			
+			//onlyCategoriesCheckBox.setVisibility(View.INVISIBLE);
+		}
+		
+		
 		addItemsOnUserSpinner();
 		return v;
 	};
@@ -156,11 +165,20 @@ public class ImagesMultiselectFragment extends ListFragment implements LoaderCal
 	@Override
 	public void onActivityCreated(Bundle savedInstanceState) {
 		super.onActivityCreated(savedInstanceState);
-		//new ImageLoader(getActivity());
-		selectedItemsOnCreate = new ArrayList<Long>();
+		SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(getActivity());
+		mCategoryBackgroundColor =sharedPref.getInt("category_view_background", 0xff33b5e5);
+		mContextCategoryBackgroundColor =sharedPref.getInt("context_category_view_background",0xffe446ff);
+
 		
-		String[] from = new String[] {ImageContract.Columns._ID,  ImageContract.Columns.FILENAME,  ImageContract.Columns.DESC,  ImageContract.Columns.IS_CATEGORY, UserContract.Columns.USERNAME};
-		int[] to = new int[] {0, R.id.mc_icon, R.id.mc_text, R.id.mc_info, R.id.mc_author }; 
+		String[] from = new String[] {
+				ImageContract.Columns._ID,
+				ImageContract.Columns.FILENAME,
+				ImageContract.Columns.DESC,
+				ImageContract.Columns.IS_CATEGORY,
+				ImageContract.Columns.IS_ADD_TO_EXPR,
+				UserContract.Columns.USERNAME
+				};
+		int[] to = new int[] {0, R.id.mc_icon, R.id.mc_text, R.id.mc_info, 0,R.id.mc_author }; 
 		
 		listView = getListView();
 		adapter = new SimpleCursorAdapter( getActivity().getApplicationContext(), R.layout.multiple_choice_item, null, from, to, 0);
@@ -168,24 +186,27 @@ public class ImagesMultiselectFragment extends ListFragment implements LoaderCal
 		listView.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
 
 		
-		adapter.setFilterQueryProvider(fqp);
+		//adapter.setFilterQueryProvider(fqp);
 		adapter.setViewBinder(new SimpleCursorAdapter.ViewBinder() {
 			public boolean setViewValue(View view, Cursor cursor,int columnIndex) {
 				Long img_id = cursor.getLong(0);
 				String path =  Storage.getPathToScaledBitmap(cursor.getString(1),100);
-				String category = cursor.getString(3);
-				boolean isCategory =  ( category != null && !category.isEmpty()) ? true : false;
+				int isCategory = cursor.getInt(3);
 				
 				switch (view.getId()) {
 				case R.id.mc_icon:
 					ImageLoader.loadBitmap(path, (ImageView) view,100);
-					CheckableLinearLayout cll = (CheckableLinearLayout)view.getParent();
-					if(isCategory)
-						cll.setBackgroundColor(Color.argb(120, 0, 255, 0));
-					else
-						cll.setBackgroundColor(Color.TRANSPARENT);
+					//CheckableLinearLayout cll = (CheckableLinearLayout)view.getParent();
+					if(isCategory==1){
+						int isAddToExpr = cursor.getInt(4);
+						if(isAddToExpr == 1)
+							view.setBackgroundColor(mContextCategoryBackgroundColor);
+						else
+							view.setBackgroundColor(mCategoryBackgroundColor);
+					}else
+						view.setBackgroundColor(Color.TRANSPARENT);
 					return true;
-				
+				/*
 				case R.id.mc_dfs:
 					//TextView tv = (TextView) view;
 					//if(isCategory)
@@ -194,7 +215,7 @@ public class ImagesMultiselectFragment extends ListFragment implements LoaderCal
 					//	tv.setText("");
 						
 					return true;
-					
+					*/
 					
 				case R.id.mc_info:
 					TextView tv = (TextView) view;
@@ -240,7 +261,8 @@ public class ImagesMultiselectFragment extends ListFragment implements LoaderCal
 		final FragmentActivity a = getActivity();
 
 		items =  new ArrayList<ImageSpinnerItem>();
-
+		items.add(new ImageSpinnerItem(null,"Wszyscy u¿ytkownicy", null, true));
+		
 		String[] projection = {UserContract.Columns._ID, UserContract.Columns.IMG_FILENAME, UserContract.Columns.USERNAME };
 	
 		Cursor c = a.getContentResolver().query(UserContract.CONTENT_URI, projection, null, null, null);
@@ -254,22 +276,22 @@ public class ImagesMultiselectFragment extends ListFragment implements LoaderCal
 		ImageSpinnerAdapter mySpinnerAdapter = new ImageSpinnerAdapter(a, android.R.layout.simple_spinner_item, items);
 		mySpinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 		mSpinner.setAdapter(mySpinnerAdapter);
-		int logged_user_pos_in_spinner = 0;
+		int owner_pos_in_spinner = 0;
 
 		for(  ImageSpinnerItem item : items)
 			if(item.getItemId()== executing_category_author)
 				break;
 			else
-				logged_user_pos_in_spinner++;
+				owner_pos_in_spinner++;
 		
-		mSpinner.setSelection(logged_user_pos_in_spinner);
+		mSpinner.setSelection(owner_pos_in_spinner);
 		mSpinner.setOnItemSelectedListener(new OnItemSelectedListener() {
-			Bundle bundle = new Bundle();
+			//Bundle bundle = new Bundle();
 			
 			@Override
 			public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int position, long id) {
 				ImageSpinnerItem data = items.get(position);
-				if(data.isHint()){
+				if(data.isHint()){				// wszyscy u¿ytkownicy
 					TextView tv = (TextView)selectedItemView;
 					if(tv!=null)
 						tv.setTextColor(Color.rgb(148, 150, 148));
@@ -285,8 +307,9 @@ public class ImagesMultiselectFragment extends ListFragment implements LoaderCal
 			
 			@Override
 			public void onNothingSelected(AdapterView<?> parentView) {
-				bundle.putLong("SELECTED_USER_ID", executing_category_author);
-				a.getSupportLoaderManager().restartLoader(0, bundle, lc);
+				//bundle.putLong("SELECTED_USER_ID", executing_category_author);
+				selected_user_id = null;
+				a.getSupportLoaderManager().restartLoader(0, null, lc);
 			}
 
 		});
@@ -315,9 +338,7 @@ public class ImagesMultiselectFragment extends ListFragment implements LoaderCal
 		if(cat_root == null || tv == null){
 			return;
 		}
-		//else if(cancelPotentialWork(cat_root, tv)){
-			
-		//}
+
 		
 		CalculateDfsWorkerTask task = new CalculateDfsWorkerTask(tv);
 		task.executeOnExecutor(com.example.app_2.utils.AsyncTask.DUAL_THREAD_EXECUTOR, cat_root);
@@ -373,22 +394,61 @@ public class ImagesMultiselectFragment extends ListFragment implements LoaderCal
 	//		---- L	O	A	D	E	R	----
 	@Override
 	public Loader<Cursor> onCreateLoader(int arg0, Bundle bundle) {
-		String sel = selection;
-		String selArgs[] = selectionArgs;
+		String selection = new String();
+		LinkedHashMap<String,String> selArgs = new LinkedHashMap<String, String>();
+		
+		
+		
+		if(!viewUserRootCategories){
+			selection = "p."+ParentContract.Columns.PARENT_FK+" = ? AND"; 							// - obrazki które wskazuj¹ na s³ownik ( czyli wszystkie )
+			selArgs.put("PARENT_FK", Long.toString(Database.getMainDictFk()));
+		}
 
-		if(selected_user_id != null){
-			selArgs= new String[]{Long.toString(Database.getMainDictFk()),
-							      Long.toString(selected_user_id),
-								  Long.toString(executing_category_id) 
-			};
+		if(executing_category_id!=null){													// - usuñ mo¿liwoœæ tworzenia pêtli prostych na kategori¹ z której wywo³ujemy dodawanie obrazka
+			selection+= " i." + ImageContract.Columns._ID + "<> ? ";
+			selArgs.put("_ID",  Long.toString(executing_category_id));
 		}
 		
-		if(showOnlyCategories){
-			sel += " AND ( " + ImageContract.Columns.IS_CATEGORY + "<> ? OR " + ImageContract.Columns.IS_CATEGORY + " IS NOT NULL )";
-			selArgs = new String[]{ selArgs[0], selArgs[1], selArgs[2], ""};
+		if(selected_user_id!= null){
+			selection += " AND i." + ImageContract.Columns.AUTHOR_FK + "= ? "; 					// - w³aœcicielem jest autor kategorii do której dodajemy obrazki
+			selArgs.put("AUTHOR_FK", Long.toString(selected_user_id));
 		}
 
-		CursorLoader cursorLoader = new CursorLoader(getActivity(),	ImagesOfParentContract.CONTENT_URI, projection, sel, selArgs, sortOrder);
+
+		
+		
+		if(constraint!=null && !constraint.isEmpty()){
+			selection = "(" + selection + " ) " +
+				"AND (i."+ImageContract.Columns.FILENAME+" LIKE ?" +
+				" OR i."+ImageContract.Columns.DESC+" LIKE ?" +
+				" OR i."+ImageContract.Columns.TTS_M+" LIKE ?" +
+				" OR i."+ImageContract.Columns.TTS_F+" LIKE ?)";
+			
+			selArgs.put("FILENAME", constraint+"%");
+			selArgs.put("DESC", constraint+"%");
+			selArgs.put("TTS_M",  constraint+"%");
+			selArgs.put("TTS_F", constraint+"%"
+					);
+		}
+		
+		
+
+
+		//if(selected_user_id != null)
+		//	selArgs.put("AUTHOR_FK", Long.toString(selected_user_id));
+		
+		
+		
+		if(showOnlyCategories){
+			selection += " AND ( i." + ImageContract.Columns.IS_CATEGORY + "= ?)";
+			selArgs.put("SHOW_ONLY_CATEGORIES", "1");
+		}
+		
+		
+		String [] selectionArguments = selArgs.values().toArray(new String [selArgs.size()]);
+		//String [] selectionArguments = (String[]) selArgs.values().toArray();
+
+		CursorLoader cursorLoader = new CursorLoader(getActivity(),	ImagesOfParentContract.CONTENT_URI, projection, selection, selectionArguments, sortOrder);
 		return cursorLoader;
 	}
 	

@@ -490,11 +490,9 @@ public class ImageDetailsFragment extends Fragment{
 					mAddToExprRG.setVisibility(View.GONE);
 				}
 			}
-		});
-		
-		
-		
+		});		
 	}
 	
+
 
 }
