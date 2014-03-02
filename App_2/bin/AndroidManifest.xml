@@ -86,7 +86,7 @@
             android:label="ParentMultiselectActivity" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.example.app_2.activities.ImageEditActivity" />
+                android:value="com.example.app_2.activities.ImageDetailsActivity" />
         </activity>
         <activity
             android:name="com.example.app_2.activities.AddUserActivity"

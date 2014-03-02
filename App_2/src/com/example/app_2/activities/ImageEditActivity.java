@@ -38,7 +38,6 @@ import com.example.app_2.utils.Utils;
 
 public class ImageEditActivity extends FragmentActivity implements OnNavigationListener{
 	private static ImageListFragment ilf;
-	//private Spinner mSpinner;
     private ArrayList<SpinnerNavItem> navSpinner;
     private TitleNavigationAdapter title_nav_adapter;
     

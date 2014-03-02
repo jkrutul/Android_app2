@@ -56,6 +56,9 @@ public class ImageDetailsActivity extends FragmentActivity{
 		
 		case R.id.id_cancel_button:
 			details.onButtonClick(view);
+			
+		case R.id.cat_choose_button:
+			details.onButtonClick(view);
 		}
 		
     }

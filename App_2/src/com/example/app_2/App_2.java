@@ -13,8 +13,8 @@ import com.example.app_2.utils.ImageLoader;
 
 public class App_2 extends Application{
 	private static Context context;
-	public static Bitmap mPlaceHolderBitmap;
-	public static Bitmap mDarkPlaceHolderBitmap;
+	//public static Bitmap mPlaceHolderBitmap;
+	//public static Bitmap mDarkPlaceHolderBitmap;
 	public static int maxWidth;
 	public static int maxHeight; 
 	private static Long main_dict_id;
@@ -29,8 +29,8 @@ public class App_2 extends Application{
 		Display display = wm.getDefaultDisplay();
 		maxWidth = display.getWidth();
 		maxHeight = display.getHeight();
-		mPlaceHolderBitmap = BitmapCalc.decodeSampleBitmapFromResources(App_2.getAppContext().getResources(), R.drawable.empty_photo, 100, 100);
-		mDarkPlaceHolderBitmap = BitmapCalc.decodeSampleBitmapFromResources(App_2.getAppContext().getResources(), R.drawable.dark_empty, 100, 100);
+		//mPlaceHolderBitmap = BitmapCalc.decodeSampleBitmapFromResources(App_2.getAppContext().getResources(), R.drawable.empty_photo, 100, 100);
+		//mDarkPlaceHolderBitmap = BitmapCalc.decodeSampleBitmapFromResources(App_2.getAppContext().getResources(), R.drawable.dark_empty, 100, 100);
 		
 
 		Database db = Database.getInstance(context);

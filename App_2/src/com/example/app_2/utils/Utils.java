@@ -17,6 +17,7 @@
 package com.example.app_2.utils;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.security.MessageDigest;
@@ -295,5 +296,15 @@ public class Utils {
 		} else {
 			return false;
 		}
+	}
+	
+	
+	public static boolean isZipFile(String path) {
+		File f = new File(path);
+		String zip ="zip";
+		if(zip.equals(getExtention(f.getName())))
+			return true;
+		else
+			return false;
 	}
 }

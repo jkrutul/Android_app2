@@ -7,7 +7,7 @@
     android:orientation="vertical"
     android:padding="16dp" >
 
-    <LinearLayout
+    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
@@ -15,17 +15,27 @@
 
         <Button
             android:id="@+id/grid_activity"
-            android:layout_width="0dp"
+            android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_marginBottom="10dp"
-            android:layout_weight="1"
+
             android:background="@android:color/holo_blue_dark"
             android:gravity="bottom"
             android:onClick="onClick"
             android:text=" Komunikator"
             android:textColor="#ffff"
             android:textSize="35sp" />
-    </LinearLayout>
+        
+                <TextView
+            android:id="@+id/logged_user_name"
+            android:layout_height="wrap_content"
+            android:layout_width="match_parent"
+            android:layout_alignRight="@id/grid_activity"
+            android:layout_alignLeft="@id/grid_activity"
+            android:text="Sesja administratora" />
+
+
+    </RelativeLayout>
 
     <LinearLayout
         android:layout_width="match_parent"

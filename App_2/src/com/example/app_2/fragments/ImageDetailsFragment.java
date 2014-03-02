@@ -30,6 +30,7 @@ import android.widget.TextView;
 import com.example.app_2.App_2;
 import com.example.app_2.R;
 import com.example.app_2.activities.ImageDetailsActivity;
+import com.example.app_2.activities.ParentMultiselectActivity;
 import com.example.app_2.contentprovider.ImageContract;
 import com.example.app_2.contentprovider.ImagesOfParentContract;
 import com.example.app_2.contentprovider.ParentContract;
@@ -303,6 +304,12 @@ public class ImageDetailsFragment extends Fragment{
 			AlertDialog dialog = builder.create();
 			dialog.show();
 			break;
+			
+		case R.id.cat_choose_button:
+			Intent i = new Intent(getActivity(), ParentMultiselectActivity.class);
+			i.putExtra("row_id", row_id);
+			startActivity(i);
+			break;
 
 		default:
 			break;
@@ -429,8 +436,8 @@ public class ImageDetailsFragment extends Fragment{
 		values.put(ImageContract.Columns.TTS_M, tts_m);
 		values.put(ImageContract.Columns.TTS_F, tts_f);
 		values.put(ImageContract.Columns.IS_CATEGORY, isCategory);
-		values.put(ImageContract.Columns.IS_ADD_TO_CAT_LIST, isAddToExpr);
-		values.put(ImageContract.Columns.IS_ADD_TO_EXPR, isAddToCatList);
+		values.put(ImageContract.Columns.IS_ADD_TO_CAT_LIST, isAddToCatList);
+		values.put(ImageContract.Columns.IS_ADD_TO_EXPR, isAddToExpr);
 
 		/*
 		if (row_id == null && this.filename!=null) {

@@ -100,7 +100,7 @@ public class ImageLoader {
 		}
 		if(value != null){
 			//Log.i(LOG_TAG, "cache - > " + ckm.getImgKey() + " : "+ ckm.getImgSize() );
-			imageView.setImageBitmap(value);
+			imageView.setImageBitmap(BitmapCalc.getRoundedCornerBitmap(value));
 		}else if(cancelPotentialWork(path, imageView)){
 			BitmapWorkerTask task = new BitmapWorkerTask(imageView, reqImgSize);
 			AsyncDrawable asyncDrawable = new AsyncDrawable(App_2.getAppContext().getResources(), null, task);
@@ -189,7 +189,7 @@ public class ImageLoader {
 	        	//Log.i(LOG_TAG, "filename: "+ path +" decoded image h:"+bitmap.getHeight()+" w:"+bitmap.getWidth());
 	        	
 		        addBitmapToMemoryCache(new CacheKeyModel(imageKey,  this.reqImgSize),bitmap);
-	        return bitmap;
+	        return BitmapCalc.getRoundedCornerBitmap(bitmap);
 	    }
 	    	    
 	    private void setImageDrawable(ImageView imageView, Bitmap bitmap) {

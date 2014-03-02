@@ -70,14 +70,16 @@ import com.sonyericsson.util.ScalingUtilities.ScalingLogic;
 public class ImageGridFragment extends Fragment implements LoaderCallbacks<Cursor>{
     private static final String LOG_TAG = ImageGridActivity.GRID_FRAGMENT_TAG;
     private ImageView expandedImageView;
+    /*
     private int mImageThumbSize;
     private int mImageThumbSpacing;
     private int mCategoryBackgroundColor;
     private int mContextCategoryBackgroundColor;
 	private int mImageFontSize = 20;
+	*/
     private SimpleCursorAdapter adapter;
     private ArrayList<Long> selected_images_ids = new ArrayList<Long>();
-    private Animator mCurrentAnimator;
+    //private Animator mCurrentAnimator;
     public  GridView mGridView;
     private RelativeLayout.LayoutParams mImageViewLayoutParams;
     private int mItemHeight = 0;
@@ -141,9 +143,9 @@ public class ImageGridFragment extends Fragment implements LoaderCallbacks<Curso
 		@Override
 		public void onGlobalLayout() {
 			if(mChangeNumColumns){
-                final int numColumns = (int) Math.floor(mGridView.getWidth() / (mImageThumbSize + mImageThumbSpacing));
+                final int numColumns = (int) Math.floor(mGridView.getWidth() / (ImageGridActivity.mImageThumbSize + ImageGridActivity.mImageThumbSpacing));
                 if (numColumns > 0) {
-                    final int columnWidth = (mGridView.getWidth() / numColumns) - mImageThumbSpacing;
+                    final int columnWidth = (mGridView.getWidth() / numColumns) - ImageGridActivity.mImageThumbSpacing;
                     mGridView.setColumnWidth(columnWidth);
                     setItemHeight(columnWidth);
                         Log.d(LOG_TAG, "onCreateView - numColumns set to " + numColumns);
@@ -169,10 +171,10 @@ public class ImageGridFragment extends Fragment implements LoaderCallbacks<Curso
 					if(isCategory == 1)
 						if(cursor.getInt(6) == 1)
 							//view.setBackgroundColor(Color.argb(120, 149,39,225));
-							view.setBackgroundColor(mCategoryBackgroundColor);
+							view.setBackgroundColor(ImageGridActivity.mCategoryBackgroundColor);
 						else
 							//view.setBackgroundColor(Color.argb(120, 0, 255, 0));
-							view.setBackgroundColor(mContextCategoryBackgroundColor);
+							view.setBackgroundColor(ImageGridActivity.mContextCategoryBackgroundColor);
 					else
 						view.setBackgroundColor(Color.TRANSPARENT);
 					if(selected_images_ids.contains(cursor.getLong(0)))
@@ -182,8 +184,8 @@ public class ImageGridFragment extends Fragment implements LoaderCallbacks<Curso
 
 				case R.id.image_desc:
 					TextView tv = (TextView) view;
-					if(tv.getTextSize() != mImageFontSize)
-						tv.setTextSize(mImageFontSize);
+					if(tv.getTextSize() != ImageGridActivity.mImageFontSize)
+						tv.setTextSize(ImageGridActivity.mImageFontSize);
 					return false;
 					
 				default:
@@ -280,6 +282,7 @@ public class ImageGridFragment extends Fragment implements LoaderCallbacks<Curso
 			ImageObject img_object= new ImageObject(c.getString(1), c.getString(2), c.getString(3), c.getString(4), c.getInt(5), c.getInt(6), c.getInt(7));
 			img_object.setTimes_used(c.getLong(9));
 			img_object.setId(c.getLong(0));
+			//c.close();
 			/*
 			img_object.setId(c.getLong(c.getColumnIndex(ImageContract.Columns._ID)));
 			img_object.setImageName(c.getString(c.getColumnIndex(ImageContract.Columns.FILENAME)));
@@ -294,18 +297,22 @@ public class ImageGridFragment extends Fragment implements LoaderCallbacks<Curso
 				if(img_object.isAddToExpr() == 1)						// dodawana do wyra¿enia
 					executingActivity.addImageToAdapter(img_object);
 				
-				Long l = c.getLong(c.getColumnIndex(ImageContract.Columns._ID));
-				executingActivity.replaceCategory(l, position, true);
-				ActionBar actionBar = executingActivity.getActionBar();
-				actionBar.setTitle(img_object.getDescription());
+				//Long l = img_object.getId();
+				//c.getLong(c.getColumnIndex(ImageContract.Columns._ID));
+				executingActivity.replaceCategory(img_object.getId(), position, true);
+				//ActionBar actionBar = executingActivity.getActionBar();
+				//actionBar.setTitle(img_object.getDescription());
 				
 			}
 			else														// jest symbolem
 				executingActivity.addImageToAdapter(img_object);
+
 			
+			/*
 			if (mCurrentAnimator != null) {
 			       mCurrentAnimator.cancel();
-			   }	
+			   }
+			   */
 	 }
 	};
 	
@@ -315,20 +322,14 @@ public class ImageGridFragment extends Fragment implements LoaderCallbacks<Curso
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		executingActivity = (ImageGridActivity) getActivity();
-		SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(executingActivity);
-		mImageThumbSize =sharedPref.getInt("pref_img_size",150);
-		mImageFontSize = sharedPref.getInt("pref_img_desc_font_size", 15);
-		/*
-		mCategoryBackgroundColor = Integer.valueOf(sharedPref.getString("category_view_background", "0xff33b5e5"));
-		mContextCategoryBackgroundColor = Integer.valueOf(sharedPref.getString("context_category_view_background","0xffe446ff"));
-		*/
-		mCategoryBackgroundColor =sharedPref.getInt("category_view_background", 0xff33b5e5);
-		mContextCategoryBackgroundColor =sharedPref.getInt("context_category_view_background",0xffe446ff);
 		
-        mImageThumbSpacing = getResources().getDimensionPixelSize(R.dimen.image_thumbnail_spacing);	
+		
+		
+		
 		mChangeNumColumns = true;
 
     	adapter = new SimpleCursorAdapter(executingActivity.getApplicationContext(), R.layout.image_item, null, from, to, 0);
+    	    	
     	adapter.setViewBinder(vb);
 		//getLoaderManager().initLoader(LOADER_ID, this.getArguments(), this);
 		setHasOptionsMenu(true);
@@ -415,6 +416,7 @@ public class ImageGridFragment extends Fragment implements LoaderCallbacks<Curso
 	public void onLoadFinished(Loader<Cursor> arg0, Cursor data) { 
 		adapter.swapCursor(data);	
 		adapter.notifyDataSetChanged();
+		/*
 		mGridView.post( new Runnable() {
 		    @Override
 		    public void run() {
@@ -424,7 +426,7 @@ public class ImageGridFragment extends Fragment implements LoaderCallbacks<Curso
 				//mGridView.smoothScrollToPositionFromTop(posToScrool, 10, 0);
 		    }
 		  });
-
+		 */
 		}
 
 	@Override
@@ -460,9 +462,9 @@ public class ImageGridFragment extends Fragment implements LoaderCallbacks<Curso
 		}
 		c.close();
 
-		Bundle args = new Bundle();		
-		args.putLong("CATEGORY_ID", ImageGridActivity.actual_category_fk.getCategoryId());
-		getLoaderManager().restartLoader(1, args, this);
+		//Bundle args = new Bundle();		
+		//args.putLong("CATEGORY_ID", ImageGridActivity.actual_category_fk.getCategoryId());
+		getLoaderManager().restartLoader(1, null, this);
 		executingActivity.notifyCategoryAdapter();
 		//refreshDrawer();
 	}
@@ -479,10 +481,11 @@ public class ImageGridFragment extends Fragment implements LoaderCallbacks<Curso
 			Uri uri = Uri.parse(ImageContract.CONTENT_URI + "/" + l);
 			String categoryName = null;
 			
-			c =getActivity().getContentResolver().query(uri, new String[]{ImageContract.Columns.IS_CATEGORY}, null, null, null);
+			c =getActivity().getContentResolver().query(uri, new String[]{ImageContract.Columns.IS_CATEGORY, ImageContract.Columns.DESC}, null, null, null);
 			if(c!= null){
 				c.moveToFirst();
 				isCategory = (c.getInt(0) == 1) ? true : false;
+				categoryName = c.getString(1);
 			}
 
 			if(isCategory){
@@ -511,7 +514,7 @@ public class ImageGridFragment extends Fragment implements LoaderCallbacks<Curso
 					
 					if(isCategoryEmpty){							// jeœli tak usuwam kategoriê ( ustawiam dla obrazka null w polu kategorii )
 						ContentValues cv = new ContentValues();
-						cv.put(ImageContract.Columns.IS_CATEGORY, (Long)null);
+						cv.put(ImageContract.Columns.IS_CATEGORY, 0);
 						Uri p_uri = Uri.parse(ImageContract.CONTENT_URI + "/" + l);
 						getActivity().getContentResolver().update(p_uri, cv, null, null);
 	
@@ -537,9 +540,9 @@ public class ImageGridFragment extends Fragment implements LoaderCallbacks<Curso
 		}
 
 		c.close();
-		Bundle args = new Bundle();		
-		args.putLong("CATEGORY_ID", category_fk);
-		getLoaderManager().restartLoader(1, args, this);
+		//Bundle args = new Bundle();		
+		//args.putLong("CATEGORY_ID", category_fk);
+		getLoaderManager().restartLoader(1, null, this);
 		executingActivity.notifyCategoryAdapter();
 		//refreshDrawer();
 		

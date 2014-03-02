@@ -15,6 +15,7 @@ import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
@@ -49,10 +50,10 @@ import com.example.app_2.utils.Utils;
 public class AddImagesFromFolderActivity  extends FragmentActivity{
 	private Button import_button;
 	private EditText pathEditText;
-	private Spinner user_spinner;
+	//private Spinner user_spinner;
 	
-	ArrayList<ImageSpinnerItem> items;
-	Long selected_user_id;
+	//private ArrayList<ImageSpinnerItem> items;
+	private Long selected_user_id;
 	
 	private static final String TAG = "AddImagesFromFolderActivity";
 	private static final int FILE_SELECT_CODE = 0;
@@ -70,7 +71,7 @@ public class AddImagesFromFolderActivity  extends FragmentActivity{
 	protected void onCreate(Bundle bundle) {
 		super.onCreate(bundle);
 		getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
-		
+		getActionBar().setBackgroundDrawable(new ColorDrawable(getResources().getColor(android.R.color.holo_green_dark))); 
 		setContentView(R.layout.activity_import);
 		pathEditText = (EditText) findViewById(R.id.path_to_folder);
 		import_button= (Button) findViewById(R.id.import_button);

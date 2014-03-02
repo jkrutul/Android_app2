@@ -17,13 +17,13 @@ import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.LinearLayout;
 import android.widget.ShareActionProvider;
 import android.widget.Toast;
 
@@ -34,7 +34,6 @@ import com.example.app_2.storage.Storage;
 import com.example.app_2.utils.AsyncTask;
 import com.example.app_2.utils.Utils;
 import com.example.app_2.utils.ZipUnzipFiles;
-import com.sonyericsson.util.ScalingUtilities.ScalingLogic;
 
 
 public class MainActivity extends Activity {
@@ -42,6 +41,7 @@ public class MainActivity extends Activity {
 	private final static int ZIP_DIALOG= 62;
 	private final static int UNZIP_DIALOG= 60;
 	private final static int REQUEST_CHOOSER=3;
+	private static final int FILE_SELECT_REQUEST = 45;
 	private ShareActionProvider mShareActionProvider;
 	private SharedPreferences prefs = null;
 	public static ProgressDialog zip_dialog;
@@ -124,14 +124,8 @@ public class MainActivity extends Activity {
 	            .setMessage("Importuj lub eksportuj pliki u¿ytkownika")
 	            .setPositiveButton("Importuj", new DialogInterface.OnClickListener() {
 	                public void onClick(DialogInterface dialog, int whichButton) {
-	                	File f = new File(Storage.getAppRootDir()+File.separator+"zapis.zip");
-	                	if(!f.exists()){
-	                		Toast.makeText(a.getApplicationContext(), "plik: "+ f.getAbsolutePath()+" nie istnieje" , Toast.LENGTH_LONG).show();
-	                	}else{
-	                		ImportUserFilesTask iuft = new ImportUserFilesTask(a);
-	                		iuft.execute(Storage.getAppRootDir()+File.separator+"zapis.zip");
-	                	}
-
+	                	runFilePicker();
+	                	
 	                	//importAllUserFiles( Storage.getAppRootDir()+File.separator+"zapis.zip");
 	                }
 	            })
@@ -157,6 +151,19 @@ public class MainActivity extends Activity {
 			 break;
 		}
 		return true;
+	}
+	
+	
+	private void runFilePicker(){
+		Intent  intent = new Intent(Intent.ACTION_GET_CONTENT);
+		intent.setType("*/*");
+
+		try{
+			startActivityForResult(Intent.createChooser(intent, "Wybierz obrazek"), FILE_SELECT_REQUEST);	
+			
+		}catch(android.content.ActivityNotFoundException ex){
+			Toast.makeText(this, "Zainstaluj menad¿er plików", Toast.LENGTH_SHORT).show();
+		}
 	}
 
 	public void onClick(View view) {
@@ -220,6 +227,41 @@ public class MainActivity extends Activity {
 	        return null;
 	    }
 
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+	    super.onActivityResult(requestCode, resultCode, data);
+	    switch (requestCode) {
+		case FILE_SELECT_REQUEST:
+			if(resultCode == RESULT_OK){
+				Uri uri = data.getData();
+		        final String path = Utils.getPath(this, uri);
+		        if(!Utils.isZipFile(path)){
+		        	Toast.makeText(App_2.getAppContext(), "B³¹d importowania!\n Plik " + Utils.getFilenameFromPath(path) + " jest niepoprawny" , Toast.LENGTH_LONG).show();
+		        	return;
+		        }
+		        
+		        
+				new AlertDialog.Builder(this)
+	            .setIcon(R.drawable.ic_action_import_export)
+	            .setTitle("Zainportowaæ plik"+ Utils.getFilenameFromPath(path))
+	            .setMessage("Isniej¹ce symbole zostan¹ utracone!")
+	            .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+	                public void onClick(DialogInterface dialog, int whichButton) {
+	    		        importUserFiles(path);
+	                }
+	            })
+	            .setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
+	                public void onClick(DialogInterface dialog, int whichButton) {
+	                	return;
+	                }
+	            }).create().show();
+			}
+			break;
+
+		default:
+			break;
+		}
+	 }
 	
 	private static class ExportUserFilesTask extends AsyncTask<String, Integer, Void>{
 		private Activity executing_activity;
@@ -300,7 +342,16 @@ public class MainActivity extends Activity {
 
 	}
 	
-	
+	private void importUserFiles(String path){
+    	File f = new File(path);
+    	if(!f.exists()){
+    		Toast.makeText(App_2.getAppContext(), "plik: "+ f.getAbsolutePath()+" nie istnieje" , Toast.LENGTH_LONG).show();
+    	}else{
+    		ImportUserFilesTask iuft = new ImportUserFilesTask(this);
+    		iuft.execute(path);
+    	}
+		
+	}
 	
 	private static class ImportUserFilesTask extends AsyncTask<String, Integer, Void>{
 		private Activity executing_activity;

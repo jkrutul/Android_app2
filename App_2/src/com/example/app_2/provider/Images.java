@@ -168,8 +168,8 @@ public final class Images {
 			}
 			
 		}
-		
-		c.close();
+		if(c != null)
+			c.close();
 		return ios;
 	}
 	
@@ -465,9 +465,9 @@ public final class Images {
 	 * Dodawanie obrazków z wybranego folderu, do s³ownika i wybranej kategorii
 	 */
 	public static class ProcessBitmapsTask extends	AsyncTask<ArrayList<String>, Integer, Void> {
-		Activity executing_activity;
-		Database db;
-		Long user_id;
+		private Activity executing_activity;
+		private Database db;
+		private Long user_id;
 
 		public ProcessBitmapsTask(Activity activity, Long user_id) {
 			this.executing_activity = activity;

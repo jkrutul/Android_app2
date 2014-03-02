@@ -103,17 +103,26 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
     
     private  ListView mDrawerList;
     private SimpleCursorAdapter categoriesAdapter;
-  
-
+    
+    public static int mImageThumbSize;
+    public static int mImageThumbSpacing;
+    public static int mCategoryBackgroundColor;
+    public static int mContextCategoryBackgroundColor;
+    public static int isMale = 1;
+    public static int mImageFontSize = 20;
+    
+    public ExpressionListFragment elf;
+    public ImageGridFragment igf;
+    
    // private Map<String, Long> mCategoryMap  = new HashMap<String, Long>();
 	public TextToSpeech tts;
     //CharSequence mTitle;
     //private CharSequence mDrawerTitle;
     //public ImageLoader imageLoader;
-    public ExpressionListFragment elf;
-    Long logged_user_root;
-    Long logged_user_id;
-    public ImageGridFragment igf;
+
+    private Long logged_user_root;
+    private Long logged_user_id;
+
 
     
     protected boolean mDualPane = false;
@@ -129,13 +138,27 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_grid);
+        
+        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
+		mImageThumbSize =sharedPref.getInt("pref_img_size",150);
+		mImageFontSize = sharedPref.getInt("pref_img_desc_font_size", 15);
+		mCategoryBackgroundColor =sharedPref.getInt("category_view_background", 0xff33b5e5);
+		mContextCategoryBackgroundColor =sharedPref.getInt("context_category_view_background",0xffe446ff);
+		isMale = sharedPref.getInt("is_male", 1);
+		
+        mImageThumbSpacing = getResources().getDimensionPixelSize(R.dimen.image_thumbnail_spacing);	
+        
+        
+        
         Database db = Database.getInstance(getApplicationContext());
         db.open();
         //LinearLayout ll = (LinearLayout) findViewById(R.layout.activity_grid);
         //Utils.setWallpaper(ll, App_2.maxHeight, App_2.getMaxWidth(), null, ScalingLogic.CROP);
-		SharedPreferences sharedPref = getApplicationContext().getSharedPreferences("USER",Context.MODE_PRIVATE);			// pobranie informacji o zalogowanym u¿ytkowniku
-		logged_user_root = sharedPref.getLong("logged_user_root", Database.getMainRootFk());
-		logged_user_id = sharedPref.getLong("logged_user_id", 0);
+		SharedPreferences user_sharedPref = getApplicationContext().getSharedPreferences("USER",Context.MODE_PRIVATE);			// pobranie informacji o zalogowanym u¿ytkowniku
+		logged_user_root = user_sharedPref.getLong("logged_user_root", Database.getMainRootFk());
+		logged_user_id = user_sharedPref.getLong("logged_user_id", 0);
+		
+		
 		
 		SharedPreferences sharedPref2 = PreferenceManager.getDefaultSharedPreferences(this);
 		mCatBColor =sharedPref2.getInt("category_view_background", 0xff33b5e5);
@@ -395,15 +418,59 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 		public void onItemClick(AdapterView parent, View view, int position, long id) {
 			if(actual_category_fk.getCategoryId() != id){
 				//selectItem(position);
-				replaceCategory(id, 0, true);
+				//replaceCategory(id, 0, true);
 				 mDrawerList.setItemChecked(position, true);
 				 if(!mDualPane)
 				    	mDrawerLayout.closeDrawers();
 				igf.finishActionMode();
-				IdPositionModel firstCategory = fragmentsHistory.get(0);
-				fragmentsHistory.clear();
-				if(firstCategory != null && id!= firstCategory.getCategoryId()){
-					fragmentsHistory.add(firstCategory);
+
+				
+				
+				Uri uri = Uri.parse(ImageContract.CONTENT_URI+"/"+id);
+				
+				 String[] projection = new String[] { "i."+ImageContract.Columns._ID,						//0
+					   "i."+ImageContract.Columns.FILENAME,					//1
+					   "i."+ImageContract.Columns.DESC,						//2
+					   "i."+ImageContract.Columns.TTS_M,					//3
+					   "i."+ImageContract.Columns.TTS_F,					//4
+					   "i."+ImageContract.Columns.IS_CATEGORY,				//5
+					   "i."+ImageContract.Columns.IS_ADD_TO_EXPR,			//6
+					   "i."+ImageContract.Columns.IS_ADD_TO_CAT_LIST,		//7
+				       "i."+ImageContract.Columns.MODIFIED,					//8
+					   "i."+ImageContract.Columns.TIME_USED};				//9
+				 
+				 
+				 
+		
+	 			Cursor c = getContentResolver().query(uri, projection, null, null, null);
+				c.moveToFirst();
+				ImageObject img_object = null;
+				
+				if(!c.isAfterLast()){
+					img_object= new ImageObject(c.getString(1), c.getString(2), c.getString(3), c.getString(4), c.getInt(5), c.getInt(6), c.getInt(7));
+					img_object.setTimes_used(c.getLong(9));
+					img_object.setId(c.getLong(0));
+				
+				}
+				c.close();
+					
+				if(img_object!=null){
+					if(img_object.isCategory() == 1){ 							// jest kategori¹
+						if(img_object.isAddToExpr() == 1)						// dodawana do wyra¿enia
+							addImageToAdapter(img_object);
+							replaceCategory(img_object.getId(), position, true);
+							
+							if(fragmentsHistory.size()>0){
+								IdPositionModel firstCategory = fragmentsHistory.get(0);
+								fragmentsHistory.clear();
+								if(firstCategory != null && id!= firstCategory.getCategoryId()){
+									fragmentsHistory.add(firstCategory);
+								}
+
+							}
+					}
+					else														// jest symbolem
+						addImageToAdapter(img_object);
 				}
 			}
 			else{
@@ -411,6 +478,13 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 			    if(!mDualPane)
 			    	mDrawerLayout.closeDrawers();
 			}
+			
+
+			
+
+			
+
+			
 		}
 		/*
 		private void selectItem(int position){
@@ -672,8 +746,8 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 		igf = new ImageGridFragment();
 
 		Bundle args = new Bundle();	
-		args.putLong("CATEGORY_ID", categoryId);
-		igf.setArguments(args);
+		//args.putLong("CATEGORY_ID", categoryId);
+		//igf.setArguments(args);
 		
 		final FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
 		ft.setCustomAnimations(R.anim.slide_in_right, R.anim.slide_out_left);
@@ -723,11 +797,17 @@ public class ImageGridActivity extends FragmentActivity implements TextToSpeech.
 	
 	private void setActionBarTitleFromCategoryId(Long category_id){
 		Uri uri = Uri.parse(ImageContract.CONTENT_URI+"/"+category_id);
-		Cursor c = getApplicationContext().getContentResolver().query(uri, new String[]{ImageContract.Columns.DESC},null,null,null);
+		Cursor c = getApplicationContext().getContentResolver().query(uri, new String[]{ImageContract.Columns.FILENAME,ImageContract.Columns.DESC},null,null,null);
 		if(c != null){
 			c.moveToFirst();
 			if(!c.isAfterLast()){
-				getActionBar().setTitle(c.getString(0));
+				mActionBar.setTitle(c.getString(1));
+				
+      			String path = Storage.getPathToScaledBitmap(c.getString(0), 50);
+      			Bitmap user_icon = ScalingUtilities.decodeFile(path, 50, 50, ScalingLogic.FIT);
+      			mActionBar.setIcon(new BitmapDrawable(getResources(),user_icon));
+      			
+
 			}
 			c.close();
 		}

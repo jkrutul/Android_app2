@@ -182,6 +182,7 @@ public class ImagesMultiselectFragment extends ListFragment implements LoaderCal
 		
 		listView = getListView();
 		adapter = new SimpleCursorAdapter( getActivity().getApplicationContext(), R.layout.multiple_choice_item, null, from, to, 0);
+		
 		listView.setItemsCanFocus(false);
 		listView.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
 
@@ -394,7 +395,7 @@ public class ImagesMultiselectFragment extends ListFragment implements LoaderCal
 	//		---- L	O	A	D	E	R	----
 	@Override
 	public Loader<Cursor> onCreateLoader(int arg0, Bundle bundle) {
-		String selection = new String();
+		String selection = null;
 		LinkedHashMap<String,String> selArgs = new LinkedHashMap<String, String>();
 		
 		
@@ -402,15 +403,20 @@ public class ImagesMultiselectFragment extends ListFragment implements LoaderCal
 		if(!viewUserRootCategories){
 			selection = "p."+ParentContract.Columns.PARENT_FK+" = ? AND"; 							// - obrazki które wskazuj¹ na s³ownik ( czyli wszystkie )
 			selArgs.put("PARENT_FK", Long.toString(Database.getMainDictFk()));
+			if(executing_category_id!=null){													// - usuñ mo¿liwoœæ tworzenia pêtli prostych na kategori¹ z której wywo³ujemy dodawanie obrazka
+				selection+= " i." + ImageContract.Columns._ID + "<> ? ";
+				selArgs.put("_ID",  Long.toString(executing_category_id));
+			}
 		}
 
-		if(executing_category_id!=null){													// - usuñ mo¿liwoœæ tworzenia pêtli prostych na kategori¹ z której wywo³ujemy dodawanie obrazka
-			selection+= " i." + ImageContract.Columns._ID + "<> ? ";
-			selArgs.put("_ID",  Long.toString(executing_category_id));
-		}
+	
 		
 		if(selected_user_id!= null){
-			selection += " AND i." + ImageContract.Columns.AUTHOR_FK + "= ? "; 					// - w³aœcicielem jest autor kategorii do której dodajemy obrazki
+			if(selection!= null)
+				selection += " AND i." + ImageContract.Columns.AUTHOR_FK + "= ? "; 					// - w³aœcicielem jest autor kategorii do której dodajemy obrazki
+			else
+				selection = "i." + ImageContract.Columns.AUTHOR_FK + "= ? "; 					// - w³aœcicielem jest autor kategorii do której dodajemy obrazki
+			
 			selArgs.put("AUTHOR_FK", Long.toString(selected_user_id));
 		}
 
@@ -418,11 +424,17 @@ public class ImagesMultiselectFragment extends ListFragment implements LoaderCal
 		
 		
 		if(constraint!=null && !constraint.isEmpty()){
-			selection = "(" + selection + " ) " +
-				"AND (i."+ImageContract.Columns.FILENAME+" LIKE ?" +
-				" OR i."+ImageContract.Columns.DESC+" LIKE ?" +
-				" OR i."+ImageContract.Columns.TTS_M+" LIKE ?" +
-				" OR i."+ImageContract.Columns.TTS_F+" LIKE ?)";
+			if(selection !=null)
+				selection = "(" + selection + " ) " +
+					"AND (i."+ImageContract.Columns.FILENAME+" LIKE ?" +
+					" OR i."+ImageContract.Columns.DESC+" LIKE ?" +
+					" OR i."+ImageContract.Columns.TTS_M+" LIKE ?" +
+					" OR i."+ImageContract.Columns.TTS_F+" LIKE ?)";
+			else
+				selection = "i."+ImageContract.Columns.FILENAME+" LIKE ?" +
+						" OR i."+ImageContract.Columns.DESC+" LIKE ?" +
+						" OR i."+ImageContract.Columns.TTS_M+" LIKE ?" +
+						" OR i."+ImageContract.Columns.TTS_F+" LIKE ?";
 			
 			selArgs.put("FILENAME", constraint+"%");
 			selArgs.put("DESC", constraint+"%");
@@ -431,24 +443,24 @@ public class ImagesMultiselectFragment extends ListFragment implements LoaderCal
 					);
 		}
 		
-		
 
-
-		//if(selected_user_id != null)
-		//	selArgs.put("AUTHOR_FK", Long.toString(selected_user_id));
-		
-		
-		
 		if(showOnlyCategories){
-			selection += " AND ( i." + ImageContract.Columns.IS_CATEGORY + "= ?)";
+			if(selection != null)
+				selection += " AND ( i." + ImageContract.Columns.IS_CATEGORY + "= ?)";
+			else
+				selection = "i." + ImageContract.Columns.IS_CATEGORY + "= ? ";
 			selArgs.put("SHOW_ONLY_CATEGORIES", "1");
 		}
 		
 		
 		String [] selectionArguments = selArgs.values().toArray(new String [selArgs.size()]);
-		//String [] selectionArguments = (String[]) selArgs.values().toArray();
 
-		CursorLoader cursorLoader = new CursorLoader(getActivity(),	ImagesOfParentContract.CONTENT_URI, projection, selection, selectionArguments, sortOrder);
+		
+		CursorLoader cursorLoader;
+		if(viewUserRootCategories)
+			cursorLoader = new CursorLoader(getActivity(),	ImageContract.CONTENT_URI, projection, selection, selectionArguments, sortOrder);
+		else
+			cursorLoader = new CursorLoader(getActivity(),	ImagesOfParentContract.CONTENT_URI, projection, selection, selectionArguments, sortOrder);
 		return cursorLoader;
 	}
 	

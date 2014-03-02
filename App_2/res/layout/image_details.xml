@@ -91,7 +91,7 @@
                         android:layout_below="@id/cat_list_nfo"
                         android:background="@android:color/darker_gray" />
 
-                    <!--  
+                    <!--
                     <FrameLayout
                         android:id="@+id/cat_list_content_frame"
                         android:layout_width="match_parent"
@@ -99,13 +99,29 @@
                         android:layout_below="@id/divider_line"
                         android:focusable="false" />
                     -->
-                    
-                    <TextView 
-                        android:id="@+id/cat_list_tv"
+
+                    <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:layout_below="@id/divider_line"
-                        android:hint="symbol nie znajduje się w żadnej kategorii"/>
+                        android:orientation="vertical" >
+
+                        <TextView
+                            android:id="@+id/cat_list_tv"
+                            android:layout_width="match_parent"
+                            android:layout_height="0dp"
+                            android:layout_weight="1"
+                            android:layout_below="@id/divider_line"
+                            android:hint="symbol nie znajduje się w żadnej kategorii" />
+
+                        <Button
+                            android:id="@+id/cat_choose_button"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:textSize="10sp"
+                            android:onClick="onButtonClick"
+                            android:text="wybierz kategorie"/>
+                    </LinearLayout>
                 </RelativeLayout>
             </LinearLayout>
 
@@ -128,8 +144,9 @@
                 android:layout_height="wrap_content"
                 android:hint="opis pod obrazkiem"
                 android:textColor="@android:color/holo_blue_dark" />
-            
-<!-- jest kategorią -->
+
+            <!-- jest kategorią -->
+
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
@@ -232,38 +249,38 @@
                     android:textColor="@android:color/holo_blue_dark"
                     android:textSize="12dp" />
             </LinearLayout>
-            
-<!-- pola ukryte jeżeli symbol nie jest kategorią --> 
-<!-- dodawany do wyrażenia -->
+
+            <!-- pola ukryte jeżeli symbol nie jest kategorią -->
+            <!-- dodawany do wyrażenia -->
 
             <TextView
                 android:id="@+id/add_to_expr_info"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
                 android:gravity="center"
-                android:visibility="gone"
                 android:paddingTop="20dp"
                 android:text="kategoria jest dodawany do wyrażenia?"
                 android:textSize="10dp"
-                android:textStyle="bold" />
+                android:textStyle="bold"
+                android:visibility="gone" />
 
             <View
                 android:id="@+id/add_to_expr_info2"
                 android:layout_width="fill_parent"
                 android:layout_height="1dp"
-                android:visibility="gone"
-                android:background="@android:color/darker_gray" />
+                android:background="@android:color/darker_gray"
+                android:visibility="gone" />
 
             <RadioGroup
                 android:id="@+id/add_to_expr_rb"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:visibility="gone"
                 android:paddingBottom="20dp"
                 android:paddingLeft="4dp"
                 android:paddingRight="4dp"
-                android:paddingTop="4dp" >
+                android:paddingTop="4dp"
+                android:visibility="gone" >
 
                 <RadioButton
                     android:id="@+id/add_to_expr_yes"
@@ -283,22 +300,6 @@
                     android:text="NIE"
                     android:textSize="10dp" />
             </RadioGroup>
-
-            <!--
-            <EditText
-                android:id="@+id/edit_category"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:enabled="false"
-                android:gravity="left"
-                android:hint="podaj nazwę nowej kategorii"
-                android:imeOptions="actionNext"
-                android:paddingBottom="20dp"
-                android:paddingLeft="4dp"
-                android:paddingRight="4dp"
-                android:paddingTop="4dp"
-                android:textSize="12dp" />
-            -->
 
             <TextView
                 android:id="@+id/addToLLInfo1"
