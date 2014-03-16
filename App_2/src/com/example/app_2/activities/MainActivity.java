@@ -15,20 +15,24 @@ import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ShareActionProvider;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.app_2.App_2;
 import com.example.app_2.R;
+import com.example.app_2.contentprovider.UserContract;
+import com.example.app_2.spinner.model.UserSpinnerItem;
 import com.example.app_2.storage.Database;
 import com.example.app_2.storage.Storage;
 import com.example.app_2.utils.AsyncTask;
@@ -45,6 +49,8 @@ public class MainActivity extends Activity {
 	private ShareActionProvider mShareActionProvider;
 	private SharedPreferences prefs = null;
 	public static ProgressDialog zip_dialog;
+	
+	private TextView loggin_info_tv;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -52,7 +58,7 @@ public class MainActivity extends Activity {
 		setContentView(R.layout.activity_main);
 		PreferenceManager.setDefaultValues(this, R.xml.preferences, false);
 
-		
+	
 		//LinearLayout ll = (LinearLayout) findViewById(R.id.main_activity);
 		//Utils.setWallpaper(ll, App_2.maxHeight, App_2.getMaxWidth(), null, ScalingLogic.CROP);
 		
@@ -69,9 +75,37 @@ public class MainActivity extends Activity {
 
 	}
 	
+	private void setLogginInfo(){
+		loggin_info_tv = (TextView) findViewById(R.id.logged_user_name);
+		SharedPreferences user_sharedPref = getApplicationContext().getSharedPreferences("USER",Context.MODE_PRIVATE);			// pobranie informacji o zalogowanym u¿ytkowniku
+		Long logged_user_id = user_sharedPref.getLong("logged_user_id", 0);
+		Long logged_user_root = user_sharedPref.getLong("logged_user_root", Database.getMainRootFk());
+
+		String loginfo= "TRYB EDYCJI";
+		if(logged_user_root == Database.getMainRootFk()) //jeœli ktoœ zalogowany tryb edycji wy³¹czony
+			loggin_info_tv.setText(loginfo);
+		else{
+			
+			Uri uri = Uri.parse(UserContract.CONTENT_URI+"/"+logged_user_id);
+			String[] projection = { UserContract.Columns.IMG_FILENAME,	UserContract.Columns.USERNAME};
+			Cursor c = getContentResolver().query(uri, projection, null, null, null);
+			c.moveToFirst();
+			if(!c.isAfterLast()) {
+				loginfo = c.getString(1);
+				String image_file = c.getString(0);
+			}
+			c.close();
+			
+			loggin_info_tv.setText(loginfo);
+		}
+		
+	}
+	
 	@Override
 	protected void onResume() {
 		super.onResume();
+		setLogginInfo();
+		
 	       if (prefs.getBoolean("firstrun", true)) {
 	    	  
 	    		   
